@@ -1,0 +1,14 @@
+# =====================================================================
+# File Cấu hình Git Services (Dự án Capstone-OG)
+# =====================================================================
+# Định dạng: FOLDER_NAME=REPO_URL|BRANCH
+# - Các dòng bắt đầu bằng dấu # là ghi chú và sẽ bị bỏ qua.
+# - FOLDER_NAME là tên thư mục con nằm dưới "All Services".
+# - REPO_URL là URL clone GitHub của service đó.
+# - BRANCH là nhánh mà bạn muốn tracking (ví dụ: develop, main).
+# 
+# Hãy sửa lại link repository và tên service thực tế của bạn dưới đây:
+#
+#Backend_Service=https://github.com/Capstone-OG/Backend-Service.git|main
+#FE_Service=https://github.com/Capstone-OG/Frontend-Service.git|main
+#Identity_Service=https://github.com/Capstone-OG/Identity-Service.git|main

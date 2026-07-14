@@ -1,0 +1,27 @@
+name: Docker Compose Validation CI
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+  pull_request:
+    branches: [ "develop", "main" ]
+
+
+jobs:
+  validate:
+    name: Lint & Verify YAML Syntax
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Validate YAML Syntax
+      uses: ibiqlik/action-yamllint@v3
+      with:
+        file_or_dir: docker-compose.yml
+        config_data: |
+          extends: default
+          rules:
+            line-length: disable
+            document-start: disable

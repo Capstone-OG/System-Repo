@@ -1,0 +1,60 @@
+---
+services:
+  # 1. Database Service (PostgreSQL)
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: capstone_postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=capstone_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d capstone_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - capstone_network
+
+  # 2. Backend API Service Template
+  backend-service:
+    build:
+      context: ./All Services/Backend_Service
+      dockerfile: Dockerfile
+    container_name: capstone_backend_service
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DB_HOST=postgres-db
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - capstone_network
+
+  # 3. Frontend Web Service Template
+  fe-service:
+    build:
+      context: ./All Services/FE_Service
+      dockerfile: Dockerfile
+    container_name: capstone_fe_service
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+    networks:
+      - capstone_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  capstone_network:
+    driver: bridge
