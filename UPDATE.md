@@ -1,1 +1,1 @@
-- clear bin and debug file 
+- Clear bin and obj error file fix right now  
