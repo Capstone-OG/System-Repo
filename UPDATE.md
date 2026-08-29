@@ -1,1 +1,1 @@
-- Kh?i T?o C c Service trung tƒm tr? FE v… Setup t?ng qu t 
+- Thˆm git ignore 

@@ -17,7 +17,7 @@ echo.
 REM Kiem tra xem Git da duoc cai dat chua
 git --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo [ERROR] Git chưa được cài đặt hoặc chưa thêm vào PATH!
+    echo [ERROR] Git chua duoc cai dat hoac chua them vao PATH!
     pause
     exit /b 1
 )
@@ -86,54 +86,19 @@ if "!CAN_PUSH!"=="0" (
 echo [SUCCESS] Kiem tra dong bo an toan. Tat ca cac repo san sang day code.
 echo.
 
-REM --- BƯỚC 3: Chọn chiến lược đẩy code ---
-echo === [2/3] Lua chon Chien luoc Day Code (Push Strategy) ===
-echo   [1] Commit va Push len mot NHÁNH MỚI [Dang: Ten_Dev/Nhiem_Vu]
-echo   [2] Commit va Push truc tiep len NHÁNH HIỆN TẠI
-echo   [3] Huy bo tien trinh (Cancel)
-echo.
-
-set "PUSH_OPTION=3"
-set /p PUSH_OPTION="Nhap lua chon cua ban [1, 2, 3]: " <con
-
-if "!PUSH_OPTION!"=="3" (
-    echo [INFO] Huy bo tien trinh.
-    pause
-    exit /b 0
-)
-
-set "TARGET_BRANCH="
-if "!PUSH_OPTION!"=="1" (
-    set /p DEV_NAME="Nhap ten cua ban [vd: hoang, dung]: " <con
-    set /p TASK_NAME="Nhap ten nhiem vu [vd: auth-api, gateway-fix]: " <con
-    
-    REM Loai bo cac ky tu dac biet
-    set "DEV_NAME=!DEV_NAME: =!"
-    set "TASK_NAME=!TASK_NAME: =!"
-    
-    set "TARGET_BRANCH=!DEV_NAME!/!TASK_NAME!"
-    if "!TARGET_BRANCH!"=="/" (
-        echo [ERROR] Ten nhanh khong duoc de trong!
-        pause
-        exit /b 1
-    )
-    echo [INFO] Chon chien luoc push len nhanh moi: !TARGET_BRANCH!
-) else (
-    echo [INFO] Chon chien luoc push truc tiep len nhanh hien tai cua tung repo.
-)
-
-REM --- BƯỚC 4: Thực hiện Commit & Push ---
-echo.
-echo === [3/3] Dang thuc hien Commit va Push... ===
+REM --- BƯỚC 3: Chọn chiến lược và thực hiện Commit & Push cho từng Repo ---
+echo === [2/3] Lua chon Chien luoc va thuc hien Day Code... ===
 
 REM Viet update message vao UPDATE.md
 echo - !COMMIT_MSG! > "%ROOT_DIR%\UPDATE.md"
 
 REM Push System-Repo
 pushd "%ROOT_DIR%"
-set "REPO_NAME=System-Repo"
-for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD') do set "CUR_BRANCH=%%b"
-call :EXECUTE_PUSH
+call :CHOOSE_AND_EXECUTE_PUSH "System-Repo"
+if !ERRORLEVEL! neq 0 (
+    popd
+    exit /b 1
+)
 popd
 
 REM Push cac service con
@@ -151,18 +116,20 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
         
         if exist "!TARGET_PATH!\.git" (
             pushd "!TARGET_PATH!"
-            set "REPO_NAME=!SERVICE_NAME!"
-            set "CUR_BRANCH=!BRANCH!"
-            call :EXECUTE_PUSH
+            call :CHOOSE_AND_EXECUTE_PUSH "!SERVICE_NAME!"
+            if !ERRORLEVEL! neq 0 (
+                popd
+                exit /b 1
+            )
             popd
         )
     )
 )
 :SKIP_PUSH_SERVICES
 
-REM --- BƯỚC 5: Bắn thông báo Discord Webhook ---
+REM --- BƯỚC 4: Bắn thông báo Discord Webhook ---
 echo.
-echo Gửi thong bao cap nhat ve Discord...
+echo Gui thong bao cap nhat ve Discord...
 set "DISCORD_WEBHOOK=https://discord.com/api/webhooks/1526538394904035359/MmLUwCC2sOMjXHw-kh_f_-SjVABCyTtalAXfg6pgFsdQrsg_ISk25Nx7bfFKAWLHPCq6"
 for /f "tokens=*" %%u in ('git config user.name') do set "GIT_USER=%%u"
 if "!GIT_USER!"=="" set "GIT_USER=Developer"
@@ -226,8 +193,6 @@ set "BR=%~2"
 REM Lay thong tin remote moi nhat
 git fetch origin >nul 2>&1
 
-REM Kiem tra conflict truoc
-set "CONFLICT_FILES="
 for /f "tokens=*" %%c in ('git diff --name-only --diff-filter=U') do set "CONFLICT_FILES=%%c"
 if not "!CONFLICT_FILES!"=="" (
     echo [ERROR] Repo !NM! dang co conflict chua duoc giai quyet!
@@ -258,21 +223,82 @@ if not "!R_SHA!"=="" (
 exit /b 0
 
 REM =====================================================================
-REM SUBROUTINE: EXECUTE_PUSH
+REM SUBROUTINE: CHOOSE_AND_EXECUTE_PUSH
 REM Yêu cầu: pushd vào đúng thư mục repo trước khi gọi.
-REM Biến cần có: REPO_NAME, CUR_BRANCH, TARGET_BRANCH, COMMIT_MSG
+REM Biến toàn cục: COMMIT_MSG, GLOBAL_DEV_NAME, GLOBAL_TASK_NAME, TARGET_BRANCH
+REM Tham số: %1: Tên Repo
 REM =====================================================================
-:EXECUTE_PUSH
+:CHOOSE_AND_EXECUTE_PUSH
+set "REPO_NAME=%~1"
+set "CUR_BRANCH="
+for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD') do set "CUR_BRANCH=%%b"
+
 REM Kiem tra xem co code chua commit khong
 set HAS_CHANGES=0
 for /f "tokens=*" %%i in ('git status --porcelain') do set HAS_CHANGES=1
 
+REM Kiem tra ahead
+set IS_AHEAD=0
+for /f "tokens=*" %%a in ('git rev-parse HEAD') do set "L_SHA=%%a"
+for /f "tokens=*" %%a in ('git rev-parse --verify --quiet origin/!CUR_BRANCH! 2^>nul') do set "R_SHA=%%a"
+if not "!R_SHA!"=="" (
+    for /f "tokens=*" %%a in ('git merge-base HEAD origin/!CUR_BRANCH! 2^>nul') do set "B_SHA=%%a"
+    if "!R_SHA!"=="!B_SHA!" if not "!L_SHA!"=="!R_SHA!" set IS_AHEAD=1
+)
+
+if "!HAS_CHANGES!"=="0" if "!IS_AHEAD!"=="0" (
+    echo [INFO] Repo !REPO_NAME! sach se va khong co gi thay doi.
+    exit /b 0
+)
+
+echo.
+echo =============================================================
+echo Phat hien thay doi hoac commit moi tai: !REPO_NAME!
+echo [Nhanh hien tai: !CUR_BRANCH!]
+echo =============================================================
+echo Vui long chon chien luoc day code:
+echo   [1] Commit va Push len mot NHANH MOI [Dang: Ten_Dev/Nhiem_Vu]
+echo   [2] Commit va Push truc tiep len NHANH HIEN TAI [!CUR_BRANCH!]
+echo   [3] Bo qua repo nay [Skip]
+echo   [4] Huy bo toan bo tien trinh [Cancel]
+echo.
+
+set "CHOICE=3"
+set /p CHOICE="Nhap lua chon cua ban [1, 2, 3, 4]: " <con
+
+if "!CHOICE!"=="4" (
+    echo [INFO] Huy bo toan bo tien trinh.
+    exit /b 1
+)
+if "!CHOICE!"=="3" (
+    echo [INFO] Da bo qua repo !REPO_NAME!.
+    exit /b 0
+)
+
+set "TARGET_BRANCH="
+if "!CHOICE!"=="1" (
+    set "USE_PREV=2"
+    if not "!GLOBAL_DEV_NAME!"=="" (
+        set /p USE_PREV="Su dung lai ten nhanh '!GLOBAL_DEV_NAME!/!GLOBAL_TASK_NAME!'? [1: Co, 2: Nhap moi]: " <con
+    )
+    if "!USE_PREV!"=="2" (
+        set /p DEV_NAME="Nhap ten cua ban [vd: hoang, dung]: " <con
+        set /p TASK_NAME="Nhap ten nhiem vu [vd: auth-api, gateway-fix]: " <con
+        set "GLOBAL_DEV_NAME=!DEV_NAME: =!"
+        set "GLOBAL_TASK_NAME=!TASK_NAME: =!"
+    )
+    set "TARGET_BRANCH=!GLOBAL_DEV_NAME!/!GLOBAL_TASK_NAME!"
+    if "!TARGET_BRANCH!"=="/" (
+        echo [ERROR] Ten nhanh khong duoc de trong!
+        exit /b 1
+    )
+)
+
 if "!HAS_CHANGES!"=="1" (
-    echo --- Thuc hien push cho: !REPO_NAME! ---
+    echo --- Thuc hien commit va push cho: !REPO_NAME! ---
     if not "!TARGET_BRANCH!"=="" (
         echo Dang tao va checkout sang nhanh moi: !TARGET_BRANCH!...
         git checkout -b !TARGET_BRANCH! >nul 2>&1
-        REM Neu da ton tai nhanh moi, checkout luon
         if !ERRORLEVEL! neq 0 git checkout !TARGET_BRANCH! >nul 2>&1
         
         git add -A
@@ -286,24 +312,10 @@ if "!HAS_CHANGES!"=="1" (
         git push origin !CUR_BRANCH!
     )
 ) else (
-    REM Neu khong co thay doi cục bộ nhưng dang co commit ahead chua push thi van can push
-    if "!TARGET_BRANCH!"=="" (
-        REM Kiem tra ahead
-        set IS_AHEAD=0
-        for /f "tokens=*" %%a in ('git rev-parse HEAD') do set "L_SHA=%%a"
-        for /f "tokens=*" %%a in ('git rev-parse --verify --quiet origin/!CUR_BRANCH! 2^>nul') do set "R_SHA=%%a"
-        if not "!R_SHA!"=="" (
-            for /f "tokens=*" %%a in ('git merge-base HEAD origin/!CUR_BRANCH! 2^>nul') do set "B_SHA=%%a"
-            if "!R_SHA!"=="!B_SHA!" if not "!L_SHA!"=="!R_SHA!" set IS_AHEAD=1
-        )
-        if "!IS_AHEAD!"=="1" (
-            echo --- Thuc hien push code ahead cho: !REPO_NAME! ---
-            git push origin !CUR_BRANCH!
-        ) else (
-            echo [INFO] Repo !REPO_NAME! sach se va da push het.
-        )
-    ) else (
-        echo [INFO] Repo !REPO_NAME! sach se.
+    if "!IS_AHEAD!"=="1" (
+        echo --- Thuc hien push commit ahead cho: !REPO_NAME! ---
+        git push origin !CUR_BRANCH!
     )
 )
+
 exit /b 0

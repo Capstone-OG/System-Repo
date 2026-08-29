@@ -135,6 +135,17 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                     echo Giai phap C# Clean Architecture Web API cho !SERVICE_NAME! >> README.md
                 )
                 
+                REM Tao .gitignore neu chua co
+                if not exist ".gitignore" (
+                    echo # Build results > .gitignore
+                    echo [Db]in/ >> .gitignore
+                    echo [Ob]j/ >> .gitignore
+                    echo .vs/ >> .gitignore
+                    echo .idea/ >> .gitignore
+                    echo *.user >> .gitignore
+                    echo *.suo >> .gitignore
+                )
+                
                 git add -A
                 git commit -m "Auto Clean Architecture setup for !SERVICE_NAME!" >nul 2>&1
             )
@@ -184,6 +195,15 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                 echo. >> README.md
                 echo Nhanh theo doi: !BRANCH! >> README.md
                 echo URL remote mac dinh: !REPO_URL! >> README.md
+                
+                REM Tao .gitignore
+                echo # Build results > .gitignore
+                echo [Db]in/ >> .gitignore
+                echo [Ob]j/ >> .gitignore
+                echo .vs/ >> .gitignore
+                echo .idea/ >> .gitignore
+                echo *.user >> .gitignore
+                echo *.suo >> .gitignore
                 
                 git add -A
                 git commit -m "Initial Clean Architecture setup for !SERVICE_NAME!" >nul 2>&1
