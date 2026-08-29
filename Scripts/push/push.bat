@@ -52,31 +52,31 @@ call :CHECK_REPO_SYNC "System-Repo" "!R_BRANCH!"
 popd
 
 REM Kiem tra cac service con
-if exist "%CONFIG_FILE%" (
-    for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
-        set "SERVICE_NAME=%%A"
-        set "CONFIG_VAL=%%B"
+if not exist "%CONFIG_FILE%" goto :SKIP_CHECK_SERVICES
+for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
+    set "SERVICE_NAME=%%A"
+    set "CONFIG_VAL=%%B"
+    
+    if not "!CONFIG_VAL!"=="" (
+        for /f "tokens=1,2 delims=|" %%I in ("!CONFIG_VAL!") do (
+            set "REPO_URL=%%I"
+            set "BRANCH=%%J"
+        )
         
-        if not "!CONFIG_VAL!"=="" (
-            for /f "tokens=1,2 delims=|" %%I in ("!CONFIG_VAL!") do (
-                set "REPO_URL=%%I"
-                set "BRANCH=%%J"
-            )
-            
-            set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
-            
-            if exist "!TARGET_PATH!\.git" (
-                pushd "!TARGET_PATH!"
-                call :CHECK_REPO_SYNC "!SERVICE_NAME!" "!BRANCH!"
-                popd
-            )
+        set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
+        
+        if exist "!TARGET_PATH!\.git" (
+            pushd "!TARGET_PATH!"
+            call :CHECK_REPO_SYNC "!SERVICE_NAME!" "!BRANCH!"
+            popd
         )
     )
 )
+:SKIP_CHECK_SERVICES
 
 if "!CAN_PUSH!"=="0" (
     echo.
-    echo [ERROR] Phat hien xung dot hoac lich su bi tre (behind/diverged) tren mot so repo!
+    echo [ERROR] Phat hien xung dot hoac lich su bi tre - behind/diverged - tren mot so repo!
     echo Vui long chay Scripts/pull/pull.bat de dong bo code truoc khi tiep tuc.
     echo.
     pause
@@ -88,8 +88,8 @@ echo.
 
 REM --- BƯỚC 3: Chọn chiến lược đẩy code ---
 echo === [2/3] Lua chon Chien luoc Day Code (Push Strategy) ===
-echo   [1] Commit & Push len mot NHÁNH MỚI (Dang: Ten_Dev/Nhiem_Vu)
-echo   [2] Commit & Push truc tiep len NHÁNH HIỆN TẠI
+echo   [1] Commit va Push len mot NHÁNH MỚI [Dang: Ten_Dev/Nhiem_Vu]
+echo   [2] Commit va Push truc tiep len NHÁNH HIỆN TẠI
 echo   [3] Huy bo tien trinh (Cancel)
 echo.
 
@@ -104,8 +104,8 @@ if "!PUSH_OPTION!"=="3" (
 
 set "TARGET_BRANCH="
 if "!PUSH_OPTION!"=="1" (
-    set /p DEV_NAME="Nhap ten cua ban (vd: hoang, dung): " <con
-    set /p TASK_NAME="Nhap ten nhiem vu (vd: auth-api, gateway-fix): " <con
+    set /p DEV_NAME="Nhap ten cua ban [vd: hoang, dung]: " <con
+    set /p TASK_NAME="Nhap ten nhiem vu [vd: auth-api, gateway-fix]: " <con
     
     REM Loai bo cac ky tu dac biet
     set "DEV_NAME=!DEV_NAME: =!"
@@ -137,28 +137,28 @@ call :EXECUTE_PUSH
 popd
 
 REM Push cac service con
-if exist "%CONFIG_FILE%" (
-    for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
-        set "SERVICE_NAME=%%A"
-        set "CONFIG_VAL=%%B"
+if not exist "%CONFIG_FILE%" goto :SKIP_PUSH_SERVICES
+for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
+    set "SERVICE_NAME=%%A"
+    set "CONFIG_VAL=%%B"
+    
+    if not "!CONFIG_VAL!"=="" (
+        for /f "tokens=1,2 delims=|" %%I in ("!CONFIG_VAL!") do (
+            set "BRANCH=%%J"
+        )
         
-        if not "!CONFIG_VAL!"=="" (
-            for /f "tokens=1,2 delims=|" %%I in ("!CONFIG_VAL!") do (
-                set "BRANCH=%%J"
-            )
-            
-            set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
-            
-            if exist "!TARGET_PATH!\.git" (
-                pushd "!TARGET_PATH!"
-                set "REPO_NAME=!SERVICE_NAME!"
-                set "CUR_BRANCH=!BRANCH!"
-                call :EXECUTE_PUSH
-                popd
-            )
+        set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
+        
+        if exist "!TARGET_PATH!\.git" (
+            pushd "!TARGET_PATH!"
+            set "REPO_NAME=!SERVICE_NAME!"
+            set "CUR_BRANCH=!BRANCH!"
+            call :EXECUTE_PUSH
+            popd
         )
     )
 )
+:SKIP_PUSH_SERVICES
 
 REM --- BƯỚC 5: Bắn thông báo Discord Webhook ---
 echo.
@@ -228,7 +228,7 @@ git fetch origin >nul 2>&1
 
 REM Kiem tra conflict truoc
 set "CONFLICT_FILES="
-for /f "tokens=*" %%c in ('git diff --name-only --diff-filter^=U') do set "CONFLICT_FILES=%%c"
+for /f "tokens=*" %%c in ('git diff --name-only --diff-filter=U') do set "CONFLICT_FILES=%%c"
 if not "!CONFLICT_FILES!"=="" (
     echo [ERROR] Repo !NM! dang co conflict chua duoc giai quyet!
     set "CAN_PUSH=0"
@@ -238,20 +238,20 @@ if not "!CONFLICT_FILES!"=="" (
 REM Lay hash commits
 for /f "tokens=*" %%a in ('git rev-parse HEAD') do set "L_SHA=%%a"
 set "R_SHA="
-for /f "tokens=*" %%a in ('git rev-parse origin/!BR! 2^>nul') do set "R_SHA=%%a"
+for /f "tokens=*" %%a in ('git rev-parse --verify --quiet origin/!BR! 2^>nul') do set "R_SHA=%%a"
 
 if not "!R_SHA!"=="" (
     for /f "tokens=*" %%a in ('git merge-base HEAD origin/!BR! 2^>nul') do set "B_SHA=%%a"
     
     if "!L_SHA!"=="!R_SHA!" (
-        rem up-to-date
+        set "SYNC_STATUS=up-to-date"
     ) else if "!L_SHA!"=="!B_SHA!" (
-        echo [ERROR] Repo !NM! dang bi cham hon remote (behind). Vui long pull!
+        echo [ERROR] Repo !NM! dang bi cham hon remote - behind. Vui long pull!
         set "CAN_PUSH=0"
     ) else if "!R_SHA!"=="!B_SHA!" (
-        rem ahead - safely to push
+        set "SYNC_STATUS=ahead"
     ) else (
-        echo [ERROR] Repo !NM! bi lech lich su voi remote (diverged). Vui long pull de merge!
+        echo [ERROR] Repo !NM! bi lech lich su voi remote - diverged. Vui long pull de merge!
         set "CAN_PUSH=0"
     )
 )
@@ -291,7 +291,7 @@ if "!HAS_CHANGES!"=="1" (
         REM Kiem tra ahead
         set IS_AHEAD=0
         for /f "tokens=*" %%a in ('git rev-parse HEAD') do set "L_SHA=%%a"
-        for /f "tokens=*" %%a in ('git rev-parse origin/!CUR_BRANCH! 2^>nul') do set "R_SHA=%%a"
+        for /f "tokens=*" %%a in ('git rev-parse --verify --quiet origin/!CUR_BRANCH! 2^>nul') do set "R_SHA=%%a"
         if not "!R_SHA!"=="" (
             for /f "tokens=*" %%a in ('git merge-base HEAD origin/!CUR_BRANCH! 2^>nul') do set "B_SHA=%%a"
             if "!R_SHA!"=="!B_SHA!" if not "!L_SHA!"=="!R_SHA!" set IS_AHEAD=1

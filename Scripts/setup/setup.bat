@@ -97,6 +97,47 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             git fetch origin >nul 2>&1
             git checkout !BRANCH! >nul 2>&1
             git pull origin !BRANCH! >nul 2>&1
+            
+            REM Kiem tra xem da co solution (.sln) chua, neu chua thi tu dong khoi tao
+            set "SLN_EXISTS=0"
+            if exist "*.sln" set "SLN_EXISTS=1"
+            for /r %%f in (*.sln) do set "SLN_EXISTS=1"
+            
+            if "!SLN_EXISTS!"=="0" (
+                echo [INFO] Thu muc ton tai nhung chua co Solution. Tien hanh khoi tao C# Clean Architecture...
+                echo [INFO] Dang khoi tao Solution va cac Project C# Clean Architecture cho !SERVICE_NAME!...
+                
+                REM Tao Solution .NET
+                dotnet new sln -n !SERVICE_NAME! >nul 2>&1
+                
+                REM Tao cac Project con cung cap voi Solution
+                dotnet new classlib -n !SERVICE_NAME!.Domain -o "!SERVICE_NAME!.Domain" >nul 2>&1
+                dotnet new classlib -n !SERVICE_NAME!.Application -o "!SERVICE_NAME!.Application" >nul 2>&1
+                dotnet new classlib -n !SERVICE_NAME!.Infrastructure -o "!SERVICE_NAME!.Infrastructure" >nul 2>&1
+                dotnet new webapi -n !SERVICE_NAME!.API -o "!SERVICE_NAME!.API" >nul 2>&1
+                
+                REM Add Projects vao Solution
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" >nul 2>&1
+                
+                REM Thiet la tham chieu (References) giua cac projects theo Clean Architecture
+                dotnet add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" reference "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
+                
+                REM Tao README.md neu chua co
+                if not exist "README.md" (
+                    echo # !SERVICE_NAME! > README.md
+                    echo. >> README.md
+                    echo Giai phap C# Clean Architecture Web API cho !SERVICE_NAME! >> README.md
+                )
+                
+                git add -A
+                git commit -m "Auto Clean Architecture setup for !SERVICE_NAME!" >nul 2>&1
+            )
             popd
             echo [SUCCESS] Updated !SERVICE_NAME!.
         ) else (
@@ -118,24 +159,23 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                 REM Tao Solution .NET
                 dotnet new sln -n !SERVICE_NAME! >nul 2>&1
                 
-                REM Tao cac Project con trong src/
-                mkdir "src" >nul 2>&1
-                dotnet new classlib -n !SERVICE_NAME!.Domain -o "src\!SERVICE_NAME!.Domain" >nul 2>&1
-                dotnet new classlib -n !SERVICE_NAME!.Application -o "src\!SERVICE_NAME!.Application" >nul 2>&1
-                dotnet new classlib -n !SERVICE_NAME!.Infrastructure -o "src\!SERVICE_NAME!.Infrastructure" >nul 2>&1
-                dotnet new webapi -n !SERVICE_NAME!.API -o "src\!SERVICE_NAME!.API" >nul 2>&1
+                REM Tao cac Project con cung cap voi Solution
+                dotnet new classlib -n !SERVICE_NAME!.Domain -o "!SERVICE_NAME!.Domain" >nul 2>&1
+                dotnet new classlib -n !SERVICE_NAME!.Application -o "!SERVICE_NAME!.Application" >nul 2>&1
+                dotnet new classlib -n !SERVICE_NAME!.Infrastructure -o "!SERVICE_NAME!.Infrastructure" >nul 2>&1
+                dotnet new webapi -n !SERVICE_NAME!.API -o "!SERVICE_NAME!.API" >nul 2>&1
                 
                 REM Add Projects vao Solution
-                dotnet sln !SERVICE_NAME!.sln add "src\!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
-                dotnet sln !SERVICE_NAME!.sln add "src\!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
-                dotnet sln !SERVICE_NAME!.sln add "src\!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
-                dotnet sln !SERVICE_NAME!.sln add "src\!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
+                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" >nul 2>&1
                 
                 REM Thiet la tham chieu (References) giua cac projects theo Clean Architecture
-                dotnet add "src\!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" reference "src\!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
-                dotnet add "src\!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" reference "src\!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
-                dotnet add "src\!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "src\!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
-                dotnet add "src\!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "src\!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" reference "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
+                dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
                 
                 REM Tao README.md
                 echo # !SERVICE_NAME! > README.md
@@ -151,25 +191,27 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                 echo [SUCCESS] Khoi tao local Git va Solution C# Clean Architecture cho !SERVICE_NAME!.
             ) else (
                 echo [SUCCESS] Cloned !SERVICE_NAME! from GitHub.
-                
-                REM Phuc hoi va Build neu clone thanh cong
-                pushd "!TARGET_PATH!"
-                if exist "package.json" (
-                    echo Cai dat dependencies cho !SERVICE_NAME!...
-                    call npm install
-                    call npm run build
-                ) else (
-                    set "IS_DOTNET=0"
-                    if exist "*.sln" set "IS_DOTNET=1"
-                    for /r %%f in (*.csproj) do set "IS_DOTNET=1"
-                    if "!IS_DOTNET!"=="1" (
-                        echo Restoring NuGet and building !SERVICE_NAME!...
-                        dotnet restore
-                        dotnet build
-                    )
-                )
-                popd
             )
+        )
+        
+        REM Phuc hoi va Build tu dong cho tat ca cac service sau khi Setup/Pull
+        if exist "!TARGET_PATH!" (
+            pushd "!TARGET_PATH!"
+            if exist "package.json" (
+                echo Cai dat dependencies va build cho !SERVICE_NAME!...
+                call npm install
+                call npm run build
+            ) else (
+                set "IS_DOTNET=0"
+                if exist "*.sln" set "IS_DOTNET=1"
+                for /r %%f in (*.csproj) do set "IS_DOTNET=1"
+                if "!IS_DOTNET!"=="1" (
+                    echo Dang phuc hoi NuGet va build !SERVICE_NAME!...
+                    dotnet restore
+                    dotnet build
+                )
+            )
+            popd
         )
     )
 )

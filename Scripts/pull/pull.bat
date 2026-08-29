@@ -102,7 +102,7 @@ if "!HAS_LOCAL_CHANGES!"=="1" (
     git status -s
     echo.
     echo Vui long chon phuong an xu ly truoc khi pull:
-    echo   [1] Stash thay doi - Cat tam thoi, pull roi phuc hoi (Khuyen nghi)
+    echo   [1] Stash thay doi - Cat tam thoi, pull roi phuc hoi [Khuyen nghi]
     echo   [2] Commit thay doi - Ghi nhan code local truoc roi pull
     echo   [3] Bo qua repo nay - Khong pull gi ca
     echo.
@@ -131,7 +131,7 @@ if "!HAS_LOCAL_CHANGES!"=="1" (
     REM Code local sach se, kiem tra dong bo lich su
     for /f "tokens=*" %%a in ('git rev-parse HEAD') do set "LOCAL_SHA=%%a"
     set "REMOTE_SHA="
-    for /f "tokens=*" %%a in ('git rev-parse origin/!CUR_BRANCH! 2^>nul') do set "REMOTE_SHA=%%a"
+    for /f "tokens=*" %%a in ('git rev-parse --verify --quiet origin/!CUR_BRANCH! 2^>nul') do set "REMOTE_SHA=%%a"
     
     if "!REMOTE_SHA!"=="" (
         echo [INFO] Nhanh origin/!CUR_BRANCH! chua ton tai tren remote. Khong co gi de pull.
