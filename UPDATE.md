@@ -1,1 +1,1 @@
-- Clear bin and obj error file fix right now  
+- D?n d?p tri?t d? thu m?c build vÖ c?u hçnh gRPC 
