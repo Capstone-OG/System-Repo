@@ -296,14 +296,24 @@ if "!CHOICE!"=="1" (
 
 if "!HAS_CHANGES!"=="1" (
     echo --- Thuc hien commit va push cho: !REPO_NAME! ---
+    echo - !COMMIT_MSG! > "UPDATE.md"
     if not "!TARGET_BRANCH!"=="" (
-        echo Dang tao va checkout sang nhanh moi: !TARGET_BRANCH!...
+        echo Dang chuyen sang nhanh: !TARGET_BRANCH!...
         git checkout -b !TARGET_BRANCH! >nul 2>&1
-        if !ERRORLEVEL! neq 0 git checkout !TARGET_BRANCH! >nul 2>&1
+        if !ERRORLEVEL! neq 0 (
+            git checkout !TARGET_BRANCH! >nul 2>&1
+            if !ERRORLEVEL! neq 0 (
+                echo [ERROR] Khong the tao hoac chuyen sang nhanh !TARGET_BRANCH!
+                exit /b 1
+            )
+            echo [INFO] Da chuyen sang nhanh da ton tai: !TARGET_BRANCH!
+        ) else (
+            echo [INFO] Da tao va chuyen sang nhanh moi: !TARGET_BRANCH!
+        )
         
         git add -A
         git commit -m "!COMMIT_MSG!"
-        echo Dang push len nhanh moi !TARGET_BRANCH!...
+        echo Dang push len nhanh !TARGET_BRANCH!...
         git push origin !TARGET_BRANCH!
     ) else (
         git add -A
