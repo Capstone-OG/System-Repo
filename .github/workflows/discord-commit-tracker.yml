@@ -24,8 +24,16 @@ jobs:
         run: |
           echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           
-          # Lấy danh sách file thay đổi (bỏ qua một số file cấu hình hệ thống nếu cần)
-          CHANGED=$(git show --name-only --format= | grep -v -E '^(\.cursor/|\.config/|\.git)' | awk 'NF' | head -n 15 | sed 's/^/- /')
+          # Lấy danh sách file thay đổi kèm trạng thái (Thêm mới/Sửa đổi/Xóa...)
+          CHANGED=$(git show --name-status --format= | grep -v -E '^(\.cursor/|\.config/|\.git)' | awk 'NF' | head -n 15 | while read -r status file; do
+            case "$status" in
+              A) echo "- 🟢 [Thêm mới] $file" ;;
+              M) echo "- 🟡 [Sửa đổi] $file" ;;
+              D) echo "- 🔴 [Xóa] $file" ;;
+              R*) echo "- 🔵 [Đổi tên] $file" ;;
+              *) echo "- ⚪ [$status] $file" ;;
+            esac
+          done)
           if [ -z "$CHANGED" ]; then
             CHANGED="- Không có file nào thay đổi"
           fi
