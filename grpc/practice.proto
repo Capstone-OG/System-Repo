@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package veval.practice;
+
+option csharp_namespace = "VEval.Shared.Grpc.Practice";
+
+// Service quản lý quá trình làm bài và máy trạng thái thích ứng (Adaptive State Machine)
+service PracticeService {
+  // Khởi tạo bài test chẩn đoán đầu vào (Competency Diagnosis)
+  rpc StartDiagnosisAttempt (StartDiagnosisRequest) returns (StartDiagnosisResponse);
+  
+  // Submit câu trả lời cho câu hỏi hiện tại, cập nhật Mastery Score và nhận gợi ý độ khó tiếp theo
+  rpc SubmitAdaptiveAnswer (SubmitAnswerRequest) returns (SubmitAnswerResponse);
+  
+  // Lấy lộ trình ôn tập cá nhân hóa được sắp xếp theo thuật toán Topological Sort
+  rpc GetPersonalizedPath (GetPathRequest) returns (GetPathResponse);
+  
+  // Lấy hồ sơ năng lực hiện tại của học sinh và điểm dự đoán (chạy qua ONNX model)
+  rpc GetLearningProfile (GetProfileRequest) returns (GetProfileResponse);
+}
+
+message StartDiagnosisRequest {
+  string student_id = 1;
+  string subject_id = 2;
+}
+
+message StartDiagnosisResponse {
+  string attempt_id = 1;
+  repeated string question_ids = 2;
+}
+
+message SubmitAnswerRequest {
+  string attempt_id = 1;
+  string question_id = 2;
+  string selected_option_id = 3;
+  int32 duration_seconds = 4;
+}
+
+message SubmitAnswerResponse {
+  bool is_correct = 1;
+  double new_mastery_score = 2;
+  string next_difficulty = 3; // "EASY", "MEDIUM", "HARD"
+  bool is_finished = 4;
+}
+
+message GetPathRequest {
+  string student_id = 1;
+  string subject_id = 2;
+}
+
+message PathStep {
+  string skill_id = 1;
+  string skill_name = 2;
+  double current_mastery = 3;
+  int32 sequence_order = 4;
+  bool is_unlocked = 5;
+}
+
+message GetPathResponse {
+  string student_id = 1;
+  repeated PathStep pathway = 2;
+}
+
+message GetProfileRequest {
+  string student_id = 1;
+}
+
+message SkillMastery {
+  string skill_id = 1;
+  string skill_name = 2;
+  double mastery_score = 3;
+}
+
+message GetProfileResponse {
+  string student_id = 1;
+  repeated SkillMastery masteries = 2;
+  double predicted_exam_score = 3; // Điểm thi dự đoán chạy từ model Regression/ONNX
+}

@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package veval.auth;
+
+option csharp_namespace = "VEval.Shared.Grpc.Auth";
+
+// Service định nghĩa các chức năng liên quan đến chứng thực, phân quyền và liên kết phụ huynh - học sinh
+service AuthService {
+  // Đăng nhập tài khoản
+  rpc Login (LoginRequest) returns (LoginResponse);
+  
+  // Đăng ký tài khoản mới
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  
+  // Kiểm tra và xác thực JWT token
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+  
+  // Liên kết tài khoản phụ huynh với học sinh qua email học sinh
+  rpc LinkParentStudent (LinkParentRequest) returns (LinkParentResponse);
+  
+  // Lấy danh sách học sinh liên kết với một phụ huynh
+  rpc GetParentStudents (GetParentStudentsRequest) returns (GetParentStudentsResponse);
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+  string refresh_token = 2;
+  string user_id = 3;
+  string role = 4;
+}
+
+message RegisterRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  string role = 4; // "student", "parent", "teacher", "admin"
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+  string user_id = 3;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool is_valid = 1;
+  string user_id = 2;
+  string role = 3;
+}
+
+message LinkParentRequest {
+  string parent_id = 1;
+  string student_email = 2;
+}
+
+message LinkParentResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetParentStudentsRequest {
+  string parent_id = 1;
+}
+
+message StudentInfo {
+  string student_id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+message GetParentStudentsResponse {
+  repeated StudentInfo students = 1;
+}
