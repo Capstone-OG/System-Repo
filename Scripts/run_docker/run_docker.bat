@@ -2,8 +2,15 @@
 setlocal enabledelayedexpansion
 
 echo =====================================================================
-echo                Capstone-OG - Docker Compose Run Script
+echo                V-Eval - Docker Compose Run Script
 echo =====================================================================
+echo.
+
+pushd "%~dp0..\..\"
+set "ROOT_DIR=%CD%"
+popd
+
+echo [INFO] Project Root Directory: %ROOT_DIR%
 echo.
 
 REM Kiểm tra xem Docker Daemon đã chạy chưa
@@ -15,4 +22,8 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo Dang khoi dong cac Docker Container (va build lai neu co thay doi)...
+pushd "%ROOT_DIR%"
 docker-compose up --build
+popd
+
+pause

@@ -8,7 +8,8 @@
 # - BRANCH là nhánh mà bạn muốn tracking (ví dụ: develop, main).
 # 
 # Hãy sửa lại link repository và tên service thực tế của bạn dưới đây:
-#
-#Backend_Service=https://github.com/Capstone-OG/Backend-Service.git|main
-#FE_Service=https://github.com/Capstone-OG/Frontend-Service.git|main
-#Identity_Service=https://github.com/Capstone-OG/Identity-Service.git|main
+V-Eval_Gateway_Service=https://github.com/Capstone-OG/V-Eval_Gateway_Service.git|main
+V-Eval_Identity_Service=https://github.com/Capstone-OG/V-Eval_Identity_Service.git|main
+V-Eval_Content_Service=https://github.com/Capstone-OG/V-Eval_Content_Service.git|main
+V-Eval_Practice_Service=https://github.com/Capstone-OG/V-Eval_Practice_Service.git|main
+V-Eval_AI_Engine=https://github.com/Capstone-OG/V-Eval_AI_Engine.git|main

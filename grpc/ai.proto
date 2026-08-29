@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package veval.ai;
+
+option csharp_namespace = "VEval.Shared.Grpc.Ai";
+
+// Service AI Engine cung cấp Socratic AI Tutor và các tiến trình RAG Vector DB
+service AiService {
+  // Socratic AI Tutor - Phản hồi hội thoại dẫn dắt học sinh từng từ một (Server Streaming gRPC)
+  rpc ChatSocraticTutor (ChatRequest) returns (stream ChatResponse);
+  
+  // Nạp tài liệu lý thuyết mới vào Vector DB (Qdrant) phục vụ RAG pipeline
+  rpc IndexTheoreticalDocument (IndexDocumentRequest) returns (IndexDocumentResponse);
+}
+
+message ChatRequest {
+  string student_id = 1;
+  string question_id = 2; // Câu hỏi học sinh đang làm và cần trợ giúp
+  string current_dialogue = 3; // Nội dung tin nhắn hiện tại học sinh gửi lên
+  repeated string chat_history = 4; // Lịch sử các câu thoại trước đó của cuộc trò chuyện
+}
+
+message ChatResponse {
+  string token = 1; // Token chữ được sinh ra trực tiếp (stream về client)
+  bool is_end = 2; // Đánh dấu việc kết thúc dòng stream
+}
+
+message IndexDocumentRequest {
+  string document_id = 1;
+  string title = 2;
+  string content = 3; // Nội dung lý thuyết dạng Markdown/LaTeX
+  string skill_id = 4; // ID kỹ năng tương ứng trong cây năng lực
+}
+
+message IndexDocumentResponse {
+  bool success = 1;
+  string message = 2;
+}
