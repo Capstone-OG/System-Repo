@@ -1,1 +1,1 @@
-- D?n d?p tri?t d? thu m?c build vÖ c?u hçnh gRPC 
+- Fix CI error in github action 
