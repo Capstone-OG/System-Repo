@@ -122,7 +122,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                 dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
                 dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" >nul 2>&1
                 
-                REM Thiet la tham chieu (References) giua cac projects theo Clean Architecture
+                REM Thiet la tham chieu [References] giua cac projects theo Clean Architecture
                 dotnet add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" reference "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
                 dotnet add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
                 dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
@@ -162,7 +162,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                 echo [WARNING] Lan dau clone that bai. Dang thu tu dong retry...
                 for /l %%i in (1,1,4) do (
                     if "!CLONE_SUCCESS!"=="0" (
-                        echo [INFO] Dang thu clone lai (Lan %%i/4)...
+                        echo [INFO] Dang thu clone lai [Lan %%i/4]...
                         git clone -b !BRANCH! !REPO_URL! "!TARGET_PATH!"
                         if !ERRORLEVEL! equ 0 set "CLONE_SUCCESS=1"
                     )
@@ -172,8 +172,8 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             if "!CLONE_SUCCESS!"=="0" (
                 echo.
                 echo [WARNING] Khong the clone repository !SERVICE_NAME! tu remote sau 4 lan thu.
-                echo Nguyen nhan co the do mat ket noi mang (Port 443) hoac URL sai.
-                echo [INFO] Tien hanh chi khoi tao Git local (git init) va gan remote origin...
+                echo Nguyen nhan co the do mat ket noi mang [Port 443] hoac URL sai.
+                echo [INFO] Tien hanh chi khoi tao Git local [git init] va gan remote origin...
                 
                 if not exist "!TARGET_PATH!" mkdir "!TARGET_PATH!"
                 pushd "!TARGET_PATH!"
