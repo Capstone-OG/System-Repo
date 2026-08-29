@@ -257,20 +257,21 @@ echo Phat hien thay doi hoac commit moi tai: !REPO_NAME!
 echo [Nhanh hien tai: !CUR_BRANCH!]
 echo =============================================================
 echo Vui long chon chien luoc day code:
-echo   [1] Commit va Push len mot NHANH MOI [Dang: Ten_Dev/Nhiem_Vu]
+echo   [1] Commit va Push len NHANH MOI [Dang: Ten_Dev/Nhiem_Vu]
 echo   [2] Commit va Push truc tiep len NHANH HIEN TAI [!CUR_BRANCH!]
-echo   [3] Bo qua repo nay [Skip]
-echo   [4] Huy bo toan bo tien trinh [Cancel]
+echo   [3] Commit va Push len NHANH CO SAN KHAC [Tu nhap, vd: develop, main]
+echo   [4] Bo qua repo nay [Skip]
+echo   [5] Huy bo toan bo tien trinh [Cancel]
 echo.
 
-set "CHOICE=3"
-set /p CHOICE="Nhap lua chon cua ban [1, 2, 3, 4]: " <con
+set "CHOICE=4"
+set /p CHOICE="Nhap lua chon cua ban [1, 2, 3, 4, 5]: " <con
 
-if "!CHOICE!"=="4" (
+if "!CHOICE!"=="5" (
     echo [INFO] Huy bo toan bo tien trinh.
     exit /b 1
 )
-if "!CHOICE!"=="3" (
+if "!CHOICE!"=="4" (
     echo [INFO] Da bo qua repo !REPO_NAME!.
     exit /b 0
 )
@@ -294,16 +295,35 @@ if "!CHOICE!"=="1" (
     )
 )
 
+if "!CHOICE!"=="3" (
+    set /p TARGET_BRANCH="Nhap ten nhanh ban muon push [vd: develop, main]: " <con
+    if "!TARGET_BRANCH!"=="" (
+        echo [ERROR] Ten nhanh khong duoc de trong!
+        exit /b 1
+    )
+    set "TARGET_BRANCH=!TARGET_BRANCH: =!"
+)
+
 if "!HAS_CHANGES!"=="1" (
     echo --- Thuc hien commit va push cho: !REPO_NAME! ---
+    echo - !COMMIT_MSG! > "UPDATE.md"
     if not "!TARGET_BRANCH!"=="" (
-        echo Dang tao va checkout sang nhanh moi: !TARGET_BRANCH!...
+        echo Dang chuyen sang nhanh: !TARGET_BRANCH!...
         git checkout -b !TARGET_BRANCH! >nul 2>&1
-        if !ERRORLEVEL! neq 0 git checkout !TARGET_BRANCH! >nul 2>&1
+        if !ERRORLEVEL! neq 0 (
+            git checkout !TARGET_BRANCH! >nul 2>&1
+            if !ERRORLEVEL! neq 0 (
+                echo [ERROR] Khong the tao hoac chuyen sang nhanh !TARGET_BRANCH!
+                exit /b 1
+            )
+            echo [INFO] Da chuyen sang nhanh da ton tai: !TARGET_BRANCH!
+        ) else (
+            echo [INFO] Da tao va chuyen sang nhanh moi: !TARGET_BRANCH!
+        )
         
         git add -A
         git commit -m "!COMMIT_MSG!"
-        echo Dang push len nhanh moi !TARGET_BRANCH!...
+        echo Dang push len nhanh !TARGET_BRANCH!...
         git push origin !TARGET_BRANCH!
     ) else (
         git add -A

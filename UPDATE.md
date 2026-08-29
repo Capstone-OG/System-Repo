@@ -1,1 +1,1 @@
-- Thˆm git ignore 
+- Clear bin and obj error file fix right now  
