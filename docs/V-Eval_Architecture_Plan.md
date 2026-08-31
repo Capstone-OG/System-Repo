@@ -197,3 +197,31 @@ Vì mỗi service là một repository riêng, quy trình CI/CD sẽ nằm hoàn
 ### Xác minh Thủ công (Manual Verification)
 *   Sử dụng **grpcurl** gọi trực tiếp các cổng gRPC để test.
 *   Kiểm tra giao diện RabbitMQ Management Web Portal và Jaeger UI trong Docker Compose chạy local để xác nhận message rate và luồng trace.
+
+---
+
+## 📅 Trạng Thái Triển Khai Hệ Thống Thực Tế (Cập nhật 31/08/2026)
+
+Dưới đây là bảng tổng hợp các cấu phần kiến trúc đã được triển khai, kết nối và chạy thực tế thành công:
+
+### 1. Phân hệ Cơ sở dữ liệu (PostgreSQL & Supabase)
+* **Cô lập Schema**: Đã thiết kế cấu trúc phân cấp schema `content` cô lập hoàn toàn để phục vụ lưu trữ ngân hàng câu hỏi.
+* **Đồng bộ hóa Kết nối**: Thiết lập toàn bộ 3 microservice chạy database (`Content`, `Identity`, `Practice`) kết nối đồng nhất qua **Session Mode (Port 5432)** thay vì Transaction Mode để hỗ trợ quá trình chạy Migrations và Migration EF Core.
+* **Migration Thành công**: Đã chạy migrations tạo thành công cấu trúc bảng gồm 7 thực thể trên cơ sở dữ liệu thực tế của Supabase.
+
+### 2. Content Bank Service
+* **Clean Architecture**: Tổ chức cấu trúc code phân lớp chuẩn chỉnh (Domain $\rightarrow$ Application $\rightarrow$ Infrastructure $\rightarrow$ API).
+* **API Tích hợp**: Hoàn thành API `POST /api/content/exams/import` hỗ trợ phân loại tự động dạng bài (`suggested_skill_name`) động trên cơ sở dữ liệu.
+
+### 3. AI Engine Service
+* **API Cloud Ingestion**: Tích hợp gọi trực tiếp API Cloud với bản ổn định `gemini-2.5-flash` nhận dữ liệu raw PDF base64 trực tiếp (0 giây CPU delay cục bộ).
+* **Quy trình dự phòng 3 cấp độ (Ollama Fallback)**:
+  1. *Cấp 1*: Gemini 2.5 Flash Cloud (mặc định - miễn phí).
+  2. *Cấp 2*: OpenAI GPT-4o-mini (dự phòng trả phí).
+  3. *Cấp 3*: Local Regex PDF Parser (100% Offline fallback).
+* **Progress logs**: Bổ sung in log tiến độ thời gian thực để nhà phát triển kiểm soát kết nối và thời gian phản hồi.
+* **Bảo mật API Key**: Cấu hình tách biệt file `appsettings.Development.json` lưu key chạy cục bộ khỏi Git tracking, giữ `appsettings.json` nguyên bản an toàn.
+
+### 4. Giao diện Người dùng (Frontend UI)
+* **Frontend-Backend Integration**: Liên kết nút **"Lưu vào Database"** trên giao diện hiển thị đề thi của AI Engine (`view-exam.html`) gọi trực tiếp sang API của `Content Service` để hoàn tất luồng lưu trữ CSDL tự động 2 chiều.
+* **Hỗ trợ LaTeX**: Render công thức toán học/khoa học sắc nét qua MathJax trên UI.
