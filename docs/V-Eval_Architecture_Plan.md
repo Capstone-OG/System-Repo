@@ -13,7 +13,7 @@ Tài liệu này đặc tả phương án phân chia dịch vụ, thiết kế g
 | **Core Flow 1: Competency Diagnosis** | `Practice & Adaptive Service` | Sinh bài test chẩn đoán đầu vào. Đánh giá câu trả lời của học sinh và khởi tạo bảng hồ sơ năng lực (Learning Profile) với Mastery Score ($M = 0.5$). |
 | **Core Flow 2: Personalized Path** | `Practice & Adaptive Service` | Lấy danh sách kỹ năng yếu ($M < 0.85$). Lấy cấu trúc cây năng lực từ `Content Service` (qua **gRPC**). Chạy thuật toán **Topological Sort** để sinh lộ trình ôn tập tối ưu. |
 | **Core Flow 3: Adaptive Practice** | `Practice & Adaptive Service` | Chạy **Adaptive State Machine**: Học sinh làm bài -> Cập nhật Mastery Score ($M$) -> Đọc độ khó tiếp theo -> Gọi `Content Service` qua **gRPC** lấy câu hỏi tương ứng độ khó đó. |
-| **Core Flow 4: AI-assisted Learning** | `AI Engine Service` (Python) | **Socratic AI Tutor**: Tích hợp LangChain/Semantic Kernel gọi API OpenAI GPT-4o-mini. Sử dụng **Qdrant Vector DB** chứa tài liệu lý thuyết (RAG Pipeline) để sinh gợi ý mở và truyền tải dạng stream qua **gRPC Server Streaming**. |
+| **Core Flow 4: AI-assisted Learning** | `AI Engine Service` (.NET 9 Clean Architecture) | **Socratic AI Tutor**: Tích hợp C# Native Client gọi API Gemini/OpenAI. Sử dụng **Qdrant Vector DB** chứa tài liệu lý thuyết (RAG Pipeline) để sinh gợi ý mở và truyền tải dạng stream qua **gRPC Server Streaming**. |
 | **Core Flow 5: Learning Analytics** | `Practice & Adaptive Service` & `Auth Service` | Thu thập chỉ số (thời gian làm bài, độ đều đặn, tỷ lệ đúng). Dữ liệu analytics thường truy cập cao được cache trong **Redis** để giảm tải DB. Render biểu đồ bằng **Recharts** (React) và Flutter. |
 | **Core Flow 6: Performance Prediction** | `AI Engine Service` (Train) & `Practice Service` (Run) | `AI Engine Service` huấn luyện mô hình Regression trên Python, xuất ra file `model.onnx`. `Practice Service` chạy file ONNX này để dự đoán điểm thi ĐGNL. Trạng thái và điểm dự đoán được lưu trữ tạm ở **Redis** trước khi ghi xuống PostgreSQL. |
 
@@ -68,11 +68,12 @@ graph TD
     *   Khi học sinh hoàn thành bài thi thử, publish `AttemptCompletedEvent` để kích hoạt báo cáo phân tích cho phụ huynh và học sinh.
     *   Khi điểm số dự đoán của học sinh sút giảm liên tục dưới mục tiêu, publish `PerformanceAlertTriggeredEvent` gửi thông báo cho phụ huynh.
 
-### 5. AI Engine Service (Python FastAPI)
-*   **Nhiệm vụ:** RAG pipeline với Qdrant DB cho Socratic AI Tutor, huấn luyện mô hình ML và trích xuất PDF đề thi.
-*   **gRPC Interface:** gRPC Server Streaming cung cấp từng token phản hồi Socratic Tutor về client.
+### 5. AI Engine Service (.NET 9 Native Clean Architecture)
+*   **Nhiệm vụ:** RAG pipeline với Qdrant DB cho Socratic AI Tutor, trích xuất tài liệu đề thi PDF trực tiếp bằng Gemini Vision Multimodal (`gemini-flash-lite-latest`), và cung cấp các dịch vụ gRPC cho hệ thống.
+*   **gRPC Interface:** Triển khai `AiService.AiServiceBase` (`ai.proto`) với `ChatSocraticTutor` (Server Streaming cung cấp từng token phản hồi thời gian thực về client) và `IndexTheoreticalDocument` (Unary RPC nạp tài liệu lý thuyết vào Vector DB).
+*   **PDF Ingestion Pipeline:** Triển khai mô hình Tác vụ nền (Background Job Pattern - HTTP 202 Accepted + Polling) với `gemini-flash-lite-latest` bóc tách trọn vẹn 16 trang đề thi ĐGNL (120 câu hỏi) chuẩn LaTeX trong ~50 giây.
 *   **RabbitMQ Integration:**
-    *   **Consumer:** Lắng nghe `ContentUpdatedEvent` để chạy script embedding nạp vào Qdrant Vector DB.
+    *   **Consumer:** Lắng nghe `ContentUpdatedEvent` để kích hoạt embedding nạp vào Qdrant Vector DB.
     *   **Consumer:** Lắng nghe `AttemptCompletedEvent` tích lũy dữ liệu huấn luyện để chạy huấn luyện lại mô hình dự đoán điểm số ML định kỳ.
 
 ---
@@ -87,7 +88,7 @@ Thay vì để chung code trong một Monorepo, toàn bộ dự án sẽ đượ
 *   **`v-eval-identity-service`**: Chứa code của Auth & Identity Service.
 *   **`v-eval-content-service`**: Chứa code của Content Bank Service.
 *   **`v-eval-practice-service`**: Chứa code của Practice & Adaptive Service.
-*   **`v-eval-ai-engine`**: Chứa code của AI Engine Service (Python).
+*   **`v-eval-ai-engine`**: Chứa code của AI Engine Service (.NET 9 Clean Architecture & Gemini Vision).
 *   **`v-eval-shared`**: Chứa các file định nghĩa `.proto` và DTO/Contract dùng chung (các service khác sẽ tham chiếu Repo này dưới dạng Git Submodule hoặc thông qua Private NuGet/Python Package).
 
 ### 2. Cấu trúc thư mục local khi Clone về máy phát triển:
@@ -125,13 +126,12 @@ d:\CapstoneAI\               # Thư mục gốc chứa các Repository độc l�
 │       ├── Infrastructure/
 │       └── API/
 │
-├── v-eval-ai-engine/        # Repository [v-eval-ai-engine] (Python Clean Architecture)
+├── v-eval-ai-engine/        # Repository [v-eval-ai-engine] (.NET 9 Clean Architecture)
 │   ├── .github/workflows/   # CI/CD chạy riêng cho AI Engine
-│   └── src/
-│       ├── domain/
-│       ├── application/
-│       ├── infrastructure/
-│       └── api/             # FastAPI / gRPC server entry point
+│   ├── V-Eval-Ai_Engine.Domain/
+│   ├── V-Eval-Ai_Engine.Application/
+│   ├── V-Eval-Ai_Engine.Infrastructure/
+│   └── V-Eval-Ai_Engine.API/ # Minimal API & gRPC server entry point
 │
 └── v-eval-shared/           # Repository [v-eval-shared] (Chứa Protos & Contracts)
     └── Protos/              # Các file định nghĩa gRPC (.proto)

@@ -31,23 +31,34 @@ Trước khi AI có thể gợi ý lộ trình hay giải thích bài tập, b�
   * *Tư duy khoa học:* Phân tích số liệu -> Logic -> Suy luận liên môn.
 
 ### 2. Trích xuất và cấu trúc hóa ngân hàng câu hỏi (PDF to JSON/SQL)
-Các tệp đề thi thử và luyện dạng của bạn đang ở dạng PDF (`de-thi-minh-hoa-2026-dgnl.pdf`, `LUYỆN DẠNG - TIẾNG VIỆT - 1.pdf`,...). Bạn cần viết code Python (sử dụng thư viện `pypdf`, `pdfplumber` hoặc API OCR như Tesseract/GPT-4o Vision) để trích xuất thành tệp JSON có định dạng:
-* **Câu hỏi đơn lập:**
-  ```json
-  {
-    "question_id": "uuid",
-    "skill_id": "uuid-của-kỹ-năng-liên-quan",
-    "difficulty_level": 2,
-    "content_latex": "Tìm giá trị lớn nhất của hàm số $f(x) = x^3 - 3x$ trên đoạn $[0, 2]$",
-    "options": ["A. -2", "B. 2", "C. 0", "D. 4"],
-    "correct_option": "B",
-    "explanation": "Lời giải chi tiết..."
-  }
-  ```
-* **Chùm câu hỏi (Passage-based):** Phải tách phần văn bản chung (`Passage`) và liên kết các câu hỏi con vào trường `passage_id`.
+Các tệp đề thi thử và luyện dạng của bạn ở dạng PDF (`de-thi-minh-hoa-2026-dgnl.pdf`, `De-thi-mau-DHQG-HCM-2024.pdf`,...).
+* **Hiện trạng triển khai (Đã hoàn thành - 02/09/2026):**
+  * Đã chuyển đổi toàn diện sang kiến trúc **.NET 9 Native Clean Architecture** (`v-eval-ai-engine`).
+  * Sử dụng **Google Gemini Vision Multimodal (`gemini-flash-lite-latest`)** đọc trực tiếp byte tệp PDF nguyên bản trong RAM.
+  * Tối ưu hóa thời gian xử lý: Trích xuất trọn vẹn đề thi 16 trang (120 câu hỏi) chuẩn LaTeX và 13 chùm bài đọc hiểu chỉ mất **~50 giây**.
+  * Áp dụng mô hình **Asynchronous Background Job** (`POST /upload-pdf` trả về 202 Accepted + Polling thời gian thực `GET /jobs/{jobId}`) giúp giao diện mượt mà, loại bỏ triệt để timeout 180s.
+  * Tích hợp bộ cứu cánh dự phòng cục bộ `exam_parser.py` (0.3s) khi Cloud Google quá tải.
+  * Xuất ra cấu trúc JSON chuẩn nạp trực tiếp sang `Content Service`:
+* **Cấu trúc DTO xuất ra:**
+  * **Câu hỏi đơn lập (Single questions):**
+    ```json
+    {
+      "question_number": 1,
+      "page_number": 1,
+      "suggested_skill_name": "Hàm số mũ và logarit",
+      "content": "Tìm tập xác định của hàm số $y = \\log_2(x^2 - 4x + 3)$.",
+      "options": {
+        "A": "$(-\\infty; 1) \\cup (3; +\\infty)$",
+        "B": "$(1; 3)$",
+        "C": "$[1; 3]$",
+        "D": "$(-\\infty; 1] \\cup [3; +\\infty)$"
+      }
+    }
+    ```
+  * **Chùm câu hỏi đọc hiểu (Passages):** Tách riêng văn bản đọc hiểu chung (`content`) và mảng các câu hỏi con (`questions`) kèm số thứ tự bắt đầu / kết thúc (`start_question`, `end_question`).
 
 > [!IMPORTANT]
-> Công thức Toán học và Ký hiệu Khoa học trong PDF cần được chuyển đổi sang chuẩn **LaTeX** (được bao quanh bởi dấu `$` hoặc `$$`) để Frontend (React/Flutter) hiển thị trực quan đẹp mắt.
+> Toàn bộ công thức Toán học và Ký hiệu Khoa học trong PDF được Gemini chuẩn hóa sang chuẩn **LaTeX** (bao quanh bởi dấu `$`) để Frontend (React/Flutter/HTML) render KaTeX trực quan sắc nét.
 
 ---
 
