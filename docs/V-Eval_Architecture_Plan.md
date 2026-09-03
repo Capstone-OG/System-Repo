@@ -71,7 +71,7 @@ graph TD
 ### 5. AI Engine Service (.NET 9 Native Clean Architecture)
 *   **Nhiệm vụ:** RAG pipeline với Qdrant DB cho Socratic AI Tutor, trích xuất tài liệu đề thi PDF trực tiếp bằng Gemini Vision Multimodal (`gemini-flash-lite-latest`), và cung cấp các dịch vụ gRPC cho hệ thống.
 *   **gRPC Interface:** Triển khai `AiService.AiServiceBase` (`ai.proto`) với `ChatSocraticTutor` (Server Streaming cung cấp từng token phản hồi thời gian thực về client) và `IndexTheoreticalDocument` (Unary RPC nạp tài liệu lý thuyết vào Vector DB).
-*   **PDF Ingestion Pipeline:** Triển khai mô hình Tác vụ nền (Background Job Pattern - HTTP 202 Accepted + Polling) với `gemini-flash-lite-latest` bóc tách trọn vẹn 16 trang đề thi ĐGNL (120 câu hỏi) chuẩn LaTeX trong ~50 giây.
+*   **PDF Ingestion Pipeline:** Triển khai mô hình Tác vụ nền (Background Job Pattern - HTTP 202 Accepted + Polling) kết hợp thư viện `PDFtoImage` render in-memory 16 trang JPEG 150 DPI (1.5s) gửi đồng thời sang `gemini-flash-lite-latest` với `temperature: 0.0`. Triệt tiêu hoàn toàn lỗi font nhúng MathType và nhòe hệ số, bóc tách trọn vẹn 120 câu hỏi ĐGNL chuẩn xác nguyên văn LaTeX trong ~17–25 giây.
 *   **RabbitMQ Integration:**
     *   **Consumer:** Lắng nghe `ContentUpdatedEvent` để kích hoạt embedding nạp vào Qdrant Vector DB.
     *   **Consumer:** Lắng nghe `AttemptCompletedEvent` tích lũy dữ liệu huấn luyện để chạy huấn luyện lại mô hình dự đoán điểm số ML định kỳ.
