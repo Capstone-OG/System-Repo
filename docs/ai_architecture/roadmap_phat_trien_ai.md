@@ -32,12 +32,15 @@ Trước khi AI có thể gợi ý lộ trình hay giải thích bài tập, b�
 
 ### 2. Trích xuất và cấu trúc hóa ngân hàng câu hỏi (PDF to JSON/SQL)
 Các tệp đề thi thử và luyện dạng của bạn ở dạng PDF (`de-thi-minh-hoa-2026-dgnl.pdf`, `De-thi-mau-DHQG-HCM-2024.pdf`,...).
-* **Hiện trạng triển khai (Đã nâng cấp độ chính xác tuyệt đối - 03/09/2026):**
+* **Hiện trạng triển khai (Cập nhật 04/09/2026):**
   * Kiến trúc **.NET 9 Native Clean Architecture** (`v-eval-ai-engine`).
-  * Sử dụng thư viện **`PDFtoImage` (SkiaSharp/PDFium)** render 16 trang PDF thành ảnh JPEG độ nét cao (150 DPI) trong 1.5s, triệt tiêu 100% lớp font text nhúng lỗi của MathType và nhòe hệ số.
-  * Khóa cứng **`temperature: 0.0` (Greedy Decoding)** và áp dụng **Bộ luật Verbatim OCR Zero-Tolerance**, cấm AI tự ý giải toán hay sửa bẫy trắc nghiệm (như dấu gạch trị tuyệt đối $|\int ...|$).
-  * Tốc độ phản hồi cực nhanh: Trích xuất trọn vẹn 16 trang đề thi ĐGNL (120 câu hỏi) chỉ trong **~17–25 giây**, đảm bảo 100 lần chạy ra kết quả cố định giống nhau 100%.
-  * Áp dụng mô hình **Asynchronous Background Job** (`POST /upload-pdf` trả về 202 Accepted + Polling thời gian thực `GET /jobs/{jobId}`) giúp giao diện mượt mà, loại bỏ triệt để timeout 180s.
+  * Khắc phục triệt để giới hạn Token Output (`maxOutputTokens: 65536`), trích xuất thành công trọn vẹn 100% cả 120 câu hỏi V-ACT từ PDF 16 trang.
+  * Tối ưu hóa mô hình cốt lõi: **`gemini-3.6-flash`** đạt độ ổn định và chính xác cao nhất (xử lý 120 câu trong ~2p50s).
+  * Xây dựng cơ chế **Fallback Đa mô hình động & Giới hạn thử nghiệm (`MaxAttempts = 5`)** hỗ trợ 4 mô hình OpenAI và 5 mô hình Gemini cùng mảng đa API Key luân chuyển tự động.
+  * Xử lý câu hỏi đặc thù: Tự động chuyển đổi **Markdown Table sang HTML Table** và tích hợp **Chart.js** vẽ Biểu đồ cột/tròn tương tác với số liệu trực quan in trực tiếp trên từng phần của đồ thị.
+  * Hỗ trợ đính kèm/dán ảnh gốc trực tiếp trên giao diện quản trị đề thi và liên thông 2 chiều (Lưu, Xem, Xóa) với Supabase PostgreSQL qua `Content Service`.
+  * Khóa cứng **`temperature: 0.0` (Greedy Decoding)** và áp dụng **Bộ luật Verbatim OCR Zero-Tolerance**, cấm AI tự ý giải toán hay sửa bẫy trắc nghiệm.
+  * Áp dụng mô hình **Asynchronous Background Job** (`POST /upload-pdf` trả về 202 Accepted + Polling thời gian thực `GET /jobs/{jobId}`).
   * Tích hợp bộ cứu cánh dự phòng cục bộ `exam_parser.py` (0.3s) khi Cloud Google quá tải.
   * Xuất ra cấu trúc JSON chuẩn nạp trực tiếp sang `Content Service`:
 * **Cấu trúc DTO xuất ra:**

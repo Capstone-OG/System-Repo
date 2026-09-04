@@ -11,9 +11,10 @@ Tài liệu này đặc tả phương án giải quyết kỹ thuật để hệ
 | :--- | :--- | :--- | :--- |
 | **Công thức Toán / Lý** | GPT-4o đọc hiểu trực tiếp mã LaTeX. | AI sinh câu hỏi mới dưới dạng văn bản có chứa ký hiệu LaTeX. | Sử dụng thư viện **KaTeX** (React) hoặc **flutter_math_fork** (Flutter) để vẽ vector sắc nét. |
 | **Phương trình Hóa học** | GPT-4o hiểu cấu trúc chuỗi phản ứng viết bằng chữ/LaTeX. | AI sinh phương trình phản ứng hóa học định dạng chữ chuẩn hóa LaTeX. | Render trực tiếp bằng KaTeX/Markdown. |
-| **Biểu đồ số liệu (Charts)** | GPT-4o đọc hiểu ảnh biểu đồ hoặc dữ liệu bảng tần số. | AI sinh dữ liệu thô dạng JSON (ví dụ: chuỗi giá trị X, Y). | Dùng thư viện vẽ biểu đồ động **Recharts** (React) tự động vẽ đồ thị cột/tròn/radar từ JSON. |
+| **Bảng số liệu (Tables)** | Gemini / GPT bóc tách bảng số liệu dạng Markdown Table (`| Cột 1 | Cột 2 | ...`). | AI sinh bảng số liệu chuẩn Markdown. | Bộ parser `markdownToHtml` tự động chuyển đổi sang thẻ HTML `<table>` Dark-mode viền phát sáng, header cyan. |
+| **Biểu đồ số liệu (Charts)** | Gemini / GPT đọc hiểu ảnh biểu đồ cột, tròn, đường và trích xuất nhãn kèm tỷ lệ %. | AI sinh dữ liệu nhãn kèm số liệu (Label: Value). | Sử dụng **Chart.js** tự động dựng Canvas Bar Chart / Pie Chart, plugin in trực tiếp số liệu `${val}%` trên từng cột và lát cắt. |
 | **Đồ thị hàm số (Graphs)** | GPT-4o Vision nhìn hình ảnh đồ thị và phân tích tính chất (cực trị, tiệm cận). | AI chỉ sinh ra **phương trình hàm số** (Ví dụ: `y = x^3 - 3x`). | Sử dụng thư viện **function-plot** (Canvas ở Frontend) hoặc vẽ tự động bằng **Matplotlib** (Python ở Backend). |
-| **Hình học không gian (3D)** | GPT-4o Vision phân tích ảnh hình chóp, lăng trụ (base64/url) để hướng dẫn học sinh. | AI **chỉ định một mã hình mẫu** trong thư viện ảnh có sẵn và sinh ra các thông số giả định (cạnh bên, góc). | Tải ảnh tĩnh mẫu từ thư mục tài nguyên của hệ thống dựa trên ID hình vẽ. |
+| **Hình học không gian (3D)** | GPT-4o Vision phân tích ảnh hình chóp, lăng trụ (base64/url) để hướng dẫn học sinh. | AI **chỉ định một mã hình mẫu** trong thư viện ảnh có sẵn và sinh ra các thông số giả định (cạnh bên, góc). | Tải ảnh tĩnh mẫu từ thư mục tài nguyên của hệ thống dựa trên ID hình vẽ hoặc hỗ trợ đính kèm/paste ảnh chụp đề gốc. |
 | **Công thức cấu tạo Hóa học** | GPT-4o Vision nhìn và phân tích liên kết hóa học. | AI sinh đề dựa trên các hình vẽ mẫu có sẵn trong kho dữ liệu hữu cơ. | Hiển thị ảnh tĩnh mẫu. |
 
 ---
@@ -29,15 +30,23 @@ Tài liệu này đặc tả phương án giải quyết kỹ thuật để hệ
   * **React Web:** Thư viện **function-plot** (dựa trên D3 và HTML5 Canvas).
   * **Flutter Mobile:** Tự vẽ bằng CustomPainter dựa trên phương trình hoặc dùng thư viện đồ thị toán học.
 
-### 2. Hình học không gian 3D & Thí nghiệm thực hành
-Vì các mô hình tạo ảnh (như DALL-E) không thể vẽ chính xác các nét đứt hình học không gian hoặc vị trí các đỉnh, hệ thống sử dụng giải pháp **Template Library (Thư viện mẫu có sẵn)**:
+### 2. Biểu đồ Thống kê (Cột & Tròn) & Bảng số liệu Ma trận (Đã triển khai - 04/09/2026)
+Đối với dạng bài Đọc hiểu số liệu trong đề thi V-ACT (như Câu 61-63, 64-67, 68-70):
+* **Bảng số liệu ma trận**: Hệ thống chuẩn hóa prompt AI xuất ra định dạng Markdown Table. Giao diện sử dụng thuật toán parser tự động phát hiện hàng/cột (kể cả bảng không có gạch biên `|`), sinh mã HTML `<table>` chuẩn, hỗ trợ xem rõ nét và responsive trên mọi thiết bị.
+* **Biểu đồ cột (Bar Chart) & Biểu đồ tròn (Pie Chart)**:
+  * Tích hợp thư viện **Chart.js** trực tiếp vào UI.
+  * Tự động bóc tách cặp nhãn - giá trị (ví dụ: `Đầu tư: 20%`, `A: 22%`).
+  * Tích hợp plugin vẽ số liệu trực tiếp (`barDirectDataLabels`, `pieDirectDataLabels`) sử dụng hook `afterDatasetsDraw` của Canvas để in số liệu trực quan `${val}%` ngay trên đỉnh từng cột và bên trong từng lát cắt, bám sát trực quan đề thi thật.
+
+### 3. Hình học không gian 3D & Thí nghiệm thực hành
+Vì các mô hình tạo ảnh (như DALL-E) không thể vẽ chính xác các nét đứt hình học không gian hoặc vị trí các đỉnh, hệ thống sử dụng giải pháp **Template Library & Đính kèm ảnh gốc**:
 * **Quy trình hoạt động:**
   * Đồ án xây dựng sẵn 30-50 hình vẽ hình học không gian tiêu chuẩn (hình chóp tứ giác, hình chóp tam giác đều, hình hộp chữ nhật...) được gán mã `image_id`.
-  * Khi AI sinh đề, nó sẽ chọn một `image_id` phù hợp với bài toán và tự động sinh ra các con số giả lập (Ví dụ: cho cạnh đáy bằng $a$, góc giữa cạnh bên và đáy bằng $60^\circ$).
-  * Hệ thống hiển thị ảnh mẫu đó cùng với đề bài mới.
+  * Đồng thời, trên giao diện quản trị đề thi cung cấp nút `📷 Đính kèm / Chèn ảnh gốc`, cho phép giáo viên đính kèm hoặc dán (Ctrl+V) trực tiếp ảnh chụp từ đề thi PDF vào từng câu hỏi trước khi lưu vào cơ sở dữ liệu.
 
-### 3. Đa phương thức (OpenAI Vision) để AI hiểu hình ảnh
+### 4. Đa phương thức (OpenAI / Gemini Vision) để AI hiểu hình ảnh
 Khi học sinh tương tác với AI Tutor tại câu hỏi có hình ảnh:
 * Client gửi request kèm `{question_id}` lên Backend.
 * Backend truy vấn link ảnh tương ứng (`image_url`) trong database.
 * Backend tải ảnh và chuyển đổi sang chuỗi **Base64**, đóng gói gửi lên OpenAI API kèm prompt hỏi đáp. GPT-4o Vision sẽ phân tích ảnh và trả về phản hồi định hướng tư duy cho học sinh.
+
