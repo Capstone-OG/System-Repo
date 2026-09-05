@@ -50,3 +50,18 @@ Khi học sinh tương tác với AI Tutor tại câu hỏi có hình ảnh:
 * Backend truy vấn link ảnh tương ứng (`image_url`) trong database.
 * Backend tải ảnh và chuyển đổi sang chuỗi **Base64**, đóng gói gửi lên OpenAI API kèm prompt hỏi đáp. GPT-4o Vision sẽ phân tích ảnh và trả về phản hồi định hướng tư duy cho học sinh.
 
+### 5. Kết Xuất Ảnh Cục Bộ Siêu Tốc (PDFium + SkiaSharp + PdfPig) & Quy Tắc Chống Lộ Đáp Án (Đã triển khai - 05/09/2026)
+Đối với các câu hỏi đặc thù không thể vẽ bằng code thuần (Đồ thị dao động điều hòa $a-x$ Câu 75, Hình chụp gương cầu lồi khúc cua Câu 78, Chuỗi thí nghiệm cắt ghép rễ-tán tảo *Acetabularia* chùm 106-108):
+* **Định vị & Kết xuất Cục bộ (100% Offline, 0 Tokens, 0.15s)**:
+  * Không dùng Cloud AI để cắt ảnh. Sử dụng `UglyToad.PdfPig` quét toạ độ Bounding Box của ảnh trên trang.
+  * Sử dụng `PDFtoImage` (Google PDFium Core C++) kết xuất trực tiếp vùng hình ảnh từ trang PDF với độ phân giải cao 150 DPI trên nền trắng tinh khiết (`SKColors.White`).
+  * *Xử lý triệt để FlateDecode (Câu 75)*: Xuất ra tệp PNG hoàn chỉnh 100%, bảo toàn trọn vẹn hệ trục tọa độ $a-x$, các mốc số $40, -40, 1, -1$ và gốc tọa độ $O$.
+  * *Xử lý triệt để Mặt nạ trong suốt (SMask) & Chú thích bên ngoài (Chùm 106-108)*: Loại bỏ 100% các khối đen xì (do mất mask trong suốt khi trích xuất thô), tự động bao bọc lề an toàn 20pt thu trọn vẹn các nhãn chữ Word bên ngoài ("tán", "thân", "gốc", "A. crenulata", "Tế bào ghép hoàn chỉnh 1 & 2") thành một sơ đồ duy nhất (`p14_combined.png`).
+  * Tự động lọc Header logo ĐHQG-HCM (<160pt top) và các icon/ký tự nhiễu (<50px).
+* **Quy tắc Chống Lộ Đáp Án (Zero-Spoiler Rule)**:
+  * Khi sinh nội dung câu hỏi mô tả hình ảnh, cấm AI sử dụng tên thiết bị hoặc từ khóa mục tiêu của 4 phương án trắc nghiệm (ví dụ: với Câu 78 về "Gương cầu lồi", AI chỉ được viết *"thiết bị dạng mặt gương thường đặt tại các khúc cua đường đèo"* thay vì nói toạc móng heo *"gương cầu lồi"* trong đề bài).
+* **Tự động Ánh xạ & Trình chiếu Lightbox**:
+  * Gắn tự động `image_url` vào DTO câu hỏi và bài đọc theo số trang.
+  * Frontend hỗ trợ xem hình trực quan, click để mở Lightbox phóng to toàn màn hình, và hỗ trợ dán ảnh nhanh từ bộ nhớ tạm (`Ctrl + V`).
+  * Backend Content Service tự động nhúng cú pháp Markdown `![Hình minh họa](image_url)` vào trường `ContentLatex` của câu hỏi khi lưu vào PostgreSQL Supabase.
+
