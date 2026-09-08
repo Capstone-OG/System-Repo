@@ -1,5 +1,14 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [08/09/2026] - Chuẩn Hóa Đặc Tả Luồng Phân Tích & Hiển Thị Đề Thi, Đồng Bộ Kiến Trúc V-Eval
+- **Hoàn Thiện Tài Liệu Đặc Tả Luồng Xử Lý (docs/luong_phan_tich_va_hien_thi_de_thi.md)**:
+  - Xây dựng tài liệu chi tiết quy trình 3 luồng: AI Exam Ingestion Flow, Exam Rendering & Interactive UI, Database Persistence Flow.
+  - Thiết kế sơ đồ kiến trúc Mermaid đồng bộ hóa luồng giữa AI Engine, Content Service và Client Web.
+  - Tổng hợp ma trận ánh xạ file code (Code Mapping Matrix) và các mốc hoàn thành cho hệ thống V-Eval.
+- **Rà Soát & Tối Ưu Hóa Clean Architecture**:
+  - Kiểm tra tính tương thích giữa DTO chuẩn hóa từ AI Engine và các Entity trong Content Service.
+  - Chuẩn bị pipeline phân tích và render đề thi toàn diện cho hệ thống thi trực tuyến.
+
 ## [07/09/2026] - Sửa Lỗi Hiển Thị Công Thức Vật Lý & Hóa Học, Tái Tạo Delta (\Delta) & Bảng Số Liệu 2 Tầng
 - **Khắc Phục Triệt Để Lỗi Công Thức Vật Lý & Hóa Học (Câu 93 & Đoạn Văn Truyền Tải Điện)**:
   - **Khôi phục ký tự thoát JSON cho LaTeX**: Sửa lỗi JSON Deserialization nuốt các ký tự điều khiển ASCII biến `\frac` thành `rac` (form-feed), `\times` thành `	imes` (tab), `\text` thành `	ext`, `\bar` thành `ar`.
