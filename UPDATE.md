@@ -1,5 +1,10 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [09/09/2026] - Cập Nhật Tiến Độ Toàn Diện & Rà Soát Tài Liệu Kiến Trúc V-Eval
+- **Đồng Bộ Tài Liệu Quy Trình & Kiến Trúc**:
+  - Hoàn thiện chi tiết luồng xử lý và kết nối hệ thống thi đánh giá năng lực V-ACT.
+  - Cập nhật nhật ký các mốc phát triển và đồng bộ trạng thái hệ thống.
+
 ## [08/09/2026] - Chuẩn Hóa Đặc Tả Luồng Phân Tích & Hiển Thị Đề Thi, Đồng Bộ Kiến Trúc V-Eval
 - **Hoàn Thiện Tài Liệu Đặc Tả Luồng Xử Lý (docs/luong_phan_tich_va_hien_thi_de_thi.md)**:
   - Xây dựng tài liệu chi tiết quy trình 3 luồng: AI Exam Ingestion Flow, Exam Rendering & Interactive UI, Database Persistence Flow.
