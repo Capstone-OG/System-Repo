@@ -1,5 +1,10 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [10/09/2026] - Khởi Tạo API Gateway & Tích Hợp Thư Viện YARP Reverse Proxy
+- **Khởi Tạo Cấu Trúc YARP API Gateway (`V-Eval-Gateway`)**:
+  - Tích hợp gói NuGet `Yarp.ReverseProxy` (v2.3.0) cho dự án API Gateway .NET 9.
+  - Đồng bộ hóa các hợp đồng giao tiếp gRPC (.proto) chung (`ai.proto`, `content.proto`, `auth.proto`, `practice.proto`).
+
 ## [09/09/2026] - Cập Nhật Tiến Độ Toàn Diện & Rà Soát Tài Liệu Kiến Trúc V-Eval
 - **Đồng Bộ Tài Liệu Quy Trình & Kiến Trúc**:
   - Hoàn thiện chi tiết luồng xử lý và kết nối hệ thống thi đánh giá năng lực V-ACT.
