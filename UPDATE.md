@@ -1,5 +1,11 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [12/09/2026] - Hoàn Thiện API Gateway Health Checks & Kiểm Thử Xây Dựng Hệ Thống
+- **Xây Dựng Health Check Endpoint (`/healthz`)**:
+  - Cung cấp REST Endpoint kiểm tra trạng thái hoạt động của Gateway (`/healthz`) trả về trạng thái HTTP 200 OK kèm dấu thời gian UTC.
+- **Xác Minh Build & Đồng Bộ Hệ Thống**:
+  - Biên dịch và kiểm thử thành công toàn bộ giải pháp `V-Eval-Gateway` (0 lỗi, 0 cảnh báo).
+
 ## [11/09/2026] - Thiết Kế Ma Trận Định Tuyến Microservices & Middleware V-Eval Gateway
 - **Cấu Hình Routing & Cluster Matrix (`appsettings.json`)**:
   - Thiết lập bảng định tuyến YARP cho 4 phân hệ chính: AI Engine (`:5104`), Content Service (`:5249`), Identity Service (`:5001`), Practice Service (`:5002`).
