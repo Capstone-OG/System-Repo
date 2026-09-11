@@ -1,5 +1,13 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [11/09/2026] - Thiết Kế Ma Trận Định Tuyến Microservices & Middleware V-Eval Gateway
+- **Cấu Hình Routing & Cluster Matrix (`appsettings.json`)**:
+  - Thiết lập bảng định tuyến YARP cho 4 phân hệ chính: AI Engine (`:5104`), Content Service (`:5249`), Identity Service (`:5001`), Practice Service (`:5002`).
+  - Định tuyến các URL `/api/ai-engine/*`, `/view-exam`, `/extracted_images/*`, `/api/content/*` về đúng service xử lý.
+- **Tích Hợp Middleware & Distributed Tracing**:
+  - Bổ sung middleware tự động sinh và chuyển tiếp `X-Correlation-ID` header cho distributed tracing giữa các microservice.
+  - Thiết lập chính sách CORS cho phép tất cả các nguồn truy cập từ Frontend/SPA.
+
 ## [10/09/2026] - Khởi Tạo API Gateway & Tích Hợp Thư Viện YARP Reverse Proxy
 - **Khởi Tạo Cấu Trúc YARP API Gateway (`V-Eval-Gateway`)**:
   - Tích hợp gói NuGet `Yarp.ReverseProxy` (v2.3.0) cho dự án API Gateway .NET 9.
