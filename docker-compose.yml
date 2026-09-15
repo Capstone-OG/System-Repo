@@ -1,60 +1,74 @@
----
 services:
-  # 1. Database Service (PostgreSQL)
-  postgres-db:
-    image: postgres:16-alpine
-    container_name: capstone_postgres_db
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=capstone_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=12345
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d capstone_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - capstone_network
-
-  # 2. Backend API Service Template
-  backend-service:
+  # 1. API Gateway Service (Single Entry Point / YARP Reverse Proxy)
+  v-eval-gateway:
     build:
-      context: ./All Services/Backend_Service
-      dockerfile: Dockerfile
-    container_name: capstone_backend_service
+      context: .
+      dockerfile: ./All Services/V-Eval-Gateway/Dockerfile
+    container_name: v_eval_gateway
     ports:
-      - "8080:8080"
+      - "5212:5212"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DB_HOST=postgres-db
-    depends_on:
-      postgres-db:
-        condition: service_healthy
     restart: unless-stopped
     networks:
-      - capstone_network
+      - veval_network
 
-  # 3. Frontend Web Service Template
-  fe-service:
+  # 2. AI Engine Service (PDF Parser, Gemini OCR, Socratic AI Tutor)
+  v-eval-ai-engine:
     build:
-      context: ./All Services/FE_Service
-      dockerfile: Dockerfile
-    container_name: capstone_fe_service
+      context: .
+      dockerfile: ./All Services/V-Eval-Ai_Engine/Dockerfile
+    container_name: v_eval_ai_engine
     ports:
-      - "5173:80"
+      - "5104:5104"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
     networks:
-      - capstone_network
+      - veval_network
 
-volumes:
-  postgres_data:
-    driver: local
+  # 3. Content Service (Question Bank, Exams, Materials & Supabase Storage)
+  v-eval-content-service:
+    build:
+      context: .
+      dockerfile: ./All Services/V-Eval-Content_Service/Dockerfile
+    container_name: v_eval_content_service
+    ports:
+      - "5249:5249"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    restart: unless-stopped
+    networks:
+      - veval_network
+
+  # 4. Identity Service (Authentication, JWT Token, User Management)
+  v-eval-identity-service:
+    build:
+      context: .
+      dockerfile: ./All Services/V-Eval-Identity_Service/Dockerfile
+    container_name: v_eval_identity_service
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    restart: unless-stopped
+    networks:
+      - veval_network
+
+  # 5. Practice Service (Online Examination, Auto-Grading & Competency Tracking)
+  v-eval-practice-service:
+    build:
+      context: .
+      dockerfile: ./All Services/V-Eval-Practice_Service/Dockerfile
+    container_name: v_eval_practice_service
+    ports:
+      - "5002:5002"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    restart: unless-stopped
+    networks:
+      - veval_network
 
 networks:
-  capstone_network:
+  veval_network:
     driver: bridge

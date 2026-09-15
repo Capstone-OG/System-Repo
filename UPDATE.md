@@ -1,5 +1,21 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [15/09/2026] - Dockerize Toàn Hệ Thống 5 Microservices & Chuẩn Hóa Orchestration Docker Compose
+- **Khởi Tạo Dockerfile Multi-Stage .NET 9 Tinh Gọn Cho 5 Microservices**:
+  - `All Services/V-Eval-Gateway/Dockerfile`: Cổng `5212` (Gateway YARP Proxy).
+  - `All Services/V-Eval-Ai_Engine/Dockerfile`: Cổng `5104` (AI Exam Ingestion & Chatbot).
+  - `All Services/V-Eval-Content_Service/Dockerfile`: Cổng `5249` (Ngân hàng câu hỏi & Đề thi).
+  - `All Services/V-Eval-Identity_Service/Dockerfile`: Cổng `5001` (Quản lý Người dùng & JWT Auth).
+  - `All Services/V-Eval-Practice_Service/Dockerfile`: Cổng `5002` (Thi trực tuyến & Chấm điểm).
+- **Chuẩn Hóa Docker Compose Orchestration (`docker-compose.yml`)**:
+  - Điều phối 5 container microservice kết nối qua mạng nội bộ bridge `veval_network`.
+  - Cấu hình port mapping, biến môi trường `ASPNETCORE_ENVIRONMENT=Development` và chính sách tự động khởi động lại `restart: unless-stopped`.
+  - Kiểm thử cú pháp `docker compose config` đạt **100% thành công (Exit Code 0)**.
+- **Cập Nhật Script Chạy Tự Động (`Scripts/run_docker/run_docker.bat`)**:
+  - Script tự động phát hiện root project, kiểm tra Docker Daemon và thực thi `docker-compose up --build`.
+- **Cập Nhật Hệ Thống Tài Liệu & README**:
+  - Cập nhật bảng ma trận Port và tài liệu Daily Check Log cho cả 5 phân hệ dịch vụ.
+
 ## [14/09/2026] - Chuyển Đổi V-Eval Gateway sang Modular Architecture, Security Claims Transformer & Chuẩn Hóa Cấu Hình Production
 - **Tái Cấu Trúc V-Eval Gateway sang Modular Architecture**:
   - Gỡ bỏ 3 tầng dự án Clean Architecture rỗng (`Domain`, `Application`, `Infrastructure`).
@@ -11,20 +27,6 @@
 - **Mô-Đun Chống Spam API (`RateLimiterExtensions.cs`)**:
   - Tích hợp Fixed Window (100 req/min) & Sliding Window (60 req/min) trả về HTTP 429 khi quá tải.
 - **Chuẩn Hóa Production Config & Git Security trên Toàn Hệ Thống (5 Microservices)**:
-  - Khởi tạo file mẫu `appsettings.example.json` cho cả 5 microservices (`Gateway`, `Ai_Engine`, `Content_Service`, `Identity_Service`, `Practice_Service`).
-  - Cập nhật quy tắc `.gitignore` bảo vệ tuyệt toàn bộ các file `appsettings.json` cá nhân chứa password / API Key thật khỏi bị lỡ tay đẩy lên Git.
+  - Khởi tạo file mẫu `appsettings.example.json` cho cả 5 microservices.
+  - Cập nhật quy tắc `.gitignore` bảo vệ tuyệt toàn bộ các file `appsettings.json` cá nhân.
   - Hoàn thiện bộ tài liệu triển khai và nghiệm thu kiến trúc tại `V-Eval-Gateway/docs/`.
-
-## [12/09/2026] - Hoàn Thiện API Gateway Health Checks & Kiểm Thử Xây Dựng Hệ Thống
-- **Xây Dựng Health Check Endpoint (`/healthz`)**:
-  - Cung cấp REST Endpoint kiểm tra trạng thái hoạt động của Gateway (`/healthz`) trả về trạng thái HTTP 200 OK kèm dấu thời gian UTC.
-- **Xác Minh Build & Đồng Bộ Hệ Thống**:
-  - Biên dịch và kiểm thử thành công toàn bộ giải pháp `V-Eval-Gateway` (0 lỗi, 0 cảnh báo).
-
-## [11/09/2026] - Thiết Kế Ma Trận Định Tuyến Microservices & Middleware V-Eval Gateway
-- **Cấu Hình Routing & Cluster Matrix (`appsettings.json`)**:
-  - Thiết lập bảng định tuyến YARP cho 4 phân hệ chính: AI Engine (`:5104`), Content Service (`:5249`), Identity Service (`:5001`), Practice Service (`:5002`).
-  - Định tuyến các URL `/api/ai-engine/*`, `/view-exam`, `/extracted_images/*`, `/api/content/*` về đúng service xử lý.
-- **Tích Hợp Middleware & Distributed Tracing**:
-  - Bổ sung middleware tự động sinh và chuyển tiếp `X-Correlation-ID` header cho distributed tracing giữa các microservice.
-  - Thiết lập chính sách CORS cho phép tất cả các nguồn truy cập từ Frontend/SPA.
