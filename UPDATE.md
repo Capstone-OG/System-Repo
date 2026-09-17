@@ -1,6 +1,9 @@
 # Nhật Ký Cập Nhật (Update Log)
 
-## [18/09/2026] - Phát Hành Bộ Script Push Độc Lập Cho Từng Microservice & Tối Ưu Tự Động Hóa Hệ Thống
+## [18/09/2026] - Phát Hành Bộ Script Push Độc Lập Cho Từng Microservice & Thiết Lập AI Rules Hướng Đối Tượng Tài Liệu
+- **Khởi Tạo Bộ Quy Tắc Hệ Thống Cho AI Assistant (`AGENTS.md` & `.agents/rules/documentation_workflow.md`)**:
+  - Thiết lập quy tắc bắt buộc **Documentation First**: AI **BẮT BUỘC** phải cập nhật đầy đủ file `UPDATE.md`, `daily_check_log.md` và tài liệu kiến trúc của từng service trước khi đề xuất hoặc thực hiện các lệnh Git Add / Commit / Push.
+  - Quy định quy trình 3 bước nghiêm ngặt: (1) Code & Test, (2) Cập nhật docs & `UPDATE.md` của ngày hôm đó ở đầu file, (3) Mới được hỏi/thực hiện Commit & Push.
 - **Phát Hành Công Cụ Push Độc Lập Cho Từng Service (`Scripts/push.bat`)**:
   - Đóng gói file script [`Scripts/push.bat`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/Scripts/push.bat) độc lập tại từng microservice (`V-Eval-Gateway`, `V-Eval-Identity_Service`, `V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Ai_Engine`).
   - **3 Chế độ Push thông minh**:
