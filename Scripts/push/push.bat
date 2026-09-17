@@ -7,7 +7,7 @@ echo =====================================================================
 echo.
 
 REM Lay duong dan tuyet doi den thu muc goc cua du an
-pushd "%~dp0..\..\"
+pushd "%~dp0..\.."
 set "ROOT_DIR=%CD%"
 popd
 

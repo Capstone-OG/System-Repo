@@ -6,7 +6,7 @@ echo                V-Eval - Local Run Tool (C# Services)
 echo =====================================================================
 echo.
 
-pushd "%~dp0..\..\"
+pushd "%~dp0..\.."
 set "ROOT_DIR=%CD%"
 popd
 
