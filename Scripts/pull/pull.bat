@@ -32,7 +32,7 @@ echo =============================================================
 pushd "%ROOT_DIR%"
 set "REPO_NAME=System-Repo"
 for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD') do set "CUR_BRANCH=%%b"
-call :PROCESS_PULL
+call "%~f0" :PROCESS_PULL
 popd
 echo:
 
@@ -66,7 +66,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             REM Dam bao checkout dung nhanh
             git checkout !CUR_BRANCH! >nul 2>&1
             
-            call :PROCESS_PULL
+            call "%~f0" :PROCESS_PULL
             popd
         ) else (
             echo [WARNING] Thu muc "!TARGET_PATH!" chua duoc khoi tao Git.
@@ -143,19 +143,19 @@ if "!HAS_LOCAL_CHANGES!"=="0" (
         for /f "tokens=*" %%a in ('git merge-base HEAD origin/!CUR_BRANCH!') do set "BASE_SHA=%%a"
         
         if "!LOCAL_SHA!"=="!REMOTE_SHA!" (
-            echo [INFO] Repo !REPO_NAME! da moi nhat (up-to-date).
+            echo [INFO] Repo !REPO_NAME! da moi nhat - up to date.
         )
         if not "!LOCAL_SHA!"=="!REMOTE_SHA!" (
             if "!LOCAL_SHA!"=="!BASE_SHA!" (
-                echo [INFO] Code local dang bi cham (behind). Tien hanh pull...
+                echo [INFO] Code local dang bi cham - behind. Tien hanh pull...
                 git pull origin !CUR_BRANCH!
             )
             if "!REMOTE_SHA!"=="!BASE_SHA!" (
-                echo [INFO] Code local dang nhanh hon remote (ahead). Khong can pull.
+                echo [INFO] Code local dang nhanh hon remote - ahead. Khong can pull.
             )
             if not "!LOCAL_SHA!"=="!BASE_SHA!" (
                 if not "!REMOTE_SHA!"=="!BASE_SHA!" (
-                    echo [WARNING] Lich su bi lech (diverged). Tien hanh pull va tu dong merge...
+                    echo [WARNING] Lich su bi lech - diverged. Tien hanh pull va tu dong merge...
                     git pull origin !CUR_BRANCH!
                 )
             )
