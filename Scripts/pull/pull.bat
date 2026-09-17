@@ -29,11 +29,10 @@ REM --- BƯỚC 1: Pull cho System-Repo gốc ---
 echo =============================================================
 echo Dang kiem tra va dong bo System-Repo (Root)
 echo =============================================================
-pushd "%ROOT_DIR%"
+set "REPO_PATH=%ROOT_DIR%"
 set "REPO_NAME=System-Repo"
 for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD') do set "CUR_BRANCH=%%b"
 call :PROCESS_PULL
-popd
 echo:
 
 REM --- BƯỚC 2: Duyệt qua các Service con để Pull ---
@@ -59,15 +58,11 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
         echo =============================================================
         
         if exist "!TARGET_PATH!\.git" (
-            pushd "!TARGET_PATH!"
+            set "REPO_PATH=!TARGET_PATH!"
             set "REPO_NAME=!SERVICE_NAME!"
             set "CUR_BRANCH=!BRANCH!"
             
-            REM Dam bao checkout dung nhanh
-            git checkout !CUR_BRANCH! >nul 2>&1
-            
             call :PROCESS_PULL
-            popd
         ) else (
             echo [WARNING] Thu muc "!TARGET_PATH!" chua duoc khoi tao Git.
             echo [INFO] Vui long chay Scripts/setup/setup.bat de khoi tao.
@@ -78,7 +73,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
 
 :END
 echo =====================================================================
-echo                Dong bo hoàn tat!
+echo                Dong bo hoàn tat
 echo =====================================================================
 echo:
 pause
@@ -86,10 +81,14 @@ exit /b 0
 
 REM =====================================================================
 REM SUBROUTINE: PROCESS_PULL
-REM Yêu cầu: pushd vào đúng thư mục repo trước khi gọi.
-REM Biến cần có: REPO_NAME, CUR_BRANCH
+REM Biến cần có: REPO_PATH, REPO_NAME, CUR_BRANCH
 REM =====================================================================
 :PROCESS_PULL
+pushd "!REPO_PATH!"
+
+REM Dam bao checkout dung nhanh
+git checkout !CUR_BRANCH! >nul 2>&1
+
 REM Lay thong tin remote moi nhat
 git fetch origin >nul 2>&1
 
@@ -162,4 +161,5 @@ if "!HAS_LOCAL_CHANGES!"=="0" (
         )
     )
 )
+popd
 exit /b 0
