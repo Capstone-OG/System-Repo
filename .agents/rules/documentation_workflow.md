@@ -15,9 +15,12 @@
 ### BƯỚC 2: CẬP NHẬT TÀI LIỆU TIẾN ĐỘ & UPDATE.MD (BẮT BUỘC HOÀN THÀNH TRƯỚC)
 Trước khi đề xuất hoặc thực hiện Git Commit/Push, AI **BẮT BUỘC** phải rà soát và cập nhật đầy đủ các tài liệu sau:
 
-1. **Cập Nhật Daily Check Log & Kiến Trúc Service**:
-   - Ghi nhận chi tiết công việc đã triển khai vào file `docs/daily_check_log.md` (hoặc `docs/daily_process_and_planning.md`) tại từng microservice đã đụng vào.
-   - Cập nhật báo cáo kiến trúc/sơ đồ/API trong `docs/nghiem_thu_va_thau_hieu_kien_truc.md` (nếu tác vụ có thay đổi cấu trúc DB, YARP Transform, Claims hay Clean Architecture).
+1. **Cập Nhật Bộ Tài Liệu Chuẩn Của Service (`docs/`)**:
+   - **`docs/daily.md`**: Nhật ký cập nhật tiến độ hằng ngày (log rõ công việc làm được theo mốc ngày `[DD/MM/YYYY]`).
+   - **`docs/process.md`**:
+     - *Phần trên*: Định nghĩa Kiến trúc tổng thể của service & các hạng mục/chức năng cần triển khai.
+     - *Phần dưới*: Bảng Tiến độ Chi tiết cho từng mục (mô tả rõ từng hạng mục đang ở đâu, trạng thái Hoàn thành / Đang triển khai / Chưa làm, và tiến độ ra sao).
+   - **`docs/architecture_acceptance.md`**: Báo cáo nghiệm thu & thấu hiểu kiến trúc (Tiếng Anh).
 
 2. **Cập Nhật File `UPDATE.md` Theo Ngày Hiện Tại**:
    - Mở file `UPDATE.md` của từng Service đã chỉnh sửa và file `UPDATE.md` tổng tại root `System-Repo`.

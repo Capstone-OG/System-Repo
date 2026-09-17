@@ -1,6 +1,12 @@
 # Nhật Ký Cập Nhật (Update Log)
 
-## [18/09/2026] - Phát Hành Bộ Script Push Độc Lập Cho Từng Microservice & Thiết Lập AI Rules Hướng Đối Tượng Tài Liệu
+## [18/09/2026] - Chuẩn Hóa Tên Bộ Tài Liệu Docs Toàn Bộ Microservices & Cấu Hình AI Rules
+- **Chuẩn Hóa Bộ File Tài Liệu `docs/` Cho Tất Cả 5 Microservices**:
+  - Đổi tên & đồng bộ toàn bộ tài liệu tiến độ của tất cả các service về 3 file chuẩn duy nhất:
+    1. **`docs/daily.md`**: Nhật ký kiểm tra tiến độ hằng ngày.
+    2. **`docs/process.md`**: Lộ trình và quy trình phát triển dịch vụ.
+    3. **`docs/architecture_acceptance.md`**: Báo cáo nghiệm thu & thấu hiểu kiến trúc (Đã chuyển sang tiếng Anh).
+  - Giữ nguyên tất cả các file tài liệu nghiệp vụ đặc thù khác trong thư mục `docs/`.
 - **Khởi Tạo Bộ Quy Tắc Hệ Thống Cho AI Assistant (`AGENTS.md` & `.agents/rules/documentation_workflow.md`)**:
   - Thiết lập quy tắc bắt buộc **Documentation First**: AI **BẮT BUỘC** phải cập nhật đầy đủ file `UPDATE.md`, `daily_check_log.md` và tài liệu kiến trúc của từng service trước khi đề xuất hoặc thực hiện các lệnh Git Add / Commit / Push.
   - Quy định quy trình 3 bước nghiêm ngặt: (1) Code & Test, (2) Cập nhật docs & `UPDATE.md` của ngày hôm đó ở đầu file, (3) Mới được hỏi/thực hiện Commit & Push.

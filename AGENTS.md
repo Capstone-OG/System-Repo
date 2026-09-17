@@ -13,7 +13,12 @@ Khi thực hiện bất kỳ công việc nào (tạo mới, sửa lỗi, nâng 
 1. **Bước 1: Code & Kiểm thử vần hành**
    - Viết code và chạy lệnh kiểm thử (`dotnet build`, `docker compose config`...) đảm bảo code sạch 100%.
 2. **Bước 2: Cập nhật Tài liệu & UPDATE.md TRƯỚC TIÊN (MANDATORY)**
-   - Cập nhật nhật ký tiến độ vào các file `docs/daily_check_log.md` và file kiến trúc `docs/nghiem_thu_va_thau_hieu_kien_truc.md` của các service liên quan.
+   - Cập nhật nhật ký tiến độ vào bộ 3 file tài liệu chuẩn trong thư mục `docs/` của các service liên quan:
+     - **`docs/daily.md`**: Nhật ký cập nhật tiến độ hằng ngày (`[DD/MM/YYYY]`).
+     - **`docs/process.md`**:
+       - *Phần trên*: Kiến trúc dịch vụ & danh sách các thành phần cần triển khai.
+       - *Phần dưới*: Bảng theo dõi tiến độ cho từng mục (mô tả rõ từng hạng mục đang ở đâu, trạng thái và tiến độ chi tiết ra sao).
+     - **`docs/architecture_acceptance.md`**: Báo cáo nghiệm thu & thấu hiểu kiến trúc (Tiếng Anh).
    - Làm mới và cập nhật file `UPDATE.md` của từng service vừa đụng tới và `UPDATE.md` của `System-Repo`:
      - Ghi chép tiến độ của **ngày hiện tại `[DD/MM/YYYY]` lên ĐẦU file**.
      - Xóa bớt/làm sạch nội dung `UPDATE.md` cũ không còn phù hợp để tài liệu luôn gọn gàng, chuẩn xác.
