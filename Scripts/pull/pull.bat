@@ -32,7 +32,7 @@ echo =============================================================
 pushd "%ROOT_DIR%"
 set "REPO_NAME=System-Repo"
 for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD') do set "CUR_BRANCH=%%b"
-call "%~f0" :PROCESS_PULL
+call :PROCESS_PULL
 popd
 echo:
 
@@ -66,7 +66,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             REM Dam bao checkout dung nhanh
             git checkout !CUR_BRANCH! >nul 2>&1
             
-            call "%~f0" :PROCESS_PULL
+            call :PROCESS_PULL
             popd
         ) else (
             echo [WARNING] Thu muc "!TARGET_PATH!" chua duoc khoi tao Git.
