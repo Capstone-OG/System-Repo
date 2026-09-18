@@ -1,5 +1,28 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [19/09/2026] - Phân Tích Kiểm Kê Schema SQL, Thuật Toán Gom Nhóm Năng Lực (AbilityGroups) & Đánh Giá Rủi Ro Clustering
+- **Tạo Tài Liệu Phân Tích Gom Nhóm Tránh Nổ Tổ Hợp & Đánh Giá Rủi Ro ([Phan_Tich_Gom_Nhom_AbilityGroups.md](./docs/SQL/Phan_Tich_Gom_Nhom_AbilityGroups.md))**:
+  - Đã kiểm kê luồng schema SQL hiện tại ([SQL.sql](./docs/SQL/SQL.sql)) bao gồm các thực thể `CompetencyDomains`, `Skills`, `LearningProfiles`, `MockExams`, `AttemptLogs`, `SubmissionAnswers`.
+  - Phân tích chi tiết nguy cơ **nổ tổ hợp (combinatorial explosion)** khi gom nhóm trên vector $M=60$ skills toàn hệ thống ($3^{60}$ tổ hợp), dẫn tới lời nguyền số chiều và mất tác dụng tiết kiệm chi phí AI.
+  - Đề xuất trọn bộ **3 giải pháp giảm chiều dữ liệu thực tế**:
+    1. *Domain-level Clustering*: Phân tách thành 5 bài toán gom nhóm độc lập theo từng `domain_id` (Toán, Ngôn ngữ, KHTN, KHXH, Anh văn).
+    2. *Fixed Cluster Count*: Cố định $K = 5$ cụm/domain $\Rightarrow$ Giới hạn tổng cộng **25 Ability Groups toàn hệ thống**.
+    3. *Weakness Focus Filtering*: Lọc ra Top-K skill yếu nhất để loại bỏ nhiễu từ các skill khá giỏi.
+  - Đã đồng bộ 100% CSDL Nhóm 10 trong `SQL.sql`: `AbilityGroups` và `StudentGroupMemberships`.
+  - **Bổ sung Phân tích 8 Rủi ro chính của Thuật toán Clustering**:
+    1. *Chọn sai K*, 2. *Dữ liệu thưa*, 3. *Chưa chuẩn hóa Scaling*, 4. *Outlier kéo lệch tâm cụm*, 5. *Giả định cụm hình cầu*, 6. *Cluster Drift theo thời gian*, 7. *Cold Start học sinh mới*, 8. *Nhãn không ổn định (Label Instability)*.
+    - Xác định **Top 3 rủi ro đáng ưu tiên xử lý nhất cho V-ACT**: Dữ liệu thưa (7.2), Cold Start (7.7) và Chọn sai K (7.1).
+- **Khắc Phục Lỗi Cú Pháp Mermaid Diagram & Chuẩn Hóa Markdown (`docs/luong_phan_tich_va_hien_thi_de_thi.md`)**:
+  - Đã chuẩn hóa toàn bộ các sơ đồ `sequenceDiagram` và `flowchart TD` để tương thích 100% với trình biên dịch **Mermaid 11.15.0** trên **MD Editor Plus**:
+    - Bọc ngoặc kép tất cả tên nhãn chứa ký tự đặc biệt, dấu ngoặc `()`, hai chấm `:`.
+    - Loại bỏ hoàn toàn ngoặc vuông `[]`, ngoặc nhọn `{}` và dấu nháy kép lồng trong nội dung mũi tên/subgraph.
+- **Bổ Sung Quy Tắc Hệ Thống Cho Agent (`AGENTS.md` & `.agents/rules/markdown_formatting_rules.md`)**:
+  - Đã ghi nhận quy tắc **MD Editor Plus Compatible Rule** vào bộ quy tắc của Agent:
+    1. Không dùng URL `file:///` tuyệt đối trong tài liệu repo (dùng tương đối `./`).
+    2. Bọc công thức KaTeX/LaTeX và escape sequence trong inline backticks `` `...` `` thay vì dùng `$` thô gây lỗi đỏ text.
+    3. Tuân thủ nghiêm ngặt chuẩn sơ đồ Mermaid 11.15.0+ (bọc ngoặc nhãn có ký tự đặc biệt, cấm lồng `loop` trong `par` hay `loop` trong `loop`).
+
+
 ## [18/09/2026] - Chuẩn Hóa Tên Bộ Tài Liệu Docs Toàn Bộ Microservices & Cấu Hình AI Rules
 - **Chuẩn Hóa Bộ File Tài Liệu `docs/` Cho Tất Cả 5 Microservices**:
   - Đổi tên & đồng bộ toàn bộ tài liệu tiến độ của tất cả các service về 3 file chuẩn duy nhất:

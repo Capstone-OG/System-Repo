@@ -1,7 +1,7 @@
 -- =====================================================================
 -- V-ACT PLATFORM — DATABASE SCHEMA V2 (PostgreSQL)
 -- Đồng bộ 100% với PlantUML ERD (VACT_SCHEMA_V2_ERD)
--- Cập nhật ngày: 17/09/2026
+-- Cập nhật ngày: 19/09/2026 — bổ sung Nhóm 10: Ability Group
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -356,6 +356,29 @@ CREATE TABLE "SystemConfigs" (
   "updated_at" timestamp DEFAULT (now())
 );
 
+-- ---------------------------------------------------------------------
+-- 10. ABILITY GROUP — GOM NHÓM NĂNG LỰC (Cluster-then-Classify)
+-- Chỉ lưu KẾT QUẢ (state) sau khi phân cụm/phân loại ở tầng ứng dụng/ML
+-- service (K-Means chạy định kỳ, KNN classify real-time). Không lưu
+-- quy trình/tham số thuật toán trong ERD.
+-- ---------------------------------------------------------------------
+CREATE TABLE "AbilityGroups" (
+  "group_id" uuid PRIMARY KEY,
+  "domain_id" uuid NOT NULL,
+  "skill_id" uuid,
+  "group_label" varchar NOT NULL,
+  "description" text,
+  "created_at" timestamp DEFAULT (now())
+);
+
+CREATE TABLE "StudentGroupMemberships" (
+  "membership_id" uuid PRIMARY KEY,
+  "student_id" uuid NOT NULL,
+  "group_id" uuid NOT NULL,
+  "assigned_at" timestamp DEFAULT (now()),
+  "is_current" boolean DEFAULT true
+);
+
 -- =====================================================================
 -- FOREIGN KEY CONSTRAINTS
 -- =====================================================================
@@ -437,3 +460,15 @@ ALTER TABLE "TokenUsageLogs" ADD FOREIGN KEY ("related_session_id") REFERENCES "
 ALTER TABLE "SystemAlerts" ADD FOREIGN KEY ("student_id") REFERENCES "Students" ("student_id");
 ALTER TABLE "SystemAlerts" ADD FOREIGN KEY ("handled_by") REFERENCES "AcademicManagers" ("manager_id");
 ALTER TABLE "SystemConfigs" ADD FOREIGN KEY ("updated_by") REFERENCES "Users" ("user_id");
+
+-- Ability Group (Nhóm 10 — mới bổ sung)
+ALTER TABLE "AbilityGroups" ADD FOREIGN KEY ("domain_id") REFERENCES "CompetencyDomains" ("domain_id");
+ALTER TABLE "AbilityGroups" ADD FOREIGN KEY ("skill_id") REFERENCES "Skills" ("skill_id");
+ALTER TABLE "StudentGroupMemberships" ADD FOREIGN KEY ("student_id") REFERENCES "Students" ("student_id") ON DELETE CASCADE;
+ALTER TABLE "StudentGroupMemberships" ADD FOREIGN KEY ("group_id") REFERENCES "AbilityGroups" ("group_id") ON DELETE CASCADE;
+
+-- =====================================================================
+-- INDEXES (hỗ trợ truy vấn thường dùng của Ability Group)
+-- =====================================================================
+CREATE INDEX "idx_sgm_student_current" ON "StudentGroupMemberships" ("student_id", "is_current");
+CREATE INDEX "idx_ability_groups_domain" ON "AbilityGroups" ("domain_id");
