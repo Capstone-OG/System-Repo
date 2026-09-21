@@ -1,7 +1,7 @@
 -- =====================================================================
 -- V-ACT PLATFORM — DATABASE SCHEMA V2 (PostgreSQL)
 -- Đồng bộ 100% với PlantUML ERD (VACT_SCHEMA_V2_ERD)
--- Cập nhật ngày: 19/09/2026 — bổ sung Nhóm 10: Ability Group
+-- Cập nhật ngày: 21/09/2026 — bổ sung Luồng Duyệt Đề Thi AI & Nuốt Tài Liệu RAG Theo Môn/Skill
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -153,12 +153,18 @@ CREATE TABLE "Questions" (
 CREATE TABLE "MockExams" (
   "exam_id" uuid PRIMARY KEY,
   "campus_id" uuid,
+  "domain_id" uuid,
   "title" varchar NOT NULL,
   "exam_type" varchar,
   "duration_minutes" int DEFAULT 150,
   "total_questions" int DEFAULT 120,
   "scheduled_at" timestamp,
   "is_published" boolean DEFAULT false,
+  "is_ai_generated" boolean DEFAULT false,
+  "approval_status" varchar DEFAULT 'APPROVED',
+  "approved_by" uuid,
+  "approved_at" timestamp,
+  "rejection_reason" text,
   "created_by" uuid,
   "created_at" timestamp DEFAULT (now())
 );
@@ -287,10 +293,14 @@ CREATE TABLE "SubmissionAnswers" (
 -- ---------------------------------------------------------------------
 CREATE TABLE "KnowledgeSources" (
   "source_id" uuid PRIMARY KEY,
+  "domain_id" uuid,
+  "skill_id" uuid,
   "title" varchar NOT NULL,
   "content" text,
   "file_url" varchar,
   "uploaded_by" uuid,
+  "document_type" varchar DEFAULT 'GENERAL_KNOWLEDGE',
+  "description" text,
   "vector_status" varchar DEFAULT 'PENDING',
   "created_at" timestamp DEFAULT (now())
 );
@@ -415,7 +425,9 @@ ALTER TABLE "Questions" ADD FOREIGN KEY ("reviewed_by") REFERENCES "Teachers" ("
 
 -- Thi Thử
 ALTER TABLE "MockExams" ADD FOREIGN KEY ("campus_id") REFERENCES "Campuses" ("campus_id");
+ALTER TABLE "MockExams" ADD FOREIGN KEY ("domain_id") REFERENCES "CompetencyDomains" ("domain_id");
 ALTER TABLE "MockExams" ADD FOREIGN KEY ("created_by") REFERENCES "Users" ("user_id");
+ALTER TABLE "MockExams" ADD FOREIGN KEY ("approved_by") REFERENCES "Users" ("user_id");
 ALTER TABLE "ExamQuestions" ADD FOREIGN KEY ("exam_id") REFERENCES "MockExams" ("exam_id") ON DELETE CASCADE;
 ALTER TABLE "ExamQuestions" ADD FOREIGN KEY ("question_id") REFERENCES "Questions" ("question_id");
 
@@ -450,6 +462,8 @@ ALTER TABLE "SubmissionAnswers" ADD FOREIGN KEY ("question_id") REFERENCES "Ques
 
 -- AI Tutor & RAG
 ALTER TABLE "KnowledgeSources" ADD FOREIGN KEY ("uploaded_by") REFERENCES "AcademicDirectors" ("director_id");
+ALTER TABLE "KnowledgeSources" ADD FOREIGN KEY ("domain_id") REFERENCES "CompetencyDomains" ("domain_id");
+ALTER TABLE "KnowledgeSources" ADD FOREIGN KEY ("skill_id") REFERENCES "Skills" ("skill_id");
 ALTER TABLE "AITutorSessions" ADD FOREIGN KEY ("student_id") REFERENCES "Students" ("student_id");
 ALTER TABLE "AITutorSessions" ADD FOREIGN KEY ("question_id") REFERENCES "Questions" ("question_id");
 ALTER TABLE "AITutorMessages" ADD FOREIGN KEY ("session_id") REFERENCES "AITutorSessions" ("session_id") ON DELETE CASCADE;
@@ -468,7 +482,9 @@ ALTER TABLE "StudentGroupMemberships" ADD FOREIGN KEY ("student_id") REFERENCES 
 ALTER TABLE "StudentGroupMemberships" ADD FOREIGN KEY ("group_id") REFERENCES "AbilityGroups" ("group_id") ON DELETE CASCADE;
 
 -- =====================================================================
--- INDEXES (hỗ trợ truy vấn thường dùng của Ability Group)
+-- INDEXES (hỗ trợ truy vấn thường dùng của Ability Group & Duyệt Đề AI/RAG)
 -- =====================================================================
 CREATE INDEX "idx_sgm_student_current" ON "StudentGroupMemberships" ("student_id", "is_current");
 CREATE INDEX "idx_ability_groups_domain" ON "AbilityGroups" ("domain_id");
+CREATE INDEX "idx_mock_exams_approval" ON "MockExams" ("approval_status", "domain_id");
+CREATE INDEX "idx_knowledge_sources_domain_skill" ON "KnowledgeSources" ("domain_id", "skill_id");

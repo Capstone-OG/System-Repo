@@ -1,5 +1,22 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [21/09/2026] - Cập Nhật ERD CSDL PostgreSQL Bổ Sung Luồng Duyệt Đề Thi AI 30 Câu & Nuốt Tài Liệu RAG Theo Môn / Skill
+- **Cập Nhật CSDL Schema SQL ([SQL.sql](./docs/SQL/SQL.sql))**:
+  - **Bổ sung quy trình Duyệt Đề Thi do AI Tạo vào bảng `MockExams`**:
+    - Thêm `domain_id` (FK `CompetencyDomains`): Xác định môn học / miền năng lực của đề thi.
+    - Thêm `is_ai_generated` (boolean, default false): Đánh dấu đề do AI tự động tổng hợp hay tạo thủ công.
+    - Thêm `approval_status` (varchar, default `'APPROVED'`): Quản lý vòng đời kiểm duyệt (`'DRAFT'`, `'PENDING_APPROVAL'`, `'APPROVED'`, `'REJECTED'`).
+    - Thêm `approved_by` (FK `Users`), `approved_at` (timestamp), và `rejection_reason` (text): Phục vụ thao tác duyệt/từ chối của Giám đốc môn học / Giáo viên.
+  - **Bổ sung phân loại Môn & Skill vào bảng `KnowledgeSources` (Tài liệu RAG)**:
+    - Thêm `domain_id` (FK `CompetencyDomains`) và `skill_id` (FK `Skills`): Cho phép nuốt và trích xuất tài liệu tri thức (SGK, bài giảng, tài liệu mở rộng) phân loại chuẩn xác theo từng môn học và kỹ năng.
+    - Thêm `document_type` (varchar, default `'GENERAL_KNOWLEDGE'`): Phân biệt nguồn tài liệu (`'TEXTBOOK'`, `'CURRICULUM'`, `'GENERAL_KNOWLEDGE'`, `'PAST_EXAM'`).
+    - Thêm `description` (text): Mô tả nội dung tài liệu.
+  - **Thêm Chỉ Mục (Indexes)**:
+    - `idx_mock_exams_approval` hỗ trợ tra cứu đề thi chờ duyệt theo môn học (`approval_status`, `domain_id`).
+    - `idx_knowledge_sources_domain_skill` hỗ trợ RAG vector retriever lọc nhanh tài liệu tri thức theo môn & skill (`domain_id`, `skill_id`).
+- **Thiết Thiết Kế Kế Hoạch Triển Khai Kiến Trúc (Implementation Plan)**:
+  - Xây dựng luồng API sinh đề 30 câu bất đồng bộ (`POST /api/v1/content/exams/generate-ai`), lưu DB ở trạng thái `PENDING_APPROVAL` và phản hồi HTTP `200 OK` ngay lập tức mà không làm treo ứng dụng.
+
 ## [19/09/2026] - Phân Tích Kiểm Kê Schema SQL, Thuật Toán Gom Nhóm Năng Lực (AbilityGroups) & Đánh Giá Rủi Ro Clustering
 - **Tạo Tài Liệu Phân Tích Gom Nhóm Tránh Nổ Tổ Hợp & Đánh Giá Rủi Ro ([Phan_Tich_Gom_Nhom_AbilityGroups.md](./docs/SQL/Phan_Tich_Gom_Nhom_AbilityGroups.md))**:
   - Đã kiểm kê luồng schema SQL hiện tại ([SQL.sql](./docs/SQL/SQL.sql)) bao gồm các thực thể `CompetencyDomains`, `Skills`, `LearningProfiles`, `MockExams`, `AttemptLogs`, `SubmissionAnswers`.
