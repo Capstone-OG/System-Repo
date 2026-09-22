@@ -16,6 +16,8 @@
   - Triển khai `ILearningProfileRepository` & `LearningProfileRepository`: Lưu trữ ma trận xác suất làm chủ ban đầu $P(L_0)$ cho mô hình BKT.
   - Triển khai `IClassEnrollmentRepository` & `ClassEnrollmentRepository`: Tự động tìm kiếm/khởi tạo lớp học tại cơ sở (`CampusId`) theo phân lớp và tạo bản ghi ghi danh (`ENROLLED`).
   - Nâng cấp `SubmitDiagnosticCommandHandler`: Khép kín toàn bộ luồng 5 bước từ nộp bài, chấm điểm, chẩn đoán AI, lưu BKT Priors, xếp lớp Campus và trả về Biểu đồ Radar đa giác trong $< 2$ giây (Happy Case).
+  - Di trú schema CSDL PostgreSQL: Bổ sung 4 cột mới vào `practice.exam_submissions` và tạo các bảng `LearningProfiles`, `Classes`, `ClassEnrollments`.
+  - Kiểm thử trực tiếp End-to-End thành công 100% qua Swagger UI: Trả về kết quả chẩn đoán, xếp lớp tự động `FOUNDATION`, tạo lớp tại cơ sở và lưu trữ 12 BKT Priors.
   - Biên dịch toàn bộ giải pháp .NET 9 sạch: 0 Warning(s), 0 Error(s).
 - **Tài Liệu & Tiến Độ**:
   - Cập nhật đồng bộ `docs/daily.md`, `docs/process.md`, `docs/architecture_acceptance.md` và `UPDATE.md` của AI Engine, Practice Service và System Repo.
