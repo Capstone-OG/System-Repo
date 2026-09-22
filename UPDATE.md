@@ -1,5 +1,18 @@
 # Nhật Ký Cập Nhật (Update Log)
 
+## [22/09/2026] - Triển Khai Giai Đoạn 1 Core Flow 1: Engine Ước Lượng Năng Lực IRT 2PL & BKT Initial Priors
+- **AI Engine (`rag-service`)**:
+  - Triển khai `rag-service/diagnostic_engine.py`: Module toán học cốt lõi tính toán năng lực học sinh `theta_0` theo mô hình IRT 2-Parameter Logistic (2PL) với Maximum A Posteriori (MAP) Estimation, hàm phạt Gaussian Prior `N(0, 2.0^2)` và thuật toán tối ưu hóa Brent (`scipy.optimize.minimize_scalar`).
+  - Tích hợp cơ chế triệt tiêu đoán mò thần tốc (< 5 giây): hạ tham số phân biệt `a -> 0.1` để ngăn chặn hiện tượng làm bừa nhưng ăn may làm sai lệch năng lực thực tế.
+  - Tính toán xác suất thành thạo ban đầu BKT Prior `P(L0) = Sigmoid(theta)` cho từng kỹ năng với cơ chế kẹp an toàn `[0.05, 0.95]`.
+  - Xử lý tình huống không hoàn hảo (unhappy case): các kỹ năng không có câu hỏi trong đề rút gọn 30 câu tự động kế thừa `P(L0)` suy diễn từ năng lực miền cha.
+  - Phân loại xếp lớp chuẩn mực 3 cấp: `FOUNDATION` (`theta < -0.5`), `ACCELERATION` (`-0.5 <= theta <= 0.5`), `BREAKTHROUGH` (`theta > 0.5`).
+  - Dựng tọa độ biểu đồ Radar so sánh năng lực học sinh theo từng miền với điểm chuẩn benchmark dựa trên mục tiêu điểm thi (V-ACT target score).
+  - Triển khai `POST /api/v1/diagnostic/analyze` và `GET /api/v1/diagnostic/config` trong `rag-service/routers/diagnostic.py`, tích hợp lời nhận xét sư phạm tích cực từ Google Gemini (`gemini-3.5-flash`).
+  - Hoàn thành bộ kiểm thử 10/10 test cases đơn vị và tích hợp endpoint với 100% PASS rate (`tests/test_diagnostic.py`).
+- **Tài Liệu & Tiến Độ**:
+  - Cập nhật đồng bộ `docs/daily.md`, `docs/process.md`, `docs/architecture_acceptance.md` và `UPDATE.md` của AI Engine và System Repo.
+
 ## [21/09/2026] - Cập Nhật ERD CSDL PostgreSQL Bổ Sung Luồng Duyệt Đề Thi AI 30 Câu & Nuốt Tài Liệu RAG Theo Môn / Skill
 - **Cập Nhật CSDL Schema SQL ([SQL.sql](./docs/SQL/SQL.sql))**:
   - **Bổ sung quy trình Duyệt Đề Thi do AI Tạo vào bảng `MockExams`**:
