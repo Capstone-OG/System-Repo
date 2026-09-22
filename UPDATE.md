@@ -17,6 +17,7 @@
   - Triển khai `IClassEnrollmentRepository` & `ClassEnrollmentRepository`: Tự động tìm kiếm/khởi tạo lớp học tại cơ sở (`CampusId`) theo phân lớp và tạo bản ghi ghi danh (`ENROLLED`).
   - Nâng cấp `SubmitDiagnosticCommandHandler`: Khép kín toàn bộ luồng 5 bước từ nộp bài, chấm điểm, chẩn đoán AI, lưu BKT Priors, xếp lớp Campus và trả về Biểu đồ Radar đa giác trong $< 2$ giây (Happy Case).
   - Di trú schema CSDL PostgreSQL: Bổ sung 4 cột mới vào `practice.exam_submissions` và tạo các bảng `LearningProfiles`, `Classes`, `ClassEnrollments`.
+  - Trực quan hóa DTO dữ liệu trả về: Bổ sung tên kỹ năng (`SkillName`), tên môn học (`DomainName`), cơ sở đào tạo (`CampusName`), đối tượng kỹ năng yếu trực quan (`WeakSkills`) và phân tách đa trục Biểu đồ Radar đa giác.
   - Kiểm thử trực tiếp End-to-End thành công 100% qua Swagger UI: Trả về kết quả chẩn đoán, xếp lớp tự động `FOUNDATION`, tạo lớp tại cơ sở và lưu trữ 12 BKT Priors.
   - Biên dịch toàn bộ giải pháp .NET 9 sạch: 0 Warning(s), 0 Error(s).
 - **Tài Liệu & Tiến Độ**:
