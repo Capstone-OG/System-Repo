@@ -1,6 +1,6 @@
 # Nhật Ký Cập Nhật (Update Log)
 
-## [22/09/2026] - Triển Khai Giai Đoạn 1 Core Flow 1: Engine Ước Lượng Năng Lực IRT 2PL & BKT Initial Priors
+## [22/09/2026] - Hoàn Tất Toàn Diện Core Flow 1: Engine IRT & BKT Priors (AI Engine) và Tích Hợp Xếp Lớp Tự Động (Practice Service)
 - **AI Engine (`rag-service`)**:
   - Triển khai `rag-service/diagnostic_engine.py`: Module toán học cốt lõi tính toán năng lực học sinh `theta_0` theo mô hình IRT 2-Parameter Logistic (2PL) với Maximum A Posteriori (MAP) Estimation, hàm phạt Gaussian Prior `N(0, 2.0^2)` và thuật toán tối ưu hóa Brent (`scipy.optimize.minimize_scalar`).
   - Tích hợp cơ chế triệt tiêu đoán mò thần tốc (< 5 giây): hạ tham số phân biệt `a -> 0.1` để ngăn chặn hiện tượng làm bừa nhưng ăn may làm sai lệch năng lực thực tế.
@@ -10,8 +10,15 @@
   - Dựng tọa độ biểu đồ Radar so sánh năng lực học sinh theo từng miền với điểm chuẩn benchmark dựa trên mục tiêu điểm thi (V-ACT target score).
   - Triển khai `POST /api/v1/diagnostic/analyze` và `GET /api/v1/diagnostic/config` trong `rag-service/routers/diagnostic.py`, tích hợp lời nhận xét sư phạm tích cực từ Google Gemini (`gemini-3.5-flash`).
   - Hoàn thành bộ kiểm thử 10/10 test cases đơn vị và tích hợp endpoint với 100% PASS rate (`tests/test_diagnostic.py`).
+- **Practice Service (`V-Eval-Practice_Service`)**:
+  - Triển khai `IAiDiagnosticClient` & `AiDiagnosticClient`: HTTP Client kết nối API phân tích năng lực của AI Engine kèm cơ chế Resilient Local Fallback chống nghẽn dịch vụ (Zero-Blocking).
+  - Mở rộng thực thể Domain & EF Core `PracticeDbContext`: Ánh xạ `ExamSubmission` (bổ sung `Theta0`, `PlacementClass`, `AiCommentary`, `EnrolledClassId`), `LearningProfile` (bảng `LearningProfiles`), `Class` (bảng `Classes`) và `ClassEnrollment` (bảng `ClassEnrollments`).
+  - Triển khai `ILearningProfileRepository` & `LearningProfileRepository`: Lưu trữ ma trận xác suất làm chủ ban đầu $P(L_0)$ cho mô hình BKT.
+  - Triển khai `IClassEnrollmentRepository` & `ClassEnrollmentRepository`: Tự động tìm kiếm/khởi tạo lớp học tại cơ sở (`CampusId`) theo phân lớp và tạo bản ghi ghi danh (`ENROLLED`).
+  - Nâng cấp `SubmitDiagnosticCommandHandler`: Khép kín toàn bộ luồng 5 bước từ nộp bài, chấm điểm, chẩn đoán AI, lưu BKT Priors, xếp lớp Campus và trả về Biểu đồ Radar đa giác trong $< 2$ giây (Happy Case).
+  - Biên dịch toàn bộ giải pháp .NET 9 sạch: 0 Warning(s), 0 Error(s).
 - **Tài Liệu & Tiến Độ**:
-  - Cập nhật đồng bộ `docs/daily.md`, `docs/process.md`, `docs/architecture_acceptance.md` và `UPDATE.md` của AI Engine và System Repo.
+  - Cập nhật đồng bộ `docs/daily.md`, `docs/process.md`, `docs/architecture_acceptance.md` và `UPDATE.md` của AI Engine, Practice Service và System Repo.
 
 ## [21/09/2026] - Cập Nhật ERD CSDL PostgreSQL Bổ Sung Luồng Duyệt Đề Thi AI 30 Câu & Nuốt Tài Liệu RAG Theo Môn / Skill
 - **Cập Nhật CSDL Schema SQL ([SQL.sql](./docs/SQL/SQL.sql))**:
