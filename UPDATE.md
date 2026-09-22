@@ -1,27 +1,84 @@
-# Nhật Ký Cập Nhật (Update Log)
+# Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [22/09/2026] - Hoàn Tất Toàn Diện Core Flow 1: Engine IRT & BKT Priors (AI Engine) và Tích Hợp Xếp Lớp Tự Động (Practice Service)
-- **AI Engine (`rag-service`)**:
-  - Triển khai `rag-service/diagnostic_engine.py`: Module toán học cốt lõi tính toán năng lực học sinh `theta_0` theo mô hình IRT 2-Parameter Logistic (2PL) với Maximum A Posteriori (MAP) Estimation, hàm phạt Gaussian Prior `N(0, 2.0^2)` và thuật toán tối ưu hóa Brent (`scipy.optimize.minimize_scalar`).
-  - Tích hợp cơ chế triệt tiêu đoán mò thần tốc (< 5 giây): hạ tham số phân biệt `a -> 0.1` để ngăn chặn hiện tượng làm bừa nhưng ăn may làm sai lệch năng lực thực tế.
-  - Tính toán xác suất thành thạo ban đầu BKT Prior `P(L0) = Sigmoid(theta)` cho từng kỹ năng với cơ chế kẹp an toàn `[0.05, 0.95]`.
-  - Xử lý tình huống không hoàn hảo (unhappy case): các kỹ năng không có câu hỏi trong đề rút gọn 30 câu tự động kế thừa `P(L0)` suy diễn từ năng lực miền cha.
-  - Phân loại xếp lớp chuẩn mực 3 cấp: `FOUNDATION` (`theta < -0.5`), `ACCELERATION` (`-0.5 <= theta <= 0.5`), `BREAKTHROUGH` (`theta > 0.5`).
-  - Dựng tọa độ biểu đồ Radar so sánh năng lực học sinh theo từng miền với điểm chuẩn benchmark dựa trên mục tiêu điểm thi (V-ACT target score).
-  - Triển khai `POST /api/v1/diagnostic/analyze` và `GET /api/v1/diagnostic/config` trong `rag-service/routers/diagnostic.py`, tích hợp lời nhận xét sư phạm tích cực từ Google Gemini (`gemini-3.5-flash`).
-  - Hoàn thành bộ kiểm thử 10/10 test cases đơn vị và tích hợp endpoint với 100% PASS rate (`tests/test_diagnostic.py`).
-- **Practice Service (`V-Eval-Practice_Service`)**:
-  - Triển khai `IAiDiagnosticClient` & `AiDiagnosticClient`: HTTP Client kết nối API phân tích năng lực của AI Engine kèm cơ chế Resilient Local Fallback chống nghẽn dịch vụ (Zero-Blocking).
-  - Mở rộng thực thể Domain & EF Core `PracticeDbContext`: Ánh xạ `ExamSubmission` (bổ sung `Theta0`, `PlacementClass`, `AiCommentary`, `EnrolledClassId`), `LearningProfile` (bảng `LearningProfiles`), `Class` (bảng `Classes`) và `ClassEnrollment` (bảng `ClassEnrollments`).
-  - Triển khai `ILearningProfileRepository` & `LearningProfileRepository`: Lưu trữ ma trận xác suất làm chủ ban đầu $P(L_0)$ cho mô hình BKT.
-  - Triển khai `IClassEnrollmentRepository` & `ClassEnrollmentRepository`: Tự động tìm kiếm/khởi tạo lớp học tại cơ sở (`CampusId`) theo phân lớp và tạo bản ghi ghi danh (`ENROLLED`).
-  - Nâng cấp `SubmitDiagnosticCommandHandler`: Khép kín toàn bộ luồng 5 bước từ nộp bài, chấm điểm, chẩn đoán AI, lưu BKT Priors, xếp lớp Campus và trả về Biểu đồ Radar đa giác trong $< 2$ giây (Happy Case).
-  - Di trú schema CSDL PostgreSQL: Bổ sung 4 cột mới vào `practice.exam_submissions` và tạo các bảng `LearningProfiles`, `Classes`, `ClassEnrollments`.
-  - Trực quan hóa DTO dữ liệu trả về: Bổ sung tên kỹ năng (`SkillName`), tên môn học (`DomainName`), cơ sở đào tạo (`CampusName`), đối tượng kỹ năng yếu trực quan (`WeakSkills`) và phân tách đa trục Biểu đồ Radar đa giác.
-  - Kiểm thử trực tiếp End-to-End thành công 100% qua Swagger UI: Trả về kết quả chẩn đoán, xếp lớp tự động `FOUNDATION`, tạo lớp tại cơ sở và lưu trữ 12 BKT Priors.
-  - Biên dịch toàn bộ giải pháp .NET 9 sạch: 0 Warning(s), 0 Error(s).
-- **Tài Liệu & Tiến Độ**:
-  - Cập nhật đồng bộ `docs/daily.md`, `docs/process.md`, `docs/architecture_acceptance.md` và `UPDATE.md` của AI Engine, Practice Service và System Repo.
+## [22/09/2026] - Triển Khai Toàn Diện Core Flow 1 (Chẩn Đoán Năng Lực Đầu Vào, Ước Lượng IRT & BKT Priors, Tự Động Xếp Lớp & Trực Quan Hóa Dữ Liệu)
+
+Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 câu $\to$ Chấm điểm $\to$ AI Psychometrics $\to$ Xếp lớp Campus $\to$ DTO trực quan)** đã được phát triển, liên thông và kiểm thử thành công 100% qua 4 Microservices:
+
+---
+
+### 1. AI Engine (`All Services/V-Eval-Ai_Engine/rag-service`)
+* **Toán học & Psychometrics (`rag-service/diagnostic_engine.py`) [MỚI]**:
+  * **Thuật toán IRT 2PL (Item Response Theory 2-Parameter Logistic)**: Ước lượng năng lực học sinh $\theta_0$ qua phương pháp Maximum A Posteriori (MAP) kết hợp hàm phạt Gaussian Prior $N(0, 2.0^2)$ và thuật toán tối ưu hóa Brent (`scipy.optimize.minimize_scalar`).
+  * **Cơ chế chống đoán mò (Anti-guessing penalty)**: Nếu thời gian làm câu hỏi $< 5\text{s}$, tự động giảm tham số phân biệt $a \to 0.1$ để triệt tiêu hiện tượng ăn may gây sai lệch năng lực.
+  * **Xác suất thành thục ban đầu BKT Prior $P(L_0)$**: Áp dụng Logistic Sigmoid $P(L_0) = \frac{1}{1 + e^{-\theta}}$ với cơ chế kẹp an toàn $[0.05, 0.95]$.
+  * **Suy diễn miền năng lực (Domain-level Inference)**: Các kỹ năng không có câu hỏi trong đề 30 câu tự động kế thừa $P(L_0)$ suy diễn từ năng lực miền cha $\theta_{\text{domain}}$, đảm bảo giải quyết trọn vẹn bài toán Cold-Start.
+  * **Phân lớp học sinh 3 cấp**: `FOUNDATION` ($\theta < -0.5$), `ACCELERATION` ($-0.5 \le \theta \le 0.5$), `BREAKTHROUGH` ($\theta > 0.5$).
+  * **Tọa độ Biểu đồ Radar đa trục**: Tính toán tỷ lệ % thực tế (`student_pct`) và điểm chuẩn chuẩn hóa (`benchmark_pct`) theo từng miền năng lực.
+* **REST API & Tích Hợp Gemini LLM (`rag-service/routers/diagnostic.py`) [MỚI]**:
+  * `POST /api/v1/diagnostic/analyze`: Nhận kết quả 30 câu trả lời, tính toán chỉ số psychometrics và gọi Google Gemini (`gemini-3.6-flash`, `temperature = 0.3`) tạo nhận xét sư phạm tích cực bằng Tiếng Việt.
+  * Tích hợp cơ chế tự động Fallback nội bộ nếu kết nối LLM gặp sự cố (Zero-Downtime).
+  * `GET /api/v1/diagnostic/config`: Trả về tham số cấu hình ngưỡng và thang đo.
+* **Data Contracts Pydantic (`rag-service/schemas.py`) [CẬP NHẬT]**:
+  * Định nghĩa trọn bộ DTO: `DiagnosticAnswerItem`, `DiagnosticDomainName`, `DiagnosticAnalyzeRequest`, `DiagnosticSkillPriorDto`, `DiagnosticDomainScoreDto`, `DiagnosticRadarAxisDto`, `DiagnosticAnalyzeResponse`.
+* **Bộ Kiểm Thử Toàn Diện (`rag-service/tests/test_diagnostic.py`) [MỚI]**:
+  * 12/12 unit và integration test cases đạt **100% PASS rate** (kiểm thử IRT, BKT, edge cases 100% đúng/sai, suy diễn untested skills, endpoint FastAPI).
+* **Tài Liệu Đặc Tả Toán Học (`docs/ai_architecture/cong_thuc_psychometrics_irt_bkt.md`) [MỚI]**:
+  * Ban hành tài liệu toán học chuyên sâu trình bày chi tiết toàn bộ các công thức toán học IRT 2PL, MAP Brent, SEM, BKT Sigmoid, Domain Inference, Radar Benchmark và lý giải bài toán thực tế.
+
+---
+
+### 2. Practice Service (`All Services/V-Eval-Practice_Service`)
+* **Tích Hợp AI Subsystem Client (`V-Eval-Practice_Service.Infrastructure/HttpClients/AiDiagnosticClient.cs`) [MỚI]**:
+  * Triển khai `IAiDiagnosticClient` kết nối `POST /api/v1/diagnostic/analyze` với timeout 15s.
+  * Cơ chế Resilient Fallback: Tự động tính toán $\theta_0$ xấp xỉ nội bộ nếu AI Engine tạm ngắt kết nối.
+* **Mở Rộng Domain Entities & CSDL PostgreSQL (`V-Eval-Practice_Service.Domain/Entities`) [CẬP NHẬT & MỚI]**:
+  * `ExamSubmission`: Bổ sung 4 cột `Theta0`, `PlacementClass`, `AiCommentary`, `EnrolledClassId`.
+  * `LearningProfile` [MỚI]: Thực thể lưu ma trận xác suất làm chủ ban đầu $P(L_0)$ cho từng kỹ năng vào bảng `practice.learning_profiles`.
+  * `Class` & `ClassEnrollment` [MỚI]: Thực thể quản lý lớp học tại cơ sở (`CampusId`) và ghi nhận trạng thái ghi danh (`ENROLLED`).
+* **Mở Rộng EF Core Persistence (`PracticeDbContext.cs`) [CẬP NHẬT]**:
+  * Đăng ký `DbSet<LearningProfile>`, `DbSet<Class>`, `DbSet<ClassEnrollment>`.
+  * Thêm logic tự động di trú DDL trên startup (`Program.cs`): `ALTER TABLE practice.exam_submissions ADD COLUMN IF NOT EXISTS ...` và tạo các bảng thiếu.
+* **Triển Khai Repositories Nghiệp Vụ [MỚI]**:
+  * `ILearningProfileRepository` / `LearningProfileRepository`: Lưu trữ ma trận $P(L_0)$.
+  * `IClassEnrollmentRepository` / `ClassEnrollmentRepository`: Tìm kiếm/tự động tạo lớp học tại Campus theo phân lớp (`FOUNDATION` / `ACCELERATION` / `BREAKTHROUGH`) và tạo bản ghi ghi danh `ClassEnrollment`.
+* **Khép Kín Luồng Xử Lý Nghiệp Vụ (`SubmitDiagnosticCommandHandler.cs`) [CẬP NHẬT]**:
+  1. Gọi gRPC Identity Service: Xác thực học sinh, lấy `CampusId` và `CampusName`.
+  2. Gọi gRPC Content Service: Lấy bảng đáp án bí mật kèm `SkillName`, `DomainId`, `DomainName`.
+  3. Chấm điểm 30 câu hỏi: Tính tổng điểm, tỷ lệ chính xác, phân nhóm kỹ năng, lọc kỹ năng yếu (`< 60%`), phân nhóm độ khó.
+  4. Gửi dữ liệu sang AI Engine: Nhận về $\theta_0$, phân lớp, AI commentary, tọa độ Radar Chart, BKT Priors.
+  5. Cập nhật bài nộp, lưu $P(L_0)$ vào `LearningProfiles`, tự động tạo/ghi danh lớp tại Campus, trả về DTO trực quan.
+* **Trực Quan Hóa DTO Dữ Liệu Phản Hồi [CẬP NHẬT]**:
+  * Bổ sung `SkillName`, `DomainId`, `DomainName` vào `QuestionResultDto` và `SkillDiagnosticDto`.
+  * Bổ sung object `WeakSkills` trực quan (`skillId`, `skillName`, `domainName`, `accuracyPercentage`).
+  * Bổ sung `CampusName`, `ClassName`, `ClassId`, `EnrollmentId`, `RadarChart`, `SkillPriors` vào `SubmitDiagnosticResponseDto`.
+
+---
+
+### 3. Content Service (`All Services/V-Eval-Content_Service`)
+* **Nâng Cấp Hợp Đồng gRPC (`V-Eval-Content_Service.Infrastructure/Protos/content.proto`) [CẬP NHẬT]**:
+  * Mở rộng `AnswerKeyItem`: Bổ sung 3 trường `string skill_name = 5;`, `string domain_id = 6;`, `string domain_name = 7;`.
+* **Nâng Cấp gRPC Server (`ContentGrpcService.cs`) [CẬP NHẬT]**:
+  * Cải tiến truy vấn EF Core trong `GetExamAnswerKey`:
+    `.Include(eq => eq.Question).ThenInclude(q => q.Skill).ThenInclude(s => s.Domain)`
+    giúp truyền dữ liệu tên kỹ năng và môn học sang `Practice_Service`.
+* **Đồng Bộ Hóa Proto**:
+  * Copy trực tiếp file `content.proto` sang thư mục `Protos/` của `Practice_Service` để bảo đảm tính tương thích.
+
+---
+
+### 4. Identity Service (`All Services/V-Eval-Identity_Service`)
+* **Nâng Cấp Hợp Đồng gRPC (`V-Eval-Identity_Service.Infrastructure/Protos/identity.proto`) [CẬP NHẬT]**:
+  * Mở rộng thông điệp `GetStudentSummaryResponse`: Bổ sung trường `string campus_name = 8;`.
+* **Nâng Cấp gRPC Server (`IdentityGrpcService.cs`) [CẬP NHẬT]**:
+  * Nạp thông tin quan hệ `Student -> Campus` để trả về tên cơ sở đào tạo chính xác cho Practice Service.
+* **Đồng Bộ Hóa Proto**:
+  * Copy trực tiếp file `identity.proto` sang `Protos/` của `Practice_Service`.
+
+---
+
+### 5. Scripts Vận Hành & Kiểm Thử Tự Động (`Scripts/`)
+* **`Scripts/run_local/run_core_flow1_services.bat` [MỚI]**: Khởi chạy đồng thời cả 4 dịch vụ (AI Engine port 8000, Identity Service 5155/5156, Content Service 5249/5250, Practice Service 5261).
+* **`Scripts/test_core_flow1.ps1` [MỚI]**: Kịch bản PowerShell kiểm thử tích hợp tự động toàn bộ luồng nộp bài thi 30 câu hỏi và kiểm tra tính toàn vẹn của dữ liệu trong CSDL.
 
 ## [21/09/2026] - Cập Nhật ERD CSDL PostgreSQL Bổ Sung Luồng Duyệt Đề Thi AI 30 Câu & Nuốt Tài Liệu RAG Theo Môn / Skill
 - **Cập Nhật CSDL Schema SQL ([SQL.sql](./docs/SQL/SQL.sql))**:
