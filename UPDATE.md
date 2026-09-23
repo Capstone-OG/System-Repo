@@ -1,5 +1,17 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
+## [24/09/2026] - Tái Cấu Trúc CSDL SQL Schema V2 Phân Chia 5 Microservice Schemas (`v_eval_*`) & Migration An Toàn Supabase
+- **Tái Cấu Trúc Toàn Bộ CSDL PostgreSQL Schema ([SQL.sql](./docs/SQL/SQL.sql))**:
+  - **Phân chia 5 Schemas chuyên biệt với tiền tố chuẩn `v_eval_*`**:
+    1. **`v_eval_identity`**: Quản lý RBAC, Auth, User & Actor Profiles (`Campuses`, `Roles`, `Users`, `UserRoles`, `Students`, `Parents`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators`, `RefreshTokens`, `OtpVerifications`).
+    2. **`v_eval_content`**: Quản lý Ngân hàng Đề thi & Khung Năng lực (`CompetencyDomains`, `Skills`, `Materials`, `Passages`, `Questions`, `MockExams`, `ExamQuestions`).
+    3. **`v_eval_practice`**: Quản lý Thi thử, Kết quả Luyện tập, Lớp học & Ability Groups (`Classes`, `ClassEnrollments`, `LiveSessions`, `LiveSessionAttendance`, `TeacherFeedback`, `LearningProfiles`, `LearningRoadmaps`, `RoadmapNodes`, `AttemptLogs`, `ExamSubmissions`, `SubmissionAnswers`, `AbilityGroups`, `StudentGroupMemberships`).
+    4. **`v_eval_ai`**: Quản lý RAG Tri thức, AI Tutor & Vector Database (`KnowledgeSources`, `KnowledgeVectorChunks`, `AITutorSessions`, `AITutorMessages`, `ScorePredictions`, `TokenUsageLogs`).
+    5. **`v_eval_system`**: Quản lý Cảnh báo hệ thống & Cấu hình Vận hành (`SystemAlerts`, `SystemConfigs`).
+  - **Cơ chế Idempotent & Non-Destructive Migration**:
+    - Sử dụng `CREATE SCHEMA IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`.
+    - Đảm bảo an toàn 100% khi thực thi trên CSDL đã có dữ liệu (Supabase Cloud hoặc Docker Postgres local), **tuyệt đối KHÔNG XÓA hay drop bảng/dữ liệu cũ**.
+
 ## [22/09/2026] - Triển Khai Toàn Diện Core Flow 1 (Chẩn Đoán Năng Lực Đầu Vào, Ước Lượng IRT & BKT Priors, Tự Động Xếp Lớp & Trực Quan Hóa Dữ Liệu)
 
 Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 câu $\to$ Chấm điểm $\to$ AI Psychometrics $\to$ Xếp lớp Campus $\to$ DTO trực quan)** đã được phát triển, liên thông và kiểm thử thành công 100% qua 4 Microservices:
@@ -79,6 +91,19 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
 ### 5. Scripts Vận Hành & Kiểm Thử Tự Động (`Scripts/`)
 * **`Scripts/run_local/run_core_flow1_services.bat` [MỚI]**: Khởi chạy đồng thời cả 4 dịch vụ (AI Engine port 8000, Identity Service 5155/5156, Content Service 5249/5250, Practice Service 5261).
 * **`Scripts/test_core_flow1.ps1` [MỚI]**: Kịch bản PowerShell kiểm thử tích hợp tự động toàn bộ luồng nộp bài thi 30 câu hỏi và kiểm tra tính toàn vẹn của dữ liệu trong CSDL.
+
+## [23/09/2026] - Bổ Sung Extension `pgvector` & Bảng Vector Chunks (`KnowledgeVectorChunks`) Vào CSDL PostgreSQL SQL.sql
+- **Cập Nhật CSDL PostgreSQL Schema ([SQL.sql](./docs/SQL/SQL.sql))**:
+  - **Bổ sung Extension `pgvector` (`CREATE EXTENSION IF NOT EXISTS vector;`)**: Khai báo extension hỗ trợ tìm kiếm similarity search 768 chiều.
+  - **Bổ sung bảng `KnowledgeVectorChunks` kết nối `1 - N` với `KnowledgeSources`**:
+    - `chunk_id` (`uuid`): Khóa chính cho từng đoạn văn trích xuất.
+    - `source_id` (`uuid` FK `KnowledgeSources`): Tùy chọn cascade xóa khi xóa tài liệu gốc.
+    - `domain_id` (`uuid` FK `CompetencyDomains`) & `skill_id` (`uuid` FK `Skills`): Hỗ trợ lọc vector theo môn học & kỹ năng.
+    - `content_snippet` (`text`): Lưu nội dung đoạn văn thô.
+    - `embedding` (`vector(768)`): Mảng Vector 768 chiều (Gemini Text-Embedding-004).
+    - `chunk_type` (`varchar`): Phân loại tri thức (`'THEORY'`, `'TEXTBOOK_EXAMPLE'`, `'SOLUTION_METHODOLOGY'`).
+    - `metadata` (`jsonb`): Lưu các thông số phụ (trang số, chương, bài tập mẫu, các bước giải...).
+  - **Bổ sung Chỉ Mục HNSW (`idx_vector_hnsw`)**: Tìm kiếm Cosine Similarity (`vector_cosine_ops`) tốc độ cao.
 
 ## [21/09/2026] - Cập Nhật ERD CSDL PostgreSQL Bổ Sung Luồng Duyệt Đề Thi AI 30 Câu & Nuốt Tài Liệu RAG Theo Môn / Skill
 - **Cập Nhật CSDL Schema SQL ([SQL.sql](./docs/SQL/SQL.sql))**:
