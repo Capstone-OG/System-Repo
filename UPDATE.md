@@ -120,19 +120,36 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
     3. Tuân thủ nghiêm ngặt chuẩn sơ đồ Mermaid 11.15.0+ (bọc ngoặc nhãn có ký tự đặc biệt, cấm lồng `loop` trong `par` hay `loop` trong `loop`).
 
 
+## [21/09/2026] - Cập Nhật ERD CSDL PostgreSQL Bổ Sung Luồng Duyệt Đề Thi AI 30 Câu & Nuốt Tài Liệu RAG Theo Môn / Skill
+- **Cập Nhật CSDL Schema SQL ([SQL.sql](./docs/SQL/SQL.sql))**:
+  - **Bổ sung quy trình Duyệt Đề Thi do AI Tạo vào bảng `MockExams`**:
+    - Thêm `domain_id` (FK `CompetencyDomains`): Xác định môn học / miền năng lực của đề thi.
+    - Thêm `is_ai_generated` (boolean, default false): Đánh dấu đề do AI tự động tổng hợp hay tạo thủ công.
+    - Thêm `approval_status` (varchar, default `'APPROVED'`): Quản lý vòng đời kiểm duyệt (`'DRAFT'`, `'PENDING_APPROVAL'`, `'APPROVED'`, `'REJECTED'`).
+    - Thêm `approved_by` (FK `Users`), `approved_at` (timestamp), và `rejection_reason` (text): Phục vụ thao tác duyệt/từ chối của Giám đốc môn học / Giáo viên.
+  - **Bổ sung phân loại Môn & Skill vào bảng `KnowledgeSources` (Tài liệu RAG)**:
+    - Thêm `domain_id` (FK `CompetencyDomains`) và `skill_id` (FK `Skills`): Cho phép nuốt và trích xuất tài liệu tri thức (SGK, bài giảng, tài liệu mở rộng) phân loại chuẩn xác theo từng môn học và kỹ năng.
+    - Thêm `document_type` (varchar, default `'GENERAL_KNOWLEDGE'`): Phân biệt nguồn tài liệu (`'TEXTBOOK'`, `'CURRICULUM'`, `'GENERAL_KNOWLEDGE'`, `'PAST_EXAM'`).
+    - Thêm `description` (text): Mô tả nội dung tài liệu.
+  - **Thêm Chỉ Mục (Indexes)**:
+    - `idx_mock_exams_approval` hỗ trợ tra cứu đề thi chờ duyệt theo môn học (`approval_status`, `domain_id`).
+    - `idx_knowledge_sources_domain_skill` hỗ trợ RAG vector retriever lọc nhanh tài liệu tri thức theo môn & skill (`domain_id`, `skill_id`).
+- **Thiết Kế Kế Hoạch Triển Khai Kiến Trúc (Implementation Plan)**:
+  - Xây dựng luồng API sinh đề 30 câu bất đồng bộ (`POST /api/v1/content/exams/generate-ai`), lưu DB ở trạng thái `PENDING_APPROVAL` và phản hồi HTTP `200 OK` ngay lập tức mà không làm treo ứng dụng.
+
 ## [20/09/2026] - Triển Khai Thực Thể Campus, 6 Actor Profiles, API Cơ Sở & Server gRPC Identity
 - **Hoàn Thiện Thực Thể Identity & 6 Actor Profiles (Schema `iam` & `profile`)**:
-  - Bổ sung thực thể [`Campus.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Domain/Entities/Iam/Campus.cs) vào schema `iam.campuses` và 6 hồ sơ Actor: `Students`, `Parents`, `ParentStudentRelations`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators` vào schema `profile`.
+  - Bổ sung thực thể [`Campus.cs`](./All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Domain/Entities/Iam/Campus.cs) vào schema `iam.campuses` và 6 hồ sơ Actor: `Students`, `Parents`, `ParentStudentRelations`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators` vào schema `profile`.
   - Khóa ngoại 1-1 với `iam.users` (Cascade Delete), khóa ngoại cơ sở `iam.campuses`.
   - Cấu hình Fluent API EF Core, Seed 6 vai trò chuẩn và 2 cơ sở mẫu (CS Thủ Đức, CS Quận 10).
 - **Phát Hành API Quản Lý & Lựa Chọn Cơ Sở (UC 10 & UC 40)**:
-  - Triển khai `ICampusRepository` và [`CampusesController.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/CampusesController.cs) cung cấp endpoint `GET /api/v1/campuses`.
+  - Triển khai `ICampusRepository` và [`CampusesController.cs`](./All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/CampusesController.cs) cung cấp endpoint `GET /api/v1/campuses`.
 - **Chuẩn Hóa Hồ Sơ Học Sinh & Thang Điểm Chuẩn 1200 (UC 04)**:
-  - Cập nhật [`UpdateProfileCommand.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/UpdateProfile/UpdateProfileCommand.cs) kiểm tra `TargetScore` theo thang điểm 1200 của bài thi ĐGNL ĐHQG-HCM V-ACT; tự động khởi tạo bản ghi `profile.students` nếu tài khoản chưa có.
+  - Cập nhật [`UpdateProfileCommand.cs`](./All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/UpdateProfile/UpdateProfileCommand.cs) kiểm tra `TargetScore` theo thang điểm 1200 của bài thi ĐGNL ĐHQG-HCM V-ACT; tự động khởi tạo bản ghi `profile.students` nếu tài khoản chưa có.
   - Hỗ trợ routing kép `PUT /api/v1/students/me/profile` và `PUT /api/v1/users/me/profile`.
 - **Hạ Tầng Liên Dịch Vụ gRPC**:
-  - Hợp nhất toàn bộ hợp đồng liên dịch vụ vào file chuẩn duy nhất [`grpc/identity.proto`](file:///d:/Capstone/grpc/identity.proto) (gồm `ValidateUserPermission`, `GetStudentProfileSummary`, và chuẩn bị các RPC `LinkParentStudent`, `GetParentStudents` cho phân hệ Parent).
-  - Triển khai [`IdentityGrpcService.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Services/IdentityGrpcService.cs) trên cổng `5155`.
+  - Hợp nhất toàn bộ hợp đồng liên dịch vụ vào file chuẩn duy nhất [`grpc/identity.proto`](./grpc/identity.proto) (gồm `ValidateUserPermission`, `GetStudentProfileSummary`, và chuẩn bị các RPC `LinkParentStudent`, `GetParentStudents` cho phân hệ Parent).
+  - Triển khai [`IdentityGrpcService.cs`](./All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Services/IdentityGrpcService.cs) trên cổng `5155`.
 - **Chuẩn Hóa Kiến Trúc Chuyên Nghiệp & Phân Hệ Khảo Thí (`V-Eval-Content_Service`)**:
   - Triển khai **Result Pattern** (`Result<T>`, `Error`, `ErrorType`) và `ApiControllerBase` đồng bộ 100% với kiến trúc chuyên nghiệp của Identity Service.
   - Tích hợp **FluentValidation** qua `ValidationBehavior` trong MediatR pipeline và `GlobalExceptionHandlerMiddleware` bắt ngoại lệ 500 toàn cục.
@@ -156,6 +173,28 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
   - `dotnet build` trên cả 3 services: **Thành công 100% (0 Error(s), 0 Warning(s))**.
   - Kiểm thử liên thông trọn vẹn Core Flow 1 từ Bước 1 (Đăng ký, Đăng nhập, Chọn cơ sở) -> Bước 2 (Lấy đề thi 30 câu) -> Bước 3 (Nộp bài, chấm điểm, thống kê kỹ năng yếu, lưu CSDL): **Thành công 100%**.
 
+## [19/09/2026] - Phân Tích Kiểm Kê Schema SQL, Thuật Toán Gom Nhóm Năng Lực (AbilityGroups) & Đánh Giá Rủi Ro Clustering
+- **Tạo Tài Liệu Phân Tích Gom Nhóm Tránh Nổ Tổ Hợp & Đánh Giá Rủi Ro ([Phan_Tich_Gom_Nhom_AbilityGroups.md](./docs/SQL/Phan_Tich_Gom_Nhom_AbilityGroups.md))**:
+  - Đã kiểm kê luồng schema SQL hiện tại ([SQL.sql](./docs/SQL/SQL.sql)) bao gồm các thực thể `CompetencyDomains`, `Skills`, `LearningProfiles`, `MockExams`, `AttemptLogs`, `SubmissionAnswers`.
+  - Phân tích chi tiết nguy cơ **nổ tổ hợp (combinatorial explosion)** khi gom nhóm trên vector `M=60` skills toàn hệ thống (`3^{60}` tổ hợp), dẫn tới lời nguyền số chiều và mất tác dụng tiết kiệm chi phí AI.
+  - Đề xuất trọn bộ **3 giải pháp giảm chiều dữ liệu thực tế**:
+    1. *Domain-level Clustering*: Phân tách thành 5 bài toán gom nhóm độc lập theo từng `domain_id` (Toán, Ngôn ngữ, KHTN, KHXH, Anh văn).
+    2. *Fixed Cluster Count*: Cố định `K = 5` cụm/domain `=>` Giới hạn tổng cộng **25 Ability Groups toàn hệ thống**.
+    3. *Weakness Focus Filtering*: Lọc ra Top-K skill yếu nhất để loại bỏ nhiễu từ các skill khá giỏi.
+  - Đã đồng bộ 100% CSDL Nhóm 10 trong `SQL.sql`: `AbilityGroups` và `StudentGroupMemberships`.
+  - **Bổ sung Phân tích 8 Rủi ro chính của Thuật toán Clustering**:
+    1. *Chọn sai K*, 2. *Dữ liệu thưa*, 3. *Chưa chuẩn hóa Scaling*, 4. *Outlier kéo lệch tâm cụm*, 5. *Giả định cụm hình cầu*, 6. *Cluster Drift theo thời gian*, 7. *Cold Start học sinh mới*, 8. *Nhãn không ổn định (Label Instability)*.
+    - Xác định **Top 3 rủi ro đáng ưu tiên xử lý nhất cho V-ACT**: Dữ liệu thưa (7.2), Cold Start (7.7) và Chọn sai K (7.1).
+- **Khắc Phục Lỗi Cú Pháp Mermaid Diagram & Chuẩn Hóa Markdown (`docs/luong_phan_tich_va_hien_thi_de_thi.md`)**:
+  - Đã chuẩn hóa toàn bộ các sơ đồ `sequenceDiagram` và `flowchart TD` để tương thích 100% với trình biên dịch **Mermaid 11.15.0** trên **MD Editor Plus**:
+    - Bọc ngoặc kép tất cả tên nhãn chứa ký tự đặc biệt, dấu ngoặc `()`, hai chấm `:`.
+    - Loại bỏ hoàn toàn ngoặc vuông `[]`, ngoặc nhọn `{}` và dấu nháy kép lồng trong nội dung mũi tên/subgraph.
+- **Bổ Sung Quy Tắc Hệ Thống Cho Agent (`AGENTS.md` & `.agents/rules/markdown_formatting_rules.md`)**:
+  - Đã ghi nhận quy tắc **MD Editor Plus Compatible Rule** vào bộ quy tắc của Agent:
+    1. Không dùng URL `file:///` tuyệt đối trong tài liệu repo (dùng tương đối `./`).
+    2. Bọc công thức KaTeX/LaTeX và escape sequence trong inline backticks `` `...` `` thay vì dùng `$` thô gây lỗi đỏ text.
+    3. Tuân thủ nghiêm ngặt chuẩn sơ đồ Mermaid 11.15.0+ (bọc ngoặc nhãn có ký tự đặc biệt, cấm lồng `loop` trong `par` hay `loop` trong `loop`).
+
 ## [18/09/2026] - Bổ Sung Trọn Bộ 3 API Bảo Mật Cho Identity Service: Quên Mật Khẩu, Đặt Lại Mật Khẩu & Đăng Xuất
 - **Nâng Cấp Nghiệp Vụ IAM & Bảo Mật Phiên**:
   - Triển khai thành công 3 Use Cases mở rộng chuẩn CQRS (MediatR) tại `V-Eval-Identity_Service`:
@@ -176,7 +215,7 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
   - Thiết lập quy tắc bắt buộc **Documentation First**: AI **BẮT BUỘC** phải cập nhật đầy đủ file `UPDATE.md`, `daily_check_log.md` và tài liệu kiến trúc của từng service trước khi đề xuất hoặc thực hiện các lệnh Git Add / Commit / Push.
   - Quy định quy trình 3 bước nghiêm ngặt: (1) Code & Test, (2) Cập nhật docs & `UPDATE.md` của ngày hôm đó ở đầu file, (3) Mới được hỏi/thực hiện Commit & Push.
 - **Phát Hành Công Cụ Push Độc Lập Cho Từng Service (`Scripts/push.bat`)**:
-  - Đóng gói file script [`Scripts/push.bat`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/Scripts/push.bat) độc lập tại từng microservice (`V-Eval-Gateway`, `V-Eval-Identity_Service`, `V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Ai_Engine`).
+  - Đóng gói file script [`Scripts/push.bat`](./All%20Services/V-Eval-Gateway/Scripts/push.bat) độc lập tại từng microservice (`V-Eval-Gateway`, `V-Eval-Identity_Service`, `V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Ai_Engine`).
   - **3 Chế độ Push thông minh**:
     1. *Push nhánh hiện tại*: Đẩy code trực tiếp lên nhánh làm việc hiện tại (`develop`, `main`, ...).
     2. *Chọn nhánh đã có*: Hiển thị danh sách các nhánh local hiện có dưới dạng **Menu đánh số trực quan** (không cần nhập thủ công tên nhánh).
@@ -186,7 +225,7 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
     - Tự động `git pull` nếu code local bị chậm (behind).
     - **Cảnh báo Đỏ nổi bật** và ngắt quy trình Push ngay lập tức nếu phát hiện xung đột (Conflict / Divergence) để yêu cầu Developer xử lý thủ công an toàn.
 - **Sửa Lỗi Dứt Điểm Bộ Script Hệ Thống (`Scripts/`)**:
-  - Khắc phục các lỗi cú pháp Windows CMD Batch trên [`pull.bat`](file:///e:/CapStone/Scripts/pull/pull.bat), [`push.bat`](file:///e:/CapStone/Scripts/push/push.bat), [`setup.bat`](file:///e:/CapStone/Scripts/setup/setup.bat), [`run_docker.bat`](file:///e:/CapStone/Scripts/run_docker/run_docker.bat), [`run_local.bat`](file:///e:/CapStone/Scripts/run_local/run_local.bat).
+  - Khắc phục các lỗi cú pháp Windows CMD Batch trên [`pull.bat`](./Scripts/pull/pull.bat), [`push.bat`](./Scripts/push/push.bat), [`setup.bat`](./Scripts/setup/setup.bat), [`run_docker.bat`](./Scripts/run_docker/run_docker.bat), [`run_local.bat`](./Scripts/run_local/run_local.bat).
   - Khắc phục triệt để lỗi escape quote `\"` tại lệnh `pushd`, lỗi ngoặc đơn `()` trong câu lệnh `echo` và scope nhãn `:PROCESS_PULL`.
 
 ## [16/09/2026 - 17/09/2026] - Đồng Bộ Cấu Trúc CSDL V2 ERD (PlantUML) & Chuẩn Hóa JWT Claims X-Headers Tại Gateway
@@ -196,10 +235,10 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
     - Bổ sung Cụm 5 (Lớp học & Live): `Classes`, `ClassEnrollments`, `LiveSessions`, `LiveSessionAttendance`, `TeacherFeedback`.
     - Bổ sung Cụm 7, 8, 9 (AI RAG & Vận hành): `KnowledgeSources`, `TokenUsageLogs`, `SystemConfigs`.
 - **Đồng Bộ JWT Claims & Nâng Cấp Gateway Claims Transformer**:
-  - Nâng cấp [`ClaimsHeaderTransform.cs`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Security/ClaimsHeaderTransform.cs): Bóc tách claim `campus_id` đính kèm vào Header **`X-Campus-Id`** cho các microservice nội bộ.
+  - Nâng cấp [`ClaimsHeaderTransform.cs`](./All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Security/ClaimsHeaderTransform.cs): Bóc tách claim `campus_id` đính kèm vào Header **`X-Campus-Id`** cho các microservice nội bộ.
   - Hoàn thiện trọn bộ X-Headers: `X-User-Id`, `X-User-Role`, `X-User-Email`, `X-Campus-Id`, `X-Token-Expires-At`, `X-Token-Remaining-Seconds`, và `X-Token-Refresh-Required`.
 - **Cập Nhật Hệ Thống Tài Liệu**:
-  - Cập nhật nhật ký [`docs/daily_check_log.md`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/docs/daily_check_log.md) và báo cáo nghiệm thu [`docs/nghiem_thu_va_thau_hieu_kien_truc.md`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/docs/nghiem_thu_va_thau_hieu_kien_truc.md).
+  - Cập nhật nhật ký [`docs/daily_check_log.md`](./All%20Services/V-Eval-Gateway/docs/daily_check_log.md) và báo cáo nghiệm thu [`docs/nghiem_thu_va_thau_hieu_kien_truc.md`](./All%20Services/V-Eval-Gateway/docs/nghiem_thu_va_thau_hieu_kien_truc.md).
 
 ## [15/09/2026] - Dockerize Toàn Hệ Thống 5 Microservices & Chuẩn Hóa Orchestration Docker Compose
 - **Khởi Tạo Dockerfile Multi-Stage .NET 9 Tinh Gọn Cho 5 Microservices**:
