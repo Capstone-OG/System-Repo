@@ -120,6 +120,51 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
     3. Tuân thủ nghiêm ngặt chuẩn sơ đồ Mermaid 11.15.0+ (bọc ngoặc nhãn có ký tự đặc biệt, cấm lồng `loop` trong `par` hay `loop` trong `loop`).
 
 
+## [20/09/2026] - Triển Khai Thực Thể Campus, 6 Actor Profiles, API Cơ Sở & Server gRPC Identity
+- **Hoàn Thiện Thực Thể Identity & 6 Actor Profiles (Schema `iam` & `profile`)**:
+  - Bổ sung thực thể [`Campus.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Domain/Entities/Iam/Campus.cs) vào schema `iam.campuses` và 6 hồ sơ Actor: `Students`, `Parents`, `ParentStudentRelations`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators` vào schema `profile`.
+  - Khóa ngoại 1-1 với `iam.users` (Cascade Delete), khóa ngoại cơ sở `iam.campuses`.
+  - Cấu hình Fluent API EF Core, Seed 6 vai trò chuẩn và 2 cơ sở mẫu (CS Thủ Đức, CS Quận 10).
+- **Phát Hành API Quản Lý & Lựa Chọn Cơ Sở (UC 10 & UC 40)**:
+  - Triển khai `ICampusRepository` và [`CampusesController.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/CampusesController.cs) cung cấp endpoint `GET /api/v1/campuses`.
+- **Chuẩn Hóa Hồ Sơ Học Sinh & Thang Điểm Chuẩn 1200 (UC 04)**:
+  - Cập nhật [`UpdateProfileCommand.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/UpdateProfile/UpdateProfileCommand.cs) kiểm tra `TargetScore` theo thang điểm 1200 của bài thi ĐGNL ĐHQG-HCM V-ACT; tự động khởi tạo bản ghi `profile.students` nếu tài khoản chưa có.
+  - Hỗ trợ routing kép `PUT /api/v1/students/me/profile` và `PUT /api/v1/users/me/profile`.
+- **Hạ Tầng Liên Dịch Vụ gRPC**:
+  - Hợp nhất toàn bộ hợp đồng liên dịch vụ vào file chuẩn duy nhất [`grpc/identity.proto`](file:///d:/Capstone/grpc/identity.proto) (gồm `ValidateUserPermission`, `GetStudentProfileSummary`, và chuẩn bị các RPC `LinkParentStudent`, `GetParentStudents` cho phân hệ Parent).
+  - Triển khai [`IdentityGrpcService.cs`](file:///d:/Capstone/All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Services/IdentityGrpcService.cs) trên cổng `5155`.
+- **Chuẩn Hóa Kiến Trúc Chuyên Nghiệp & Phân Hệ Khảo Thí (`V-Eval-Content_Service`)**:
+  - Triển khai **Result Pattern** (`Result<T>`, `Error`, `ErrorType`) và `ApiControllerBase` đồng bộ 100% với kiến trúc chuyên nghiệp của Identity Service.
+  - Tích hợp **FluentValidation** qua `ValidationBehavior` trong MediatR pipeline và `GlobalExceptionHandlerMiddleware` bắt ngoại lệ 500 toàn cục.
+  - Chuyển đổi toàn bộ Minimal APIs sang Controllers chuẩn RESTful (`DiagnosticController`, `MockExamsController`).
+  - **Core Flow 1 (Bước 2)**: Cung cấp API `GET /api/v1/content/diagnostic-test` trả về bộ đề thi chẩn đoán 30 câu hỏi chuẩn V-ACT, bảo mật chống gian lận 100% (ẩn `CorrectOption` và `Explanation`).
+  - Tự động Seeding đề chẩn đoán 30 câu vào Supabase schema `content` khi ứng dụng khởi động (`DiagnosticExamSeeder`).
+  - Cung cấp **Swagger UI** tại `http://localhost:5249/swagger` và bổ sung server gRPC `GetExamAnswerKey` phục vụ Practice Service chấm điểm bài thi.
+- **Triển Khai Hoàn Thiện Clean Architecture & Phân Hệ Thi Trực Tuyến (`V-Eval-Practice_Service`)**:
+  - Triển khai **Clean Architecture 4 tầng** (`Domain`, `Application`, `Infrastructure`, `API`) đồng bộ 100% với Identity và Content Services.
+  - Triển khai các thực thể `ExamSubmission`, `SubmissionAnswer` và ánh xạ bảng `practice.exam_submissions`, `practice.submission_answers` trên Supabase PostgreSQL.
+  - Thiết lập kiến trúc cổng kép Kestrel (REST HTTP/1 và gRPC HTTP/2) cho toàn bộ microservices liên lạc trơn tru không lỗi giao thức: Identity Service (5155/5156), Content Service (5249/5250), Practice Service (5261).
+  - **Core Flow 1 (Bước 3: Chấm Điểm Tự Động & Chẩn Đoán Năng Lực Đầu Vào)**:
+    + Cung cấp endpoint `POST /api/v1/practice/diagnostic-submissions` tiếp nhận bài nộp 30 câu hỏi.
+    + Tự động gọi gRPC sang Identity Service xác thực học sinh và bắt buộc chọn cơ sở (`CampusId`).
+    + Tự động gọi gRPC sang Content Service lấy bảng đáp án bảo mật, độ khó câu hỏi và mã kỹ năng.
+    + Chấm điểm thô chính xác (thang điểm 0–30), ghi nhận vi mô thời gian phản hồi (`time_spent_seconds`) từng câu.
+    + Phân tích chẩn đoán năng lực: phân tách `SkillBreakdown`, nhận diện kỹ năng yếu `WeakSkillIds` (tỷ lệ đúng < 60%), và thống kê 4 mức độ khó (Dễ, Trung bình, Khó, Rất khó) sẵn sàng làm dữ liệu đầu vào cho AI Subsystem phân lớp.
+    + Cung cấp API tra cứu: `GET /api/v1/practice/diagnostic-submissions/{id}` (xem chi tiết toàn diện 30 câu hỏi, đúng/sai, đáp án, độ khó, kỹ năng) và `GET /api/v1/practice/diagnostic-submissions/student/{studentId}` (danh sách tóm tắt lịch sử bài làm tinh gọn: điểm số, % chính xác, thời gian làm bài).
+    + Cung cấp **Swagger UI** tại `http://localhost:5261/swagger`.
+- **Kiểm Thử Toàn Diện (End-to-End Test)**:
+  - `dotnet build` trên cả 3 services: **Thành công 100% (0 Error(s), 0 Warning(s))**.
+  - Kiểm thử liên thông trọn vẹn Core Flow 1 từ Bước 1 (Đăng ký, Đăng nhập, Chọn cơ sở) -> Bước 2 (Lấy đề thi 30 câu) -> Bước 3 (Nộp bài, chấm điểm, thống kê kỹ năng yếu, lưu CSDL): **Thành công 100%**.
+
+## [18/09/2026] - Bổ Sung Trọn Bộ 3 API Bảo Mật Cho Identity Service: Quên Mật Khẩu, Đặt Lại Mật Khẩu & Đăng Xuất
+- **Nâng Cấp Nghiệp Vụ IAM & Bảo Mật Phiên**:
+  - Triển khai thành công 3 Use Cases mở rộng chuẩn CQRS (MediatR) tại `V-Eval-Identity_Service`:
+    + **UC 05: Quên Mật Khẩu (`POST /api/Auth/forgot-password`)**: Sinh OTP 6 số lưu bảng `iam.otp_verifications` (`Type = "RESET_PASSWORD"`).
+    + **UC 06: Đặt Lại Mật Khẩu (`POST /api/Auth/reset-password`)**: Xác thực OTP, cập nhật mật khẩu băm BCrypt, tự động thu hồi (revoke) toàn bộ Refresh Token cũ trên mọi thiết bị qua `RevokeAllByUserIdAsync`.
+    + **UC 07: Đăng Xuất (`POST /api/Auth/logout`)**: Thu hồi Refresh Token (`is_revoked = true`) vô hiệu hóa phiên làm việc hiện tại.
+  - Đồng bộ và hoàn thiện toàn diện bộ tài liệu chuẩn (`daily.md`, `process.md`, `architecture_acceptance.md`).
+  - Giải pháp biên dịch sạch 100% không cảnh báo hay lỗi cú pháp (`dotnet build`).
+
 ## [18/09/2026] - Chuẩn Hóa Tên Bộ Tài Liệu Docs Toàn Bộ Microservices & Cấu Hình AI Rules
 - **Chuẩn Hóa Bộ File Tài Liệu `docs/` Cho Tất Cả 5 Microservices**:
   - Đổi tên & đồng bộ toàn bộ tài liệu tiến độ của tất cả các service về 3 file chuẩn duy nhất:
