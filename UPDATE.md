@@ -1,15 +1,15 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [23/09/2026] - Tái Cấu Trúc CSDL SQL Schema V2 Phân Chia 5 Microservice Schemas (`v_eval_*`) & Migration An Toàn Supabase
+## \[23/09/2026\] - Tái Cấu Trúc CSDL SQL Schema V2 Phân Chia 5 Microservice Schemas (`v_eval_*`) & Migration An Toàn Supabase
+
 - **Tái Cấu Trúc Toàn Bộ CSDL PostgreSQL Schema ([SQL.sql](./docs/SQL/SQL.sql))**:
-  - **Phân chia 5 Schemas chuyên biệt với tiền tố chuẩn `v_eval_*`**:
-    1. **`v_eval_identity`**: Quản lý RBAC, Auth, User & Actor Profiles (`Campuses`, `Roles`, `Users`, `UserRoles`, `Students`, `Parents`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators`, `RefreshTokens`, `OtpVerifications`).
-    2. **`v_eval_content`**: Quản lý Ngân hàng Đề thi & Khung Năng lực (`CompetencyDomains`, `Skills`, `Materials`, `Passages`, `Questions`, `MockExams`, `ExamQuestions`).
-    3. **`v_eval_practice`**: Quản lý Thi thử, Kết quả Luyện tập, Lớp học & Ability Groups (`Classes`, `ClassEnrollments`, `LiveSessions`, `LiveSessionAttendance`, `TeacherFeedback`, `LearningProfiles`, `LearningRoadmaps`, `RoadmapNodes`, `AttemptLogs`, `ExamSubmissions`, `SubmissionAnswers`, `AbilityGroups`, `StudentGroupMemberships`).
-    4. **`v_eval_ai`**: Quản lý RAG Tri thức, AI Tutor & Vector Database (`KnowledgeSources`, `KnowledgeVectorChunks`, `AITutorSessions`, `AITutorMessages`, `ScorePredictions`, `TokenUsageLogs`).
-    5. **`v_eval_system`**: Quản lý Cảnh báo hệ thống & Cấu hình Vận hành (`SystemAlerts`, `SystemConfigs`).
+  - **Phân chia 5 Schemas chuyên biệt với tiền tố chuẩn** `v_eval_*`:
+    1. `v_eval_identity`: Quản lý RBAC, Auth, User & Actor Profiles (`Campuses`, `Roles`, `Users`, `UserRoles`, `Students`, `Parents`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators`, `RefreshTokens`, `OtpVerifications`).
+    2. `v_eval_content`: Quản lý Ngân hàng Đề thi & Khung Năng lực (`CompetencyDomains`, `Skills`, `Materials`, `Passages`, `Questions`, `MockExams`, `ExamQuestions`).
+    3. `v_eval_practice`: Quản lý Thi thử, Kết quả Luyện tập, Lớp học & Ability Groups (`Classes`, `ClassEnrollments`, `LiveSessions`, `LiveSessionAttendance`, `TeacherFeedback`, `LearningProfiles`, `LearningRoadmaps`, `RoadmapNodes`, `AttemptLogs`, `ExamSubmissions`, `SubmissionAnswers`, `AbilityGroups`, `StudentGroupMemberships`).
+    4. `v_eval_ai`: Quản lý RAG Tri thức, AI Tutor & Vector Database (`KnowledgeSources`, `KnowledgeVectorChunks`, `AITutorSessions`, `AITutorMessages`, `ScorePredictions`, `TokenUsageLogs`).
+    5. `v_eval_system`: Quản lý Cảnh báo hệ thống & Cấu hình Vận hành (`SystemAlerts`, `SystemConfigs`).
   - **Cơ chế Idempotent & Non-Destructive Migration**:
-    - Sử dụng `CREATE SCHEMA IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`.
     - Đảm bảo an toàn 100% khi thực thi trên CSDL đã có dữ liệu (Supabase Cloud hoặc Docker Postgres local), **tuyệt đối KHÔNG XÓA hay drop bảng/dữ liệu cũ**.
 
 ## [22/09/2026] - Triển Khai Toàn Diện Core Flow 1 (Chẩn Đoán Năng Lực Đầu Vào, Ước Lượng IRT & BKT Priors, Tự Động Xếp Lớp & Trực Quan Hóa Dữ Liệu)
@@ -274,3 +274,6 @@ Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 
   - `All Services/V-Eval-Practice_Service/Dockerfile`: Cổng `5002` (Thi trực tuyến & Chấm điểm).
 - **Chuẩn Hóa Docker Compose Orchestration (`docker-compose.yml`)**:
   - Điều phối 5 container microservice kết nối qua mạng nội bộ bridge `veval_network`.
+=======
+    - Đảm bảo an toàn 100% khi thực thi trên CSDL đã có dữ liệu (Supabase Cloud hoặc Docker Postgres local), **tuyệt đối KHÔNG XÓA hay drop bảng/dữ liệu cũ**.
+>>>>>>> 10ebeeb (docs(sql): finalize 5 v_eval_* microservice schemas and EF Core migrations [23/09/2026])
