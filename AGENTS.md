@@ -20,8 +20,8 @@ Khi thực hiện bất kỳ công việc nào (tạo mới, sửa lỗi, nâng 
        - *Phần dưới*: Bảng theo dõi tiến độ cho từng mục (mô tả rõ từng hạng mục đang ở đâu, trạng thái và tiến độ chi tiết ra sao).
      - **`docs/architecture_acceptance.md`**: Báo cáo nghiệm thu & thấu hiểu kiến trúc (Tiếng Anh).
    - Làm mới và cập nhật file `UPDATE.md` của từng service vừa đụng tới và `UPDATE.md` của `System-Repo`:
-     - Ghi chép tiến độ của **ngày hiện tại `[DD/MM/YYYY]` lên ĐẦU file**.
-     - Xóa bớt/làm sạch nội dung `UPDATE.md` cũ không còn phù hợp để tài liệu luôn gọn gàng, chuẩn xác.
+     - **XÓA TOÀN BỘ NỘI DUNG CỦA CÁC NGÀY TRƯỚC (MANDATORY)**: File `UPDATE.md` chỉ được phép chứa duy nhất 1 mục tiến độ của **ngày hiện tại `[DD/MM/YYYY]`**.
+     - Ghi chép tiến độ súc tích, chuẩn xác của ngày hiện tại để `UPDATE.md` luôn gọn gàng và tập trung 100% vào commit mới nhất.
 3. **Bước 3: Mới được phép hỏi hoặc thực hiện Git Add / Commit / Push**
    - Chỉ khi Bước 2 hoàn thành 100%, AI mới được phép đề xuất hoặc thực hiện `git add`, `git commit` và `git push` (hoặc hướng dẫn dùng `Scripts/push.bat`).
 
