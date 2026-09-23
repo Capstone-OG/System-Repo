@@ -1,6 +1,6 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [24/09/2026] - Tái Cấu Trúc CSDL SQL Schema V2 Phân Chia 5 Microservice Schemas (`v_eval_*`) & Migration An Toàn Supabase
+## [23/09/2026] - Tái Cấu Trúc CSDL SQL Schema V2 Phân Chia 5 Microservice Schemas (`v_eval_*`) & Migration An Toàn Supabase
 - **Tái Cấu Trúc Toàn Bộ CSDL PostgreSQL Schema ([SQL.sql](./docs/SQL/SQL.sql))**:
   - **Phân chia 5 Schemas chuyên biệt với tiền tố chuẩn `v_eval_*`**:
     1. **`v_eval_identity`**: Quản lý RBAC, Auth, User & Actor Profiles (`Campuses`, `Roles`, `Users`, `UserRoles`, `Students`, `Parents`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators`, `RefreshTokens`, `OtpVerifications`).

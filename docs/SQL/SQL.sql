@@ -1,7 +1,7 @@
 -- =====================================================================
 -- V-EVAL PLATFORM — SYSTEM DATABASE MIGRATION SCRIPT (PostgreSQL / Supabase)
 -- Phiên bản: Schema V2 (Non-Destructive & Idempotent Migration)
--- Cập nhật ngày: 24/09/2026 — Phân chia 5 Schemas chuẩn Microservices (v_eval_*)
+-- Cập nhật ngày: 23/09/2026 — Phân chia 5 Schemas chuẩn Microservices (v_eval_*)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
