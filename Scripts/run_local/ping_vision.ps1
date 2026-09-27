@@ -83,8 +83,8 @@ if ([string]::IsNullOrWhiteSpace($ApiKey) -or $ApiKey.StartsWith("YOUR_")) {
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host "KET LUAN VA DE XUAT CHO SGK RAG PIPELINE:" -ForegroundColor Yellow
-Write-Host "1. Dung gemini-1.5-flash hoac gemini-2.0-flash: Toc do 0.8s - 1.2s/trang (toan bo 170 trang chi 20-30s)." -ForegroundColor White
+Write-Host "1. Dung gemini-flash-lite-latest hoac gemini-3.5-flash-lite: Toc do < 1.0s/trang (toan bo 170 trang chi 20-30s)." -ForegroundColor White
 Write-Host "2. Giu nguyen 100% cong thuc LaTeX va cau truc bang Markdown khong bi nat nhu OCR CPU." -ForegroundColor White
-Write-Host "3. Chi phi: Free Tier 1,500 requests/ngay; neu tra phi chi ~500 VND / toan bo cuon sach 170 trang." -ForegroundColor White
+Write-Host "3. Chi phi: Free Tier 15 RPM; toi uu hoa token toi da voi chi phi tiet kiem." -ForegroundColor White
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host ""
