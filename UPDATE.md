@@ -12,7 +12,7 @@
 - **Phát Hành Nút Lưu CSDL Chờ Duyệt & Cơ Chế Phê Duyệt Xuất Bản**:
   - Bổ sung nút **`💾 Lưu Vào Database (Chờ Duyệt)`**: Lưu đề thi vào Supabase PostgreSQL qua `POST /api/v1/content/exams/import` với trạng thái mặc định **`IsPublished = false` (Chờ duyệt / Pending Approval)**.
   - Nút **`✅ ACCEPT: Phê Duyệt & Chuyển Sang Phòng Thi Học Sinh ➔`**: Tự động gọi `PATCH /api/v1/content/exams/{id}/publish` cập nhật trạng thái thành **`IsPublished = true` (Đã duyệt / Published)** và chuyển đề thi sang phòng thi học sinh.
-- **Chuẩn Hóa Thang Đo Tư Duy Bloom 6 Mức Độ (Revised Bloom's Taxonomy)**:
+- **Tối Ưu Luồng Đánh Giá Bloom 6 Mức Độ (Revised Bloom's Taxonomy)**:
   - Khởi tạo hằng số `BloomTaxonomy.cs` trong cả Content Service và Practice Service định nghĩa 6 mức độ nhận thức:
     1. Nhận biết (Remembering)
     2. Thông hiểu (Understanding)
@@ -47,4 +47,5 @@
   - Toàn bộ các solution .NET (`V-Eval-Practice_Service.sln`, `V-Eval-Content_Service.sln`, `V-Eval-Ai_Engine.sln`, `V-Eval-Gateway.sln`) biên dịch sạch 100% (**0 Error**).
   - Endpoint `/generate-exam` kiểm thử thành công HTTP 200 OK trên cả 2 chế độ: Fast Mode (`ms: 0`) và Gemini Mode (`ms: 7245`).
   - Endpoint `PATCH /api/v1/content/exams/{id}/publish` kiểm thử thành công HTTP 200 OK cập nhật `{ is_published: true }`.
+  - Tối ưu luồng truy xuất biến môi trường, khắc phục triệt để lỗi thiếu `import os` trong `V-Eval-Ai_Engine/rag-service/routers/diagnostic.py`, toàn bộ 12/12 test cases của AI Engine chạy đạt 100%.
 
