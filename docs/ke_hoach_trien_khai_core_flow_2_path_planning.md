@@ -53,20 +53,20 @@ Core Flow 2 tiếp nối trực tiếp kết quả của Core Flow 1 (Đánh gi�
 
 Cây khung năng lực ĐGNL ĐHQG-HCM bao gồm 12 kỹ năng chuẩn phân bổ trên 4 miền năng lực. Để tạo thành đồ thị có hướng không chu trình (DAG), các quan hệ tiên quyết được định nghĩa chính xác như sau:
 
-| STT | Mã Kỹ Năng (`skill_id`) | Tên Kỹ Năng | Miền Năng Lực (`Domain`) | Trọng Số Đề Thi (`Weight`) | Kỹ Năng Tiên Quyết Bắt Buộc (`Prerequisites`) |
-| :---: | :--- | :--- | :--- | :---: | :--- |
-| 1 | `sk_viet_doc_hieu` | Đọc hiểu văn bản Tiếng Việt | Sử dụng ngôn ngữ | 15% | *(Không có — Kỹ năng gốc)* |
-| 2 | `sk_viet_ngu_phap` | Ngữ pháp & Logic câu Tiếng Việt | Sử dụng ngôn ngữ | 10% | `sk_viet_doc_hieu` |
-| 3 | `sk_eng_reading` | Đọc hiểu văn bản Tiếng Anh | Sử dụng ngôn ngữ | 10% | *(Không có — Kỹ năng gốc)* |
-| 4 | `sk_eng_grammar` | Ngữ pháp & Từ vựng Tiếng Anh | Sử dụng ngôn ngữ | 10% | `sk_eng_reading` |
-| 5 | `sk_math_algebra` | Đại số, Hàm số & Giải tích | Toán học & Logic | 12% | *(Không có — Kỹ năng gốc)* |
-| 6 | `sk_math_geometry` | Hình học & Lượng giác không gian | Toán học & Logic | 8% | `sk_math_algebra` |
-| 7 | `sk_logic_deduction` | Suy luận Logic & Mệnh đề | Toán học & Logic | 10% | `sk_math_algebra` |
-| 8 | `sk_data_analysis` | Phân tích số liệu & Bảng biểu | Toán học & Logic | 10% | `sk_math_algebra`, `sk_logic_deduction` |
-| 9 | `sk_phys_mechanics` | Vật lý đại cương & Cơ nhiệt | Khoa học tự nhiên | 5% | `sk_math_algebra` |
-| 10 | `sk_chem_reactions` | Hóa học vô cơ & Hữu cơ | Khoa học tự nhiên | 4% | *(Không có — Kỹ năng gốc)* |
-| 11 | `sk_bio_genetics` | Sinh học di truyền & Sinh thái | Khoa học tự nhiên | 3% | `sk_chem_reactions` |
-| 12 | `sk_soc_history_geo` | Tổng hợp Lịch sử & Địa lý VN | Khoa học xã hội | 3% | `sk_viet_doc_hieu` |
+| STT | Mã Kỹ Năng (`skill_id`) | Tên Kỹ Năng                      | Miền Năng Lực (`Domain`) | Trọng Số Đề Thi (`Weight`) | Kỹ Năng Tiên Quyết Bắt Buộc (`Prerequisites`) |
+| :---:| :------------------------| :---------------------------------| :-------------------------| :--------------------------:| :----------------------------------------------|
+| 1   | `sk_viet_doc_hieu`      | Đọc hiểu văn bản Tiếng Việt      | Sử dụng ngôn ngữ         | 15%                        | *(Không có — Kỹ năng gốc)*                    |
+| 2   | `sk_viet_ngu_phap`      | Ngữ pháp & Logic câu Tiếng Việt  | Sử dụng ngôn ngữ         | 10%                        | `sk_viet_doc_hieu`                            |
+| 3   | `sk_eng_reading`        | Đọc hiểu văn bản Tiếng Anh       | Sử dụng ngôn ngữ         | 10%                        | *(Không có — Kỹ năng gốc)*                    |
+| 4   | `sk_eng_grammar`        | Ngữ pháp & Từ vựng Tiếng Anh     | Sử dụng ngôn ngữ         | 10%                        | `sk_eng_reading`                              |
+| 5   | `sk_math_algebra`       | Đại số, Hàm số & Giải tích       | Toán học & Logic         | 12%                        | *(Không có — Kỹ năng gốc)*                    |
+| 6   | `sk_math_geometry`      | Hình học & Lượng giác không gian | Toán học & Logic         | 8%                         | `sk_math_algebra`                             |
+| 7   | `sk_logic_deduction`    | Suy luận Logic & Mệnh đề         | Toán học & Logic         | 10%                        | `sk_math_algebra`                             |
+| 8   | `sk_data_analysis`      | Phân tích số liệu & Bảng biểu    | Toán học & Logic         | 10%                        | `sk_math_algebra`, `sk_logic_deduction`       |
+| 9   | `sk_phys_mechanics`     | Vật lý đại cương & Cơ nhiệt      | Khoa học tự nhiên        | 5%                         | `sk_math_algebra`                             |
+| 10  | `sk_chem_reactions`     | Hóa học vô cơ & Hữu cơ           | Khoa học tự nhiên        | 4%                         | *(Không có — Kỹ năng gốc)*                    |
+| 11  | `sk_bio_genetics`       | Sinh học di truyền & Sinh thái   | Khoa học tự nhiên        | 3%                         | `sk_chem_reactions`                           |
+| 12  | `sk_soc_history_geo`    | Tổng hợp Lịch sử & Địa lý VN     | Khoa học xã hội          | 3%                         | `sk_viet_doc_hieu`                            |
 
 ### Sơ Đồ Đồ Thị Tiên Quyết DAG Chuẩn (Không Chu Trình)
 
@@ -586,10 +586,10 @@ V-Eval-Practice_Service.API/
 - [x] Chạy migration cập nhật CSDL trên Supabase PostgreSQL.
 
 ### Giai đoạn 2: Graph Engine Thuật Toán (Day 2)
-- [ ] Cài đặt `TarjanCycleDetector.cs` và viết Unit Tests chứng minh không có chu trình.
-- [ ] Cài đặt `PathPruner.cs` tính toán quỹ thời gian và chính sách cắt tỉa.
-- [ ] Cài đặt `TopologicalSorter.cs` theo thuật toán Kahn kết hợp Priority Queue.
-- [ ] Cài đặt `MilestoneBinder.cs` kết nối 3 thành phần Video, Quiz, Live Q&A.
+- [x] Cài đặt `TarjanCycleDetector.cs` (thuật toán Tarjan SCC phát hiện chu trình kín trong đồ thị tiên quyết).
+- [x] Cài đặt `PathPruner.cs` tính toán quỹ thời gian và chính sách cắt tỉa 3 tầng.
+- [x] Cài đặt `TopologicalSorter.cs` theo thuật toán Kahn kết hợp Priority Queue đa tiêu chí.
+- [x] Cài đặt `MilestoneBinder.cs` kết nối 3 thành phần Video, Quiz, Live Q&A và khởi tạo State Machine.
 
 ### Giai đoạn 3: CQRS Commands & Queries trong Practice Service (Day 3)
 - [ ] Xây dựng `GenerateRoadmapCommand` và `GenerateRoadmapCommandHandler`.
