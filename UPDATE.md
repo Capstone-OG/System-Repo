@@ -1,22 +1,21 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [28/09/2026] - Tối Ưu Hóa Luồng Textbook RAG & Chuẩn Hóa Kiến Trúc AI Engine
+## [28/09/2026] - Hoàn Tất Giai Đoạn 1 Core Flow 2 (Path Planning): Schema CSDL, EF Core 9, Seeding Đồ Thị DAG 12 Kỹ Năng & RPC GetSkillsTree
 
-- **Tối Ưu Single-Pass CryptoStream & Khử Trùng Lặp Tệp (`TextbookEndpoints.cs`)**:
-  - Tích hợp `CryptoStream` bọc ngoài `FileStream` khi upload SGK, tính mã băm SHA-256 đồng thời trong 1 lượt đọc, cắt giảm 50% Disk I/O cho file lớn (100MB-250MB) và rút ngắn một nửa thời gian xử lý.
-  - Tự động nhận diện và dọn dẹp file tạm trùng lặp (`File.Delete`) khi tệp đang được tiến trình nền xử lý (`PROCESSING`), chống phình đĩa máy chủ.
-  - Động hóa danh sách mô hình kiểm tra độ trễ Vision AI `/ping-vision` từ cấu hình `AiSettings:GeminiModels`.
-- **Chuẩn Hóa Động Cơ Bóc Tách Đề Thi (`GeminiExamParserService.cs`)**:
-  - Triệt tiêu hoàn toàn các mô hình cũ bị lỗi HTTP 404 (`gemini-1.5-flash`, `gemini-2.0-flash`), đồng bộ sang 5 mô hình chuẩn: `gemini-flash-lite-latest`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-3.8-flash`, `gemini-3.6-flash`.
-  - Động hóa ngưỡng số câu hỏi thành công (`AiSettings:MinQuestionThreshold`), hỗ trợ các đề thi rút gọn (30-40 câu) mà không bị rơi vào vòng lặp retry quá tải.
-  - Hỗ trợ cấu hình `AiSettings:GeminiBaseUrl`, `AiSettings:OpenAiBaseUrl` và bộ thực thi Python đa nền tảng (`python` trên Windows, `python3` trên Linux/Docker).
-- **Tối Ưu Cấu Hình Timeout HttpClient Qua `appsettings.json` (`DependencyInjection.cs`)**:
-  - Loại bỏ hoàn toàn hardcode timeout, đưa `ExamParserTimeoutMinutes = 8` và `TextbookParserTimeoutMinutes = 10` vào cấu hình hệ thống.
-- **Hoàn Tất Hồ Sơ Nghiệm Thu Kiến Trúc 3 Hạng Mục Bởi `ThinhTran2412`**:
-  - Cập nhật đầy đủ hồ sơ nghiệm thu chi tiết tại [`All Services/V-Eval-Ai_Engine/docs/architecture_acceptance.md`](./All%20Services/V-Eval-Ai_Engine/docs/architecture_acceptance.md) cho: Minimal API Streaming, Raw SQL Npgsql Repository, và Gemini Vision Exam Parser.
-- **Hoàn Thiện Core Flow 1 — Kịch Bản Ngoại Lệ (Unhappy Case 2: Khóa Đề Quá Hạn 24h & Đề Thi Ngẫu Nhiên Mới)**:
-  - **Practice Service (`SubmitDiagnosticCommandHandler.cs`)**: Triển khai cơ chế kiểm tra phiên làm bài bỏ dở quá 24h (`TotalHours > 24` hoặc `TimeSpentSeconds > 86400`), tự động ghi nhận bản ghi `Status = "EXPIRED"`, khóa đề thi cũ và trả về mã lỗi chuẩn RFC 7807 `Exam.Expired`. Tự động từ chối nộp lại đề thi đã khóa (`Exam.Locked`) hoặc đã hoàn thành (`Exam.AlreadyCompleted`).
-  - **Content Service (`DiagnosticController.cs` & `GetDiagnosticTestQuery.cs`)**: Bổ sung tham số truy vấn `excludeExamId` cho endpoint `GET /api/v1/content/diagnostic-test` phục vụ yêu cầu làm lại bài chẩn đoán ngẫu nhiên khác khi đề cũ đã bị khóa.
-  - **Đồng Bộ DTOs Toàn Hệ Thống**: Bổ sung trường `Status` vào `SubmitDiagnosticResponseDto` và `DiagnosticSubmissionSummaryDto`.
-- **Kiểm Thử Vận Hành & Build**:
-  - Toàn bộ solution liên quan (`V-Eval-Practice_Service.sln`, `V-Eval-Content_Service.sln`, `V-Eval-Ai_Engine.sln`) biên dịch sạch 100% (**0 Error, 0 Warning**).
+- **Khởi Tạo CSDL & Di Trú Supabase PostgreSQL (5 Bảng Cốt Lõi)**:
+  - Khởi tạo bảng `v_eval_content."SkillPrerequisites"` lưu trữ đồ thị có hướng (DAG) giữa các kỹ năng khảo thí.
+  - Khởi tạo bảng `v_eval_practice."LearningRoadmaps"` quản lý lộ trình học tập cá nhân hóa gắn liền với kết quả chẩn đoán Flow 1.
+  - Khởi tạo bảng `v_eval_practice."RoadmapNodes"` quản lý từng chặng học (Milestones) tích hợp 3 thành phần (Video lý thuyết, Quiz củng cố, Lịch Live Q&A).
+  - Khởi tạo và cập nhật bảng `v_eval_practice."LiveSessions"` (bổ sung `recording_url`, `is_recorded` cho Unhappy Case 3) và `v_eval_practice."LiveSessionAttendance"` (bổ sung `makeup_quiz_id`, `is_makeup_quiz_passed`).
+- **Nâng Cấp V-Eval Content Service**:
+  - Bổ sung entity [`SkillPrerequisite.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Domain/Entities/SkillPrerequisite.cs) với khóa chính phức hợp `(skill_id, prerequisite_id)`.
+  - Bổ sung navigation properties `Prerequisites` và `DependentSkills` trong [`Skill.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Domain/Entities/Skill.cs).
+  - Đăng ký `DbSet<SkillPrerequisite>` và cấu hình Fluent API trong [`ContentDbContext.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Infrastructure/Persistence/ContentDbContext.cs) và [`IContentDbContext.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Common/Interfaces/IContentDbContext.cs).
+  - Khởi tạo seeder [`SkillPrerequisiteSeeder.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Infrastructure/Persistence/Seeds/SkillPrerequisiteSeeder.cs): tự động nạp 4 Miền Năng Lực, 12 Kỹ Năng Chuẩn ĐGNL ĐHQG-HCM kèm trọng số và 9 cung quan hệ tiên quyết không chu trình.
+  - Hiện thực phương thức RPC `GetSkillsTree` trong [`ContentGrpcService.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Services/ContentGrpcService.cs) theo hợp đồng `content.proto`.
+- **Nâng Cấp V-Eval Practice Service**:
+  - Tạo 4 thực thể Domain mới: [`LearningRoadmap.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/LearningRoadmap.cs), [`RoadmapNode.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/RoadmapNode.cs), [`LiveSession.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/LiveSession.cs), [`LiveSessionAttendance.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/LiveSessionAttendance.cs).
+  - Đăng ký 4 `DbSet` và cấu hình Fluent API đầy đủ quan hệ Cascade/Restrict theo schema `v_eval_practice` trong [`PracticeDbContext.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/PracticeDbContext.cs).
+- **Kiểm Thử Biên Dịch & Vận Hành Toàn Diện**:
+  - Cả hai solution `V-Eval-Content_Service.sln` và `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
+  - Dữ liệu 12 kỹ năng chuẩn và 9 cung DAG được đồng bộ và xác nhận trực tiếp trên Supabase PostgreSQL.
