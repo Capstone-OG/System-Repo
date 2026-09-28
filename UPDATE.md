@@ -14,5 +14,9 @@
   - Loại bỏ hoàn toàn hardcode timeout, đưa `ExamParserTimeoutMinutes = 8` và `TextbookParserTimeoutMinutes = 10` vào cấu hình hệ thống.
 - **Hoàn Tất Hồ Sơ Nghiệm Thu Kiến Trúc 3 Hạng Mục Bởi `ThinhTran2412`**:
   - Cập nhật đầy đủ hồ sơ nghiệm thu chi tiết tại [`All Services/V-Eval-Ai_Engine/docs/architecture_acceptance.md`](./All%20Services/V-Eval-Ai_Engine/docs/architecture_acceptance.md) cho: Minimal API Streaming, Raw SQL Npgsql Repository, và Gemini Vision Exam Parser.
+- **Hoàn Thiện Core Flow 1 — Kịch Bản Ngoại Lệ (Unhappy Case 2: Khóa Đề Quá Hạn 24h & Đề Thi Ngẫu Nhiên Mới)**:
+  - **Practice Service (`SubmitDiagnosticCommandHandler.cs`)**: Triển khai cơ chế kiểm tra phiên làm bài bỏ dở quá 24h (`TotalHours > 24` hoặc `TimeSpentSeconds > 86400`), tự động ghi nhận bản ghi `Status = "EXPIRED"`, khóa đề thi cũ và trả về mã lỗi chuẩn RFC 7807 `Exam.Expired`. Tự động từ chối nộp lại đề thi đã khóa (`Exam.Locked`) hoặc đã hoàn thành (`Exam.AlreadyCompleted`).
+  - **Content Service (`DiagnosticController.cs` & `GetDiagnosticTestQuery.cs`)**: Bổ sung tham số truy vấn `excludeExamId` cho endpoint `GET /api/v1/content/diagnostic-test` phục vụ yêu cầu làm lại bài chẩn đoán ngẫu nhiên khác khi đề cũ đã bị khóa.
+  - **Đồng Bộ DTOs Toàn Hệ Thống**: Bổ sung trường `Status` vào `SubmitDiagnosticResponseDto` và `DiagnosticSubmissionSummaryDto`.
 - **Kiểm Thử Vận Hành & Build**:
-  - Toàn bộ solution `V-Eval-Ai_Engine.sln` biên dịch sạch 100% (**0 Error, 0 Warning** mới).
+  - Toàn bộ solution liên quan (`V-Eval-Practice_Service.sln`, `V-Eval-Content_Service.sln`, `V-Eval-Ai_Engine.sln`) biên dịch sạch 100% (**0 Error, 0 Warning**).
