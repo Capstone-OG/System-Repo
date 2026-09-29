@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo =====================================================================
-echo                V-Eval - Local Run Tool (C# Services)
+echo           V-Eval - Local Full Services Runner Tool
 echo =====================================================================
 echo.
 
@@ -13,75 +13,147 @@ popd
 echo [INFO] Project Root Directory: %ROOT_DIR%
 echo.
 
-REM --- Step 1: Giai phong cac cong Port phat trien pho bien ---
-for %%P in (5173 5174 8080 5000 5001 5005 5006) do (
-    echo Dang kiem tra Port %%P...
+REM --- Step 1: Chon che do khoi chay ---
+echo Chon che do khoi dong:
+echo   [1] Khoi dong FULL tat ca 6 Service [Gateway, Identity, Content, Practice, AI Engine, Python RAG]
+echo   [2] Khoi dong cac Microservices C# [.NET Core]
+echo   [3] Khoi dong chi AI Subsystem [AI Engine .NET + Python FastAPI RAG]
+echo   [4] Giai phong / Kill tat ca cac Port va Tien trinh dang chiem dung
+echo   [5] Thoat
+echo.
+set "CHOICE=1"
+set /p "CHOICE=Nhap lua chon cua ban [Mac dinh: 1]: "
+
+if "%CHOICE%"=="5" (
+    echo Tam biet!
+    exit /b 0
+)
+
+REM --- Step 2: Giai phong cac cong Port phat trien ---
+echo.
+echo =====================================================================
+echo [BƯỚC 1] Giai phong cac cong Port tranh xung dot...
+echo =====================================================================
+set "PORTS_TO_CLEAN=5212 5155 5156 5249 5250 5261 5104 8000 5000 5001 5002 5005 5006 5173 5174 8080 3000"
+
+for %%P in (%PORTS_TO_CLEAN%) do (
     for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":%%P" ^| findstr "LISTENING" 2^>nul') do (
-        echo Phat hien Tien trinh ID %%a dang chiem dung Port %%P. Tien hanh giai phong...
+        echo [KILL] Phat hien Tien trinh ID %%a chiem dung Port %%P. Dang giai phong...
         taskkill /f /pid %%a >nul 2>&1
     )
 )
+echo [DONE] Da giai phong hoan tat cac Port phat trien.
 echo.
 
-REM --- Step 2: Quet git_config.txt de tu dong chay cac Service con ---
-set "CONFIG_FILE=%ROOT_DIR%\git_config.txt"
-if not exist "%CONFIG_FILE%" (
-    echo [ERROR] Khong tim thay file %CONFIG_FILE%!
+if "%CHOICE%"=="4" (
+    echo [INFO] Da giai phong thanh cong tat ca cac cong.
     pause
-    exit /b 1
+    exit /b 0
 )
 
 set "ALL_SERVICES_DIR=%ROOT_DIR%\All Services"
 
-for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
-    set "SERVICE_NAME=%%A"
-    set "CONFIG_VAL=%%B"
-    
-    if not "!CONFIG_VAL!"=="" (
-        set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
-        
-        if exist "!TARGET_PATH!" (
-            echo Dang khoi dong !SERVICE_NAME! o local...
-            pushd "!TARGET_PATH!"
-            
-            REM Neu co package.json (Frontend, Node.js Gateway, v.v...)
-            if exist "package.json" (
-                start "!SERVICE_NAME!" cmd /k "cd /d "%CD%" && npm run dev"
-            ) else (
-                REM Du an C# (.NET Core)
-                set "CSPROJ_PATH="
-                
-                REM Quet cac file .csproj va tim API project
-                for /r %%f in (*.csproj) do (
-                    set "FILE_NAME=%%~nxf"
-                    echo !FILE_NAME! | findstr /i "API" >nul
-                    if !ERRORLEVEL! equ 0 (
-                        set "CSPROJ_PATH=%%f"
-                    )
-                )
-                
-                REM Neu khong tim thay file API.csproj thi lay bat ky .csproj nao lam fallback
-                if "!CSPROJ_PATH!"=="" (
-                    for /r %%f in (*.csproj) do (
-                        set "CSPROJ_PATH=%%f"
-                    )
-                )
-                
-                if not "!CSPROJ_PATH!"=="" (
-                    echo Tim thay Project: !CSPROJ_PATH!
-                    start "!SERVICE_NAME!" cmd /k "dotnet run --project "!CSPROJ_PATH!""
-                ) else (
-                    echo [WARNING] Khong tim thay file .csproj hoac package.json trong !SERVICE_NAME!. Bo qua.
-                )
-            )
-            popd
-        ) else (
-            echo [WARNING] Thu muc "!TARGET_PATH!" khong ton tai. Vui long chay setup.bat truoc.
-        )
-    )
+REM --- Step 3: Khoi dong cac Service theo lua chon ---
+echo =====================================================================
+echo [BƯỚC 2] Tien hanh khoi dong cac Service...
+echo =====================================================================
+echo.
+
+REM 1. Identity Service
+if "%CHOICE%"=="1" goto start_identity
+if "%CHOICE%"=="2" goto start_identity
+goto check_ai
+
+:start_identity
+set "ID_PATH=%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\V-Eval-Identity_Service.API.csproj"
+if exist "%ID_PATH%" (
+    echo [START] Dang khoi dong Identity Service [Port 5155 / 5156]...
+    start "V-Eval - Identity Service [HTTP:5155 | gRPC:5156]" cmd /k "dotnet run --project "%ID_PATH%""
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay Identity Service tai: %ID_PATH%
 )
 
+REM 2. Content Service
+set "CONTENT_PATH=%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\V-Eval-Content_Service.API.csproj"
+if exist "%CONTENT_PATH%" (
+    echo [START] Dang khoi dong Content Service [Port 5249 / 5250]...
+    start "V-Eval - Content Service [HTTP:5249 | gRPC:5250]" cmd /k "dotnet run --project "%CONTENT_PATH%""
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay Content Service tai: %CONTENT_PATH%
+)
+
+REM 3. Practice Service
+set "PRACTICE_PATH=%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API\V-Eval-Practice_Service.API.csproj"
+if exist "%PRACTICE_PATH%" (
+    echo [START] Dang khoi dong Practice Service [Port 5261]...
+    start "V-Eval - Practice Service [HTTP:5261]" cmd /k "dotnet run --project "%PRACTICE_PATH%""
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay Practice Service tai: %PRACTICE_PATH%
+)
+
+:check_ai
+REM 4. AI Engine .NET API
+if "%CHOICE%"=="1" goto start_ai
+if "%CHOICE%"=="2" goto start_ai_net
+if "%CHOICE%"=="3" goto start_ai
+goto check_gateway
+
+:start_ai
+:start_ai_net
+set "AI_NET_PATH=%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API\V-Eval-Ai_Engine.API.csproj"
+if exist "%AI_NET_PATH%" (
+    echo [START] Dang khoi dong AI Engine .NET API [Port 5104]...
+    start "V-Eval - AI Engine .NET API [HTTP:5104]" cmd /k "dotnet run --project "%AI_NET_PATH%""
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay AI Engine .NET tai: %AI_NET_PATH%
+)
+
+if "%CHOICE%"=="2" goto check_gateway
+
+REM 5. AI Engine Python FastAPI RAG Service
+set "AI_PY_DIR=%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\rag-service"
+if exist "%AI_PY_DIR%\main.py" (
+    echo [START] Dang khoi dong AI Engine Python FastAPI RAG [Port 8000]...
+    set "PY_CMD=python -m uvicorn main:app --port 8000 --reload"
+    if exist "%AI_PY_DIR%\.venv\Scripts\python.exe" (
+        set "PY_CMD="%AI_PY_DIR%\.venv\Scripts\python.exe" -m uvicorn main:app --port 8000 --reload"
+    )
+    start "V-Eval - AI Engine Python RAG [FastAPI:8000]" cmd /k "cd /d "%AI_PY_DIR%" && !PY_CMD!"
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay Python rag-service tai: %AI_PY_DIR%
+)
+
+:check_gateway
+if "%CHOICE%"=="3" goto show_summary
+
+REM 6. API Gateway YARP
+set "GATEWAY_PATH=%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\V-Eval-Gateway.API.csproj"
+if exist "%GATEWAY_PATH%" (
+    echo [START] Dang khoi dong API Gateway YARP [Port 5212]...
+    start "V-Eval - API Gateway YARP [HTTP:5212]" cmd /k "dotnet run --project "%GATEWAY_PATH%""
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay API Gateway tai: %GATEWAY_PATH%
+)
+
+:show_summary
 echo.
-echo Tat ca cac service da duoc khoi chay trong cac cua so rieng biet.
+echo =====================================================================
+echo           DANH SACH CAC SERVICE VA PORT HOAT DONG
+echo =====================================================================
+echo  * API Gateway YARP      : http://localhost:5212  [Entry Point]
+echo  * Identity Service      : http://localhost:5155  [gRPC: 5156]
+echo  * Content Service       : http://localhost:5249  [gRPC: 5250]
+echo  * Practice Service      : http://localhost:5261  [UI Runner: :5261/view-diagnostic.html]
+echo  * AI Engine .NET API    : http://localhost:5104  [OCR, Ingestion]
+echo  * Python FastAPI RAG    : http://localhost:8000  [Swagger: :8000/docs]
+echo =====================================================================
 echo.
-pause
+echo Tat ca cac service da duoc khoi chay trong cac cua so rieng biet!
+echo Nhan phim bat ky de thoat cua so dieu khien nay...
+pause >nul

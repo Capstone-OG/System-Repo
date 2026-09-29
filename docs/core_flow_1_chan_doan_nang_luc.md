@@ -4,6 +4,7 @@
 > **Phiên bản tài liệu**: 1.0  
 > **Trạng thái**: Đã hoàn thiện liên thông 100% qua 4 Microservices & Kiểm thử E2E  
 > **Hướng dẫn chi tiết từng bước logic**: [Step-by-Step Logic Qua Từng Service](./core_flow_1_step_by_step_logic.md)  
+> **Chuyển giao sang Core Flow 2**: [Báo Cáo Kỹ Thuật Core Flow 2 (Path Planning)](./core_flow_2_quy_hoach_lo_trinh_hoc_tap.md)  
 
 ---
 
