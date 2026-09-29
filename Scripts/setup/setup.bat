@@ -99,11 +99,13 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             git pull origin !BRANCH! >nul 2>&1
             
             REM Kiem tra xem da co solution (.sln) chua, neu chua thi tu dong khoi tao
+            set "IS_NODE=0"
+            if exist "package.json" set "IS_NODE=1"
             set "SLN_EXISTS=0"
             if exist "*.sln" set "SLN_EXISTS=1"
             for /r %%f in (*.sln) do set "SLN_EXISTS=1"
             
-            if "!SLN_EXISTS!"=="0" (
+            if "!IS_NODE!"=="0" if "!SLN_EXISTS!"=="0" (
                 echo [INFO] Thu muc ton tai nhung chua co Solution. Tien hanh khoi tao C# Clean Architecture...
                 echo [INFO] Dang khoi tao Solution va cac Project C# Clean Architecture cho !SERVICE_NAME!...
                 

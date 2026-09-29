@@ -37,6 +37,7 @@ Hệ thống được chia thành **5 Microservices chính** hoạt động đ�
 | **Content Service** | `All Services/V-Eval-Content_Service` | **5249** | .NET 9, CQRS MediatR, Supabase | Ngân hàng câu hỏi, Chùm bài đọc, Import đề thi từ AI |
 | **Practice Service** | `All Services/V-Eval-Practice_Service` | **5002** | .NET 9, EF Core | Làm bài thi trực tuyến, Chấm điểm tự động, Thống kê kỹ năng |
 | **AI Engine** | `All Services/V-Eval-Ai_Engine` | **5104** | .NET 9, Gemini OCR, Qdrant | Ingestion đề thi PDF, Socratic AI Tutor Chatbot, RAG Vector Search |
+| **Web Client** | `All Services/V-Eval-Web_Client` | **5173** | React 19, Vite 8, TailwindCSS v4 | Giao diện người dùng Web SPA (Học sinh, Luyện thi, Khảo thí năng lực) |
 
 ---
 

@@ -15,16 +15,17 @@ echo.
 
 REM --- Step 1: Chon che do khoi chay ---
 echo Chon che do khoi dong:
-echo   [1] Khoi dong FULL tat ca 6 Service [Gateway, Identity, Content, Practice, AI Engine, Python RAG]
+echo   [1] Khoi dong FULL tat ca 7 Service [Gateway, Identity, Content, Practice, AI Engine, Python RAG, Web Client]
 echo   [2] Khoi dong cac Microservices C# [.NET Core]
 echo   [3] Khoi dong chi AI Subsystem [AI Engine .NET + Python FastAPI RAG]
-echo   [4] Giai phong / Kill tat ca cac Port va Tien trinh dang chiem dung
-echo   [5] Thoat
+echo   [4] Khoi dong chi Web Client [React 19 Vite - Port 5173]
+echo   [5] Giai phong / Kill tat ca cac Port va Tien trinh dang chiem dung
+echo   [6] Thoat
 echo.
 set "CHOICE=1"
 set /p "CHOICE=Nhap lua chon cua ban [Mac dinh: 1]: "
 
-if "%CHOICE%"=="5" (
+if "%CHOICE%"=="6" (
     echo Tam biet!
     exit /b 0
 )
@@ -45,11 +46,13 @@ for %%P in (%PORTS_TO_CLEAN%) do (
 echo [DONE] Da giai phong hoan tat cac Port phat trien.
 echo.
 
-if "%CHOICE%"=="4" (
+if "%CHOICE%"=="5" (
     echo [INFO] Da giai phong thanh cong tat ca cac cong.
     pause
     exit /b 0
 )
+
+if "%CHOICE%"=="4" goto start_web_only
 
 set "ALL_SERVICES_DIR=%ROOT_DIR%\All Services"
 
@@ -141,6 +144,31 @@ if exist "%GATEWAY_PATH%" (
     echo [WARNING] Khong tim thay API Gateway tai: %GATEWAY_PATH%
 )
 
+if "%CHOICE%"=="1" goto start_web
+goto show_summary
+
+:start_web
+set "WEB_DIR=%ALL_SERVICES_DIR%\V-Eval-Web_Client"
+if exist "%WEB_DIR%\package.json" (
+    echo [START] Dang khoi dong V-Eval Web Client [Port 5173]...
+    start "V-Eval - Web Client [React Vite:5173]" cmd /k "cd /d "%WEB_DIR%" && npm run dev"
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay Web Client tai: %WEB_DIR%
+)
+goto show_summary
+
+:start_web_only
+set "WEB_DIR=%ALL_SERVICES_DIR%\V-Eval-Web_Client"
+if exist "%WEB_DIR%\package.json" (
+    echo [START] Dang khoi dong V-Eval Web Client [Port 5173]...
+    start "V-Eval - Web Client [React Vite:5173]" cmd /k "cd /d "%WEB_DIR%" && npm run dev"
+    timeout /t 2 /nobreak >nul
+) else (
+    echo [WARNING] Khong tim thay Web Client tai: %WEB_DIR%
+)
+goto show_summary
+
 :show_summary
 echo.
 echo =====================================================================
@@ -152,6 +180,7 @@ echo  * Content Service       : http://localhost:5249  [gRPC: 5250]
 echo  * Practice Service      : http://localhost:5261  [UI Runner: :5261/view-diagnostic.html]
 echo  * AI Engine .NET API    : http://localhost:5104  [OCR, Ingestion]
 echo  * Python FastAPI RAG    : http://localhost:8000  [Swagger: :8000/docs]
+echo  * Web Client React Vite : http://localhost:5173  [Frontend UI]
 echo =====================================================================
 echo.
 echo Tat ca cac service da duoc khoi chay trong cac cua so rieng biet!
