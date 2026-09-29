@@ -232,7 +232,7 @@ Request Payload `GenerateRoadmapCommand`:
 
 ---
 
-### 6.2 Danh Sách 13 APIs Theo Thứ Tự Ưu Tiên Triển Khai
+### 6.2 Danh Sách 21 APIs Theo Thứ Tự Ưu Tiên Triển Khai
 
 #### 🔹 Giai Đoạn 1: Lộ Trình Cá Nhân Hóa (Roadmap Core)
 1. **API 1: `POST /api/v1/practice/roadmaps/generate`**
@@ -259,12 +259,12 @@ Request Payload `GenerateRoadmapCommand`:
    - Nhiệm vụ: Chấm điểm Quiz bù cho học sinh vắng mặt buổi Live Q&A. Nếu đạt $\ge 60\%$, cập nhật `IsMakeupQuizPassed = true` gỡ điều kiện phong tỏa chặng.
    - Commit: `feat(roadmap): implement submit makeup quiz command handler for absent students`
 
-#### 🔹 Giai Đoạn 3: Phân Hệ Quản Lý Live Q&A, Điểm Danh & Phân Công Lớp Học (Live Integration)
-8. **API 8: `POST /api/v1/practice/live-sessions` (Admin/Staff)**
+#### 🔹 Giai Đoạn 3: Phân Hệ Quản Lý Live Q&A, Điểm Danh & Phân Công Lớp Học (Academic Manager & Teacher - Practice Service)
+8. **API 8: `POST /api/v1/practice/live-sessions` (Academic Manager)**
    - Nhiệm vụ: Quản trị viên/Điều phối cơ sở tạo lịch buổi học Live Q&A, phân công giáo viên/nhân viên phụ trách (`ClassId`, `TeacherId`, `Title`, `ScheduledAt`, `DurationMinutes`, `MeetingUrl`).
    - Commit: `feat(live-session): implement create live session command handler`
-9. **API 9: `PUT /api/v1/practice/classes/{classId}/assign-teacher` (Admin/Staff)**
-   - Nhiệm vụ: Phân công hoặc điều chuyển giáo viên/nhân viên phụ trách lớp học cơ sở (`TeacherId`, `AssignedBy`, `AssignedAt`).
+9. **API 9: `PUT /api/v1/practice/classes/{classId}/assign-teacher` (Academic Manager)**
+   - Nhiệm vụ: Phân công hoặc điều chuyển giáo viên phụ trách lớp học cơ sở (`TeacherId`, `AssignedBy`, `AssignedAt`).
    - Commit: `feat(class): implement assign teacher to class command handler`
 10. **API 10: `GET /api/v1/practice/live-sessions/my-schedule` (Student)**
     - Nhiệm vụ: Lấy thời khóa biểu các buổi Live Q&A của lớp học cơ sở được phân bổ (`EnrolledClassId`).
@@ -278,6 +278,34 @@ Request Payload `GenerateRoadmapCommand`:
 13. **API 13: `PUT /api/v1/practice/live-sessions/{sessionId}/recording` (Teacher)**
     - Nhiệm vụ: Giáo viên cập nhật link video ghi hình buổi Live (`RecordingUrl`), cập nhật `IsRecorded = true` phục vụ học sinh vắng mặt xem lại.
     - Commit: `feat(live-session): implement update live session recording url command handler`
+
+#### 🔹 Giai Đoạn 4: Quản Trị Ngân Hàng Câu Hỏi, Đề Thi & Bài Giảng Gốc (Academic Director - Content Service)
+14. **API 14: `POST /api/v1/content/questions` (Academic Director)**
+    - Nhiệm vụ: Thêm mới câu hỏi trắc nghiệm vào Ngân hàng câu hỏi gốc (nội dung LaTeX, 4 phương án lựa chọn, đáp án đúng, lời giải thích chi tiết, gắn mã kỹ năng `SkillId`, phân loại cấp độ tư duy Bloom 1-6).
+    - Commit: `feat(content): implement create question command handler for academic director`
+15. **API 15: `PUT /api/v1/content/questions/{questionId}` (Academic Director)**
+    - Nhiệm vụ: Hiệu đính nội dung câu hỏi, cập nhật đáp án đúng hoặc chỉnh sửa lời giải thích trong ngân hàng đề gốc.
+    - Commit: `feat(content): implement update question command handler`
+16. **API 16: `DELETE /api/v1/content/questions/{questionId}` (Academic Director)**
+    - Nhiệm vụ: Xóa hoặc vô hiệu hóa câu hỏi trong ngân hàng câu hỏi gốc khi phát hiện sai sót chuyên môn.
+    - Commit: `feat(content): implement delete question command handler`
+17. **API 17: `POST /api/v1/content/exams/quiz` (Academic Director)**
+    - Nhiệm vụ: Đóng gói và phát hành bộ đề Quiz củng cố chuyên đề chuẩn hóa (5-10 câu hỏi) gắn với `SkillId` cụ thể (`IsPublished = true`).
+    - Commit: `feat(content): implement create milestone quiz exam command handler`
+18. **API 18: `POST /api/v1/content/materials` (Academic Director)**
+    - Nhiệm vụ: Tạo và liên kết bài giảng lý thuyết / video bài giảng chuẩn (`Title`, `VideoUrl`, `DurationSeconds`, `SkillId`) để cung cấp `MaterialId` cho chặng học.
+    - Commit: `feat(content): implement create material lecture command handler`
+19. **API 19: `GET /api/v1/content/materials/by-skill/{skillId}` (Student / Public)**
+    - Nhiệm vụ: Tra cứu nội dung chi tiết bài giảng video lý thuyết của kỹ năng chuyên đề trong chặng học (cung cấp link video, thời lượng chuẩn).
+    - Commit: `feat(content): implement get material by skill query handler`
+
+#### 🔹 Giai Đoạn 5: Điều Phối Lớp Học & Can Thiệp Sư Phạm Sa Sút (Academic Manager - Practice Service)
+20. **API 20: `GET /api/v1/practice/classes/{classId}/students` (Academic Manager / Teacher)**
+    - Nhiệm vụ: Lấy danh sách học sinh thuộc lớp học cơ sở kèm tiến độ lộ trình học tập, trạng thái bài chẩn đoán và tỷ lệ chuyên cần.
+    - Commit: `feat(class): implement get class enrolled students query handler`
+21. **API 21: `GET /api/v1/practice/classes/{classId}/at-risk-students` (Academic Manager)**
+    - Nhiệm vụ: Phát hiện và lọc danh sách học sinh có nguy cơ sa sút / bỏ học tại cơ sở (vắng mặt buổi Live Q&A, trượt Quiz $\ge 2$ lần, không xem video lý thuyết $\ge 7$ ngày) để can thiệp sư phạm kịp thời.
+    - Commit: `feat(class): implement get at-risk students query handler for academic manager`
 
 ---
 
