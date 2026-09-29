@@ -232,17 +232,17 @@ Request Payload `GenerateRoadmapCommand`:
 
 ---
 
-### 6.2 Danh Sách 11 APIs Theo Thứ Tự Ưu Tiên Triển Khai
+### 6.2 Danh Sách 13 APIs Theo Thứ Tự Ưu Tiên Triển Khai
 
 #### 🔹 Giai Đoạn 1: Lộ Trình Cá Nhân Hóa (Roadmap Core)
 1. **API 1: `POST /api/v1/practice/roadmaps/generate`**
-   - Nhiệm vụ: Tích hợp 4 thuật toán đồ thị, nạp dữ liệu gRPC, tạo `LearningRoadmap` và `RoadmapNodes`, lưu CSDL nguyên tử.
+   - Nhiệm vụ: Tích hợp 4 thuật toán đồ thị, nạp dữ liệu gRPC, tạo `LearningRoadmap` và `RoadmapNodes`, lưu CSDL nguyên tử, phân nhóm Chặng theo Miền năng lực (`stages`).
    - Commit: `feat(roadmap): implement generate roadmap command handler with 4 graph algorithms`
 2. **API 2: `GET /api/v1/practice/roadmaps/my-roadmap`**
-   - Nhiệm vụ: Lấy timeline toàn bộ các chặng học của học sinh, tiến độ phần trăm hoàn thành, danh sách các node và trạng thái hiện tại.
+   - Nhiệm vụ: Lấy timeline toàn bộ các chặng học của học sinh, tiến độ phần trăm hoàn thành, danh sách các node và nhóm stages theo môn.
    - Commit: `feat(roadmap): implement get my roadmap query handler and timeline dto`
 3. **API 3: `GET /api/v1/practice/roadmaps/nodes/{nodeId}`**
-   - Nhiệm vụ: Lấy thông tin chi tiết của 1 chặng học (Video bài giảng `MaterialId`, thông tin Quiz `QuizExamId`, buổi học Live `LiveSessionId`).
+   - Nhiệm vụ: Lấy thông tin chi tiết của 1 chặng học (Video bài giảng `MaterialId`, thông tin Quiz `QuizExamId`, buổi học Live `LiveSessionId` kèm lịch sử điểm danh và Quiz bù).
    - Commit: `feat(roadmap): implement get roadmap node detail query handler`
 4. **API 4: `POST /api/v1/practice/roadmaps/nodes/{nodeId}/track-video`**
    - Nhiệm vụ: Ghi nhận thời gian xem video bài giảng lý thuyết (yêu cầu xem $\ge 80\%$ thời lượng để đủ điều kiện làm Quiz).
@@ -259,18 +259,24 @@ Request Payload `GenerateRoadmapCommand`:
    - Nhiệm vụ: Chấm điểm Quiz bù cho học sinh vắng mặt buổi Live Q&A. Nếu đạt $\ge 60\%$, cập nhật `IsMakeupQuizPassed = true` gỡ điều kiện phong tỏa chặng.
    - Commit: `feat(roadmap): implement submit makeup quiz command handler for absent students`
 
-#### 🔹 Giai Đoạn 3: Phân Hệ Live Q&A & Điểm Danh (Live Integration)
-8. **API 8: `GET /api/v1/practice/live-sessions/my-schedule`**
-   - Nhiệm vụ: Lấy thời khóa biểu các buổi Live Q&A của lớp học cơ sở được phân bổ (`EnrolledClassId`).
-   - Commit: `feat(live-session): implement get my live sessions schedule query handler`
-9. **API 9: `POST /api/v1/practice/live-sessions/{sessionId}/join`**
-   - Nhiệm vụ: Trả về link phòng học trực tuyến (`MeetingUrl`), ghi nhận thời gian tham gia vào bản ghi `LiveSessionAttendance`.
-   - Commit: `feat(live-session): implement join live session command handler`
-10. **API 10: `POST /api/v1/practice/live-sessions/{sessionId}/attendance`**
-    - Nhiệm vụ: Giáo viên điểm danh học sinh (`ATTENDED` hoặc `ABSENT`), tự động sinh bản ghi `LiveSessionAttendance`.
+#### 🔹 Giai Đoạn 3: Phân Hệ Quản Lý Live Q&A, Điểm Danh & Phân Công Lớp Học (Live Integration)
+8. **API 8: `POST /api/v1/practice/live-sessions` (Admin/Staff)**
+   - Nhiệm vụ: Quản trị viên/Điều phối cơ sở tạo lịch buổi học Live Q&A, phân công giáo viên/nhân viên phụ trách (`ClassId`, `TeacherId`, `Title`, `ScheduledAt`, `DurationMinutes`, `MeetingUrl`).
+   - Commit: `feat(live-session): implement create live session command handler`
+9. **API 9: `PUT /api/v1/practice/classes/{classId}/assign-teacher` (Admin/Staff)**
+   - Nhiệm vụ: Phân công hoặc điều chuyển giáo viên/nhân viên phụ trách lớp học cơ sở (`TeacherId`, `AssignedBy`, `AssignedAt`).
+   - Commit: `feat(class): implement assign teacher to class command handler`
+10. **API 10: `GET /api/v1/practice/live-sessions/my-schedule` (Student)**
+    - Nhiệm vụ: Lấy thời khóa biểu các buổi Live Q&A của lớp học cơ sở được phân bổ (`EnrolledClassId`).
+    - Commit: `feat(live-session): implement get my live sessions schedule query handler`
+11. **API 11: `POST /api/v1/practice/live-sessions/{sessionId}/join` (Student)**
+    - Nhiệm vụ: Trả về link phòng học trực tuyến (`MeetingUrl`), ghi nhận thời gian tham gia vào bản ghi `LiveSessionAttendance`.
+    - Commit: `feat(live-session): implement join live session command handler`
+12. **API 12: `POST /api/v1/practice/live-sessions/{sessionId}/attendance` (Teacher)**
+    - Nhiệm vụ: Giáo viên điểm danh học sinh (`ATTENDED` hoặc `ABSENT`), tự động cập nhật bản ghi `LiveSessionAttendance`.
     - Commit: `feat(live-session): implement teacher attendance grading command handler`
-11. **API 11: `PUT /api/v1/practice/live-sessions/{sessionId}/recording`**
-    - Nhiệm vụ: Giáo viên cập nhật link video ghi hình buổi Live (`RecordingUrl`), cập nhật `IsRecorded = true` phục vụ học sinh vắng mặt.
+13. **API 13: `PUT /api/v1/practice/live-sessions/{sessionId}/recording` (Teacher)**
+    - Nhiệm vụ: Giáo viên cập nhật link video ghi hình buổi Live (`RecordingUrl`), cập nhật `IsRecorded = true` phục vụ học sinh vắng mặt xem lại.
     - Commit: `feat(live-session): implement update live session recording url command handler`
 
 ---
