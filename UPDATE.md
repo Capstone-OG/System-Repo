@@ -1,5 +1,14 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
+## [24/09/2026] - Bổ Sung Tài Liệu Chi Tiết Step-by-Step Logic Hoạt Động Core Flow 1 Qua Từng Service
+
+- **Tài liệu chuẩn hóa mới**:
+  - Ban hành [`docs/core_flow_1_step_by_step_logic.md`](./docs/core_flow_1_step_by_step_logic.md): Hướng dẫn chi tiết tuần tự từng bước logic nghiệp vụ của Core Flow 1 đi qua từng service (`Client` $\to$ `Practice Service` $\to$ `Identity Service (gRPC)` $\to$ `Content Service (gRPC)` $\to$ `AI Engine (REST)` $\to$ `PostgreSQL` $\to$ `Client`).
+  - Phân tích chi tiết quy tắc nghiệp vụ ở từng mắt xích: cơ chế FluentValidation, bảo vệ điều kiện chọn Campus, truy vấn Eager Loading lấy cây kiến thức (`Question` $\to$ `Skill` $\to$ `Domain`), tính toán thống kê vi mô và WeakSkills (< 60%), thuật toán IRT 2PL kết hợp BKT Prior giải quyết Cold-Start, cơ chế tự động tạo lớp và ghi danh tại cơ sở đào tạo.
+  - Ban hành [`docs/lich_hop_tuan_3_va_cau_hoi_huong_dan.md`](./docs/lich_hop_tuan_3_va_cau_hoi_huong_dan.md): Tài liệu chuẩn bị họp Tuần 3 với Thầy cố vấn, tổng hợp phương án phân tách AI microservices, ma trận chuẩn 30 câu thi đầu vào ĐGNL ĐHQG-HCM và 5 điểm mù học thuật/nghiệp vụ quan trọng.
+- **Cập nhật liên kết tài liệu**:
+  - Đồng bộ liên kết chéo hai chiều giữa [`docs/core_flow_1_chan_doan_nang_luc.md`](./docs/core_flow_1_chan_doan_nang_luc.md) và tài liệu step-by-step mới, đảm bảo 100% tuân thủ quy tắc đường dẫn tương đối `./`.
+
 ## [22/09/2026] - Triển Khai Toàn Diện Core Flow 1 (Chẩn Đoán Năng Lực Đầu Vào, Ước Lượng IRT & BKT Priors, Tự Động Xếp Lớp & Trực Quan Hóa Dữ Liệu)
 
 Toàn bộ luồng nghiệp vụ **Core Flow 1 (Từ Đề thi Chẩn đoán 30 câu $\to$ Chấm điểm $\to$ AI Psychometrics $\to$ Xếp lớp Campus $\to$ DTO trực quan)** đã được phát triển, liên thông và kiểm thử thành công 100% qua 4 Microservices:
