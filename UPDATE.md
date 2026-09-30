@@ -1,6 +1,6 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [01/10/2026] - Nâng Cấp Core Flow 2 (Bước 1 & 2): Mở Rộng Entity Class, Migration CSDL & Đồng Bộ DomainCode Qua gRPC / DTOs
+## [01/10/2026] - Nâng Cấp Core Flow 2 (Bước 1, 2 & 3): Entity Class, Migration CSDL, gRPC DomainCode & Thuật Toán K-Means Phân Cụm Lỗ Hổng
 
 - **Triển Khai Bước 1 Kế Hoạch Nâng Cấp Core Flow 2 Trong Practice Service**:
   - **Mở Rộng Mô Hình Thực Thể [`Class.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Class.cs)**: Bổ sung 4 trường dữ liệu mới: `ClassType`, `DomainId`, `DomainCode`, `ClusterIndex`.
@@ -15,5 +15,12 @@
     - Bổ sung `DomainCode` vào [`RoadmapNodeSummaryDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/RoadmapNodeSummaryDto.cs), [`RoadmapStageDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/RoadmapStageDto.cs), [`RoadmapNodeDetailDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/RoadmapNodeDetailDto.cs).
     - Bổ sung `PlacementClass` vào [`GenerateRoadmapResponseDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/GenerateRoadmapResponseDto.cs).
     - Cập nhật các Command/Query Handler ([`GenerateRoadmapCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Commands/GenerateRoadmap/GenerateRoadmapCommandHandler.cs), [`GetMyRoadmapQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Queries/GetMyRoadmap/GetMyRoadmapQueryHandler.cs), [`GetRoadmapNodeDetailQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Queries/GetRoadmapNodeDetail/GetRoadmapNodeDetailQueryHandler.cs)) map trọn vẹn `DomainCode` và `PlacementClass`.
+- **Triển Khai Bước 3 Kế Hoạch Nâng Cấp Core Flow 2 (Thuật Toán K-Means Student Clustering)**:
+  - **Xây Dựng Động Cơ Phân Cụm [`StudentKMeansClusterer.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/StudentKMeansClusterer.cs)**:
+    - Hỗ trợ số lượng học sinh $N$ động ($N \ge 2$), tự động thích ứng giới hạn số cụm $K_{\max} = \min(8, \max(2, \lfloor N / 3 \rfloor))$.
+    - Kết hợp khởi tạo tâm cụm K-Means++, vòng lặp hội tụ Lloyd's và thuật toán Elbow Method (khoảng cách cực đại đến dây cung).
+    - Tự động nhận diện lỗ hổng kiến thức chính (< 0.60), gợi ý tên lớp chuyên đề và gán mã miền tương ứng.
+    - Đăng ký `IStudentKMeansClusterer` vào DI container ([`DependencyInjection.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/DependencyInjection.cs)).
+    - Kiểm thử thực nghiệm với 45 học sinh phân bổ 4 nhóm lỗ hổng $\rightarrow$ tự động tìm ra $K = 4$ tối ưu (WCSS giảm mạnh từ 4.2867 xuống 0.1173), phân lớp chính xác 100%.
 - **Kiểm Thử Toàn Diện & Biên Dịch Solution**:
-  - Cả 2 service `V-Eval-Content_Service` và `V-Eval-Practice_Service` đều biên dịch sạch 100% (**0 Warning, 0 Error**).
+  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
