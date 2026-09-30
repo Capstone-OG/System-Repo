@@ -281,32 +281,35 @@ Request Payload `GenerateRoadmapCommand`:
 14. **API 14: `PUT /api/v1/practice/live-sessions/{sessionId}/recording` (Teacher)**
     - Nhiệm vụ: Giáo viên cập nhật link video ghi hình buổi Live (`RecordingUrl`), cập nhật `IsRecorded = true` phục vụ học sinh vắng mặt xem lại.
     - Commit: `feat(live-session): implement update live session recording url command handler`
+15. **API 15: `PUT /api/v1/practice/live-sessions/{sessionId}/cancel` (Teacher / Academic Manager)**
+    - Nhiệm vụ: Cập nhật trạng thái buổi học thành `CANCELLED` khi giáo viên bận hoặc có việc đột xuất. Không cho phép xóa vật lý vì buổi học do Academic Manager tạo, cần bảo lưu lịch sử đào tạo. Kèm lý do hủy (`reason`). Khi đã hủy, ngăn chặn học sinh vào phòng học (API 11) và ngăn chặn điểm danh (API 12) hay nộp video ghi hình (API 14).
+    - Commit: `feat(live-session): implement cancel live session command handler`
 
 #### 🔹 Giai Đoạn 4: Quản Trị Ngân Hàng Câu Hỏi, Đề Thi & Bài Giảng Gốc (Academic Director - Content Service)
-15. **API 15: `POST /api/v1/content/questions` (Academic Director)**
+16. **API 16: `POST /api/v1/content/questions` (Academic Director)**
     - Nhiệm vụ: Thêm mới câu hỏi trắc nghiệm vào Ngân hàng câu hỏi gốc (nội dung LaTeX, 4 phương án lựa chọn, đáp án đúng, lời giải thích chi tiết, gắn mã kỹ năng `SkillId`, phân loại cấp độ tư duy Bloom 1-6).
     - Commit: `feat(content): implement create question command handler for academic director`
-16. **API 16: `PUT /api/v1/content/questions/{questionId}` (Academic Director)**
+17. **API 17: `PUT /api/v1/content/questions/{questionId}` (Academic Director)**
     - Nhiệm vụ: Hiệu đính nội dung câu hỏi, cập nhật đáp án đúng hoặc chỉnh sửa lời giải thích trong ngân hàng đề gốc.
     - Commit: `feat(content): implement update question command handler`
-17. **API 17: `DELETE /api/v1/content/questions/{questionId}` (Academic Director)**
+18. **API 18: `DELETE /api/v1/content/questions/{questionId}` (Academic Director)**
     - Nhiệm vụ: Xóa hoặc vô hiệu hóa câu hỏi trong ngân hàng câu hỏi gốc khi phát hiện sai sót chuyên môn.
     - Commit: `feat(content): implement delete question command handler`
-18. **API 18: `POST /api/v1/content/exams/quiz` (Academic Director)**
+19. **API 19: `POST /api/v1/content/exams/quiz` (Academic Director)**
     - Nhiệm vụ: Đóng gói và phát hành bộ đề Quiz củng cố chuyên đề chuẩn hóa (5-10 câu hỏi) gắn với `SkillId` cụ thể (`IsPublished = true`).
     - Commit: `feat(content): implement create milestone quiz exam command handler`
-19. **API 19: `POST /api/v1/content/materials` (Academic Director)**
+20. **API 20: `POST /api/v1/content/materials` (Academic Director)**
     - Nhiệm vụ: Tạo và liên kết bài giảng lý thuyết / video bài giảng chuẩn (`Title`, `VideoUrl`, `DurationSeconds`, `SkillId`) để cung cấp `MaterialId` cho chặng học.
     - Commit: `feat(content): implement create material lecture command handler`
-20. **API 20: `GET /api/v1/content/materials/by-skill/{skillId}` (Student / Public)**
+21. **API 21: `GET /api/v1/content/materials/by-skill/{skillId}` (Student / Public)**
     - Nhiệm vụ: Tra cứu nội dung chi tiết bài giảng video lý thuyết của kỹ năng chuyên đề trong chặng học (cung cấp link video, thời lượng chuẩn).
     - Commit: `feat(content): implement get material by skill query handler`
 
 #### 🔹 Giai Đoạn 5: Điều Phối Lớp Học & Can Thiệp Sư Phạm Sa Sút (Academic Manager - Practice Service)
-21. **API 21: `GET /api/v1/practice/classes/{classId}/students` (Academic Manager / Teacher)**
+22. **API 22: `GET /api/v1/practice/classes/{classId}/students` (Academic Manager / Teacher)**
     - Nhiệm vụ: Lấy danh sách học sinh thuộc lớp học cơ sở kèm tiến độ lộ trình học tập, trạng thái bài chẩn đoán và tỷ lệ chuyên cần.
     - Commit: `feat(class): implement get class enrolled students query handler`
-22. **API 22: `GET /api/v1/practice/classes/{classId}/at-risk-students` (Academic Manager)**
+23. **API 23: `GET /api/v1/practice/classes/{classId}/at-risk-students` (Academic Manager)**
     - Nhiệm vụ: Phát hiện và lọc danh sách học sinh có nguy cơ sa sút / bỏ học tại cơ sở (vắng mặt buổi Live Q&A, trượt Quiz $\ge 2$ lần, không xem video lý thuyết $\ge 7$ ngày) để can thiệp sư phạm kịp thời.
     - Commit: `feat(class): implement get at-risk students query handler for academic manager`
 
