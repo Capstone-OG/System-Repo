@@ -36,6 +36,8 @@
 - **Triển Khai Bước 6 Kế Hoạch Nâng Cấp Core Flow 2 (Hỗ Trợ Multi-Class Schedule Trong API 10)**:
   - Nâng cấp [`LiveSessionRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/LiveSessionRepository.cs) truy vấn lịch Live của toàn bộ lớp học sinh tham gia.
   - Bổ sung thông tin định danh `ClassId`, `ClassName`, `DomainCode` vào [`GetMyLiveScheduleDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/LiveSessions/DTOs/GetMyLiveScheduleDtos.cs) và cập nhật [`GetMyLiveScheduleQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/LiveSessions/Queries/GetMyLiveSchedule/GetMyLiveScheduleQueryHandler.cs).
+- **Chuẩn Hóa & Cập Nhật Toàn Diện Tài Liệu Báo Cáo Kỹ Thuật Core Flow 2**:
+  - Biên soạn lại hoàn chỉnh [`docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md`](./docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md): Cập nhật sơ đồ luồng Mermaid chuẩn hóa, chi tiết hóa bước chuyển giao mô hình từ lớp hành chính sang lớp chuyên đề K-Means, ma trận 16 APIs, đặc tả FSM và hướng dẫn kiểm thử chi tiết cho toàn bộ thành viên team.
 - **Kiểm Thử Toàn Diện & Biên Dịch Solution**:
   - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
   - Kiểm thử live end-to-end thành công trên Swagger UI và PowerShell script.
