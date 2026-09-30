@@ -69,6 +69,18 @@ services:
     networks:
       - veval_network
 
+  # 6. Web Client Service (React 19, Vite, TailwindCSS Single Page App)
+  v-eval-web-client:
+    build:
+      context: .
+      dockerfile: ./All Services/V-Eval-Web_Client/Dockerfile
+    container_name: v_eval_web_client
+    ports:
+      - "5173:80"
+    restart: unless-stopped
+    networks:
+      - veval_network
+
 networks:
   veval_network:
     driver: bridge
