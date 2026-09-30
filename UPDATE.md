@@ -17,3 +17,6 @@
     3. **API 14 (Update Recording)**: Cập nhật URL ghi hình -> `200 OK`, `isRecorded: true`, `status: "COMPLETED"`. Cập nhật buổi học đã hủy -> `400 Bad Request`.
     4. **API 15 (Cancel Session)**: Hủy buổi học `8ebfe3ee...` với lý do bận công tác -> `200 OK`, `status: "CANCELLED"`. Hủy lại -> `400 Bad Request`. Học sinh gọi API 11 Join phòng -> `400 Bad Request` ("Buổi học này đã bị hủy bỏ").
     5. **Xác thực dữ liệu thời gian thực (API 10)**: Học sinh tra cứu thời khóa biểu cá nhân thấy ngay trạng thái `ATTENDED`, link video recording và trạng thái `COMPLETED`.
+- **Kế Hoạch & Phân Công Nhiệm Vụ Giai Đoạn 4 (Content Service)**:
+  - Phân công nhân sự **ThinhTT** phụ trách 4 API Quản trị Ngân hàng câu hỏi gốc & Bộ đề Quiz củng cố chuyên đề: **API 16** (`POST /api/v1/content/questions`), **API 17** (`PUT /api/v1/content/questions/{id}`), **API 18** (`DELETE /api/v1/content/questions/{id}`), **API 19** (`POST /api/v1/content/exams/quiz`).
+  - Đã cập nhật chi tiết bảng phân công và phạm vi nghiệp vụ trong `docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md`, `Content Service/docs/daily.md` và `Content Service/docs/process.md`.

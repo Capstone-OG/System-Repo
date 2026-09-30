@@ -286,16 +286,16 @@ Request Payload `GenerateRoadmapCommand`:
     - Commit: `feat(live-session): implement cancel live session command handler`
 
 #### 🔹 Giai Đoạn 4: Quản Trị Ngân Hàng Câu Hỏi, Đề Thi & Bài Giảng Gốc (Academic Director - Content Service)
-16. **API 16: `POST /api/v1/content/questions` (Academic Director)**
+16. **API 16: `POST /api/v1/content/questions` (Academic Director - Phụ trách: ThinhTT)**
     - Nhiệm vụ: Thêm mới câu hỏi trắc nghiệm vào Ngân hàng câu hỏi gốc (nội dung LaTeX, 4 phương án lựa chọn, đáp án đúng, lời giải thích chi tiết, gắn mã kỹ năng `SkillId`, phân loại cấp độ tư duy Bloom 1-6).
     - Commit: `feat(content): implement create question command handler for academic director`
-17. **API 17: `PUT /api/v1/content/questions/{questionId}` (Academic Director)**
+17. **API 17: `PUT /api/v1/content/questions/{questionId}` (Academic Director - Phụ trách: ThinhTT)**
     - Nhiệm vụ: Hiệu đính nội dung câu hỏi, cập nhật đáp án đúng hoặc chỉnh sửa lời giải thích trong ngân hàng đề gốc.
     - Commit: `feat(content): implement update question command handler`
-18. **API 18: `DELETE /api/v1/content/questions/{questionId}` (Academic Director)**
+18. **API 18: `DELETE /api/v1/content/questions/{questionId}` (Academic Director - Phụ trách: ThinhTT)**
     - Nhiệm vụ: Xóa hoặc vô hiệu hóa câu hỏi trong ngân hàng câu hỏi gốc khi phát hiện sai sót chuyên môn.
     - Commit: `feat(content): implement delete question command handler`
-19. **API 19: `POST /api/v1/content/exams/quiz` (Academic Director)**
+19. **API 19: `POST /api/v1/content/exams/quiz` (Academic Director - Phụ trách: ThinhTT)**
     - Nhiệm vụ: Đóng gói và phát hành bộ đề Quiz củng cố chuyên đề chuẩn hóa (5-10 câu hỏi) gắn với `SkillId` cụ thể (`IsPublished = true`).
     - Commit: `feat(content): implement create milestone quiz exam command handler`
 20. **API 20: `POST /api/v1/content/materials` (Academic Director)**
