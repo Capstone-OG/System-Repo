@@ -20,3 +20,11 @@
 - **Kế Hoạch & Phân Công Nhiệm Vụ Giai Đoạn 4 (Content Service)**:
   - Phân công nhân sự **ThinhTT** phụ trách 4 API Quản trị Ngân hàng câu hỏi gốc & Bộ đề Quiz củng cố chuyên đề: **API 16** (`POST /api/v1/content/questions`), **API 17** (`PUT /api/v1/content/questions/{id}`), **API 18** (`DELETE /api/v1/content/questions/{id}`), **API 19** (`POST /api/v1/content/exams/quiz`).
   - Đã cập nhật chi tiết bảng phân công và phạm vi nghiệp vụ trong `docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md`, `Content Service/docs/daily.md` và `Content Service/docs/process.md`.
+- **Chuẩn Hóa Đồng Bộ Toàn Bộ Route API Khớp Chuẩn YARP API Gateway**:
+  - Gỡ bỏ hoàn toàn tiền tố `v1` khỏi các Controller trong cả **Content Service** (`/api/content/...`) và **Practice Service** (`/api/practice/...`).
+  - Đồng bộ 100% với cấu hình định tuyến của API Gateway (`/api/content/{**catch-all}`, `/api/practice/{**catch-all}`), dọn sạch các route duplicate card trên Swagger UI của các microservice.
+- **Triển Khai Hoàn Tất APIs 20 & 21 (Quản Trị Bài Giảng Video Lý Thuyết) Trong Content Service**:
+  - **API 20 (`POST /api/content/materials`)**: Academic Director tạo bài giảng video lý thuyết chuẩn mực gắn với kỹ năng DAG (`SkillId`, `Title`, `Content`, `VideoUrl`, `DurationSeconds`, `FileUrl`), trả về `201 Created`.
+  - **API 21 (`GET /api/content/materials/by-skill/{skillId}`)**: Học sinh và hệ thống tra cứu nội dung lý thuyết, video bài giảng chuẩn và thời lượng phục vụ việc xem bài giảng chặng học. Bổ sung endpoint tra cứu chi tiết: `GET /api/content/materials/{id}`.
+  - **Kiểm thử trực tiếp (Live Test)**: Solution `V-Eval-Content_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**). Đã kiểm thử thành công tạo bài giảng Đại số (`201 Created`), tra cứu theo kỹ năng (`200 OK`) và kiểm tra toàn diện các trường hợp ngoại lệ URL không hợp lệ (`400 Bad Request`), kỹ năng không tồn tại (`404 Not Found`).
+
