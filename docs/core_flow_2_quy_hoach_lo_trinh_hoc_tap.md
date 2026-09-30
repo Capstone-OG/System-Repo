@@ -45,6 +45,89 @@ Mục tiêu cốt lõi:
  [1. Video Lý Thuyết] [2. Quiz Củng Cố] [3. Buổi Live Q&A Cơ Sở]
 ```
 
+### 🗺️ Sơ Đồ Quy Trình Tích Hợp API Toàn Tuyến (Developer Architecture Map)
+
+Để đội ngũ phát triển (Developers) có cái nhìn toàn cảnh và tức thì về **Ai gọi API nào, ở Microservice nào, dữ liệu luân chuyển từ đâu đến đâu và điều kiện chuyển trạng thái FSM ra sao**, quy trình vận hành tuần tự được đặc tả trực quan dưới đây:
+
+#### 1. Sơ Đồ Luồng Tuần Tự Tích Hợp API (Vertical Flowchart):
+
+```mermaid
+flowchart TD
+    subgraph S1 ["1. KHỞI TẠO LỘ TRÌNH (PRACTICE SERVICE)"]
+        CF1["Input Core Flow 1: theta_0, P(L0), WeakSkills, EnrolledClassId"]
+        --> API1["API 1: POST /api/practice/roadmaps/generate"]
+        --> Engine["Graph Engine: PathPruner -> Tarjan -> TopoSort -> MilestoneBinder"]
+        --> FSM["Khởi tạo FSM: Node 1 IN_PROGRESS, các Node sau LOCKED"]
+    end
+
+    subgraph S2 ["2. ĐIỀU HƯỚNG LỘ TRÌNH (STUDENT)"]
+        FSM --> API2["API 2: GET /api/practice/roadmaps/my-roadmap (Timeline, % tiến độ, Stages)"]
+        API2 --> API3["API 3: GET /api/practice/roadmaps/nodes/{nodeId} (Chi tiết 3 thành phần chặng)"]
+    end
+
+    subgraph S3 ["3. CHẶNG HỌC: BƯỚC 1 - VIDEO LÝ THUYẾT"]
+        ContentPrep1["Academic Director: API 20 (Tạo video) & API 21 (Lấy video theo Skill)"]
+        API3 --> API4["API 4: POST /api/practice/roadmaps/nodes/{nodeId}/track-video"]
+        ContentPrep1 -.-> API4
+        API4 -- "Xem >= 80% thời lượng" --> QuizUnlock["Mở khóa làm bài Quiz củng cố"]
+    end
+
+    subgraph S4 ["4. CHẶNG HỌC: BƯỚC 2 - QUIZ CỦNG CỐ & MỞ KHÓA FSM"]
+        ContentPrep2["ThinhTT: API 16-19 (Ngân hàng câu hỏi & Đóng gói đề Quiz chặng)"]
+        QuizUnlock --> API5["API 5: GET /api/practice/roadmaps/nodes/{nodeId}/quiz (Lấy đề, ẩn đáp án)"]
+        ContentPrep2 -.-> API5
+        API5 --> API6["API 6: POST /api/practice/roadmaps/nodes/{nodeId}/submit-quiz"]
+        API6 -- "Chấm điểm gRPC >= 60%" --> NextUnlock["Kích hoạt FSM mở khóa Chặng kế tiếp"]
+    end
+
+    subgraph S5 ["5. CHẶNG HỌC: BƯỚC 3 - BUỔI HỌC LIVE Q&A CƠ SỞ"]
+        ClassPrep["Academic Manager: API 9 (Gán GV) & API 8 (Tạo lịch Live) / API 15 (Hủy khi bận)"]
+        NextUnlock --> API10["API 10: GET /api/practice/live-sessions/my-schedule (Học sinh xem lịch Live)"]
+        ClassPrep -.-> API10
+        API10 --> API11["API 11: POST /api/practice/live-sessions/{sessionId}/join (Vào phòng & Ghi vết)"]
+        TeacherAct["Giáo viên: API 13 (Lịch dạy) & API 12 (Điểm danh ATTENDED / ABSENT)"]
+        API11 -.-> TeacherAct
+        TeacherAct --> API14["API 14: PUT /api/practice/live-sessions/{sessionId}/recording (Nộp video recap)"]
+    end
+
+    subgraph S6 ["6. XỬ LÝ NGOẠI LỆ: VẮNG MẶT LIVE Q&A"]
+        TeacherAct -- "Nếu đánh dấu ABSENT (Vắng mặt)" --> Locked["Chặng học bị phong tỏa tạm thời"]
+        API14 -- "Cung cấp video recap" --> API7["API 7: POST .../submit-makeup-quiz (Làm Quiz bù >= 60%)"]
+        Locked --> API7
+        API7 -- "Đạt >= 60%" --> Resolved["Giải phóng phong tỏa -> Chuyển chặng COMPLETED"]
+    end
+
+    subgraph S7 ["7. CẦU NỐI CHUYỂN GIAO SANG CORE FLOW 5"]
+        Resolved --> Core5["Core Flow 5 (Learning Analytics): API 22 (Tiến độ lớp) & API 23 (Cảnh báo sa sút)"]
+        TeacherAct --> Core5
+    end
+```
+
+#### 2. Bảng Ma Trận Phân Vai Và Trách Nhiệm API:
+
+| Nhóm Nghiệp Vụ | Mã API | Phương Thức & Endpoint | Vai Trò Gọi API | Microservice Chịu Trách Nhiệm | Ý Nghĩa Trong Luồng |
+| :--- | :---: | :--- | :--- | :--- | :--- |
+| **Quy Hoạch Lộ Trình** | **API 1** | `POST /api/practice/roadmaps/generate` | Học sinh / Client | `Practice Service` | Chạy 7 bước sinh lộ trình từ dữ liệu chẩn đoán đầu vào. |
+| **Điều Hướng** | **API 2** | `GET /api/practice/roadmaps/my-roadmap` | Học sinh | `Practice Service` | Xem lộ trình tổng quát, % hoàn thành và nhóm các Stages. |
+| **Chi Tiết Chặng** | **API 3** | `GET /api/practice/roadmaps/nodes/{nodeId}` | Học sinh | `Practice Service` | Lấy chi tiết Video, Quiz củng cố và Lịch Live của 1 chặng. |
+| **Tự Học Video** | **API 20** | `POST /api/content/materials` | Academic Director | `Content Service` | Đăng bài giảng video lý thuyết chuẩn và thời lượng bài học. |
+| | **API 21** | `GET /api/content/materials/by-skill/{skillId}`| Học sinh / Public | `Content Service` | Lấy bài giảng lý thuyết theo mã kỹ năng chặng học. |
+| | **API 4** | `POST /api/practice/roadmaps/nodes/{nodeId}/track-video` | Học sinh | `Practice Service` | Ghi nhận thời gian xem video, đạt >= 80% mở khóa Quiz. |
+| **Quiz Củng Cố** | **API 16-19**| `POST/PUT/DELETE /api/content/...` | Academic Director (ThinhTT) | `Content Service` | Quản trị ngân hàng câu hỏi gốc và đóng gói đề Quiz chặng. |
+| | **API 5** | `GET /api/practice/roadmaps/nodes/{nodeId}/quiz` | Học sinh | `Practice Service` | Lấy đề thi Quiz chặng học (ẩn đáp án đúng). |
+| | **API 6** | `POST /api/practice/roadmaps/nodes/{nodeId}/submit-quiz` | Học sinh | `Practice Service` | Nộp bài Quiz, chấm điểm gRPC, đạt >= 60% mở khóa chặng kế. |
+| **Live Q&A Cơ Sở**| **API 9** | `PUT /api/practice/classes/{classId}/assign-teacher` | Academic Manager | `Practice Service` | Phân công hoặc điều chuyển giáo viên quản lý lớp cơ sở. |
+| | **API 8** | `POST /api/practice/live-sessions` | Academic Manager | `Practice Service` | Tạo lịch buổi học Live giải đáp thắc mắc cho lớp cơ sở. |
+| | **API 10** | `GET /api/practice/live-sessions/my-schedule` | Học sinh | `Practice Service` | Xem lịch Live Q&A của lớp cơ sở, link phòng và điểm danh. |
+| | **API 11** | `POST /api/practice/live-sessions/{sessionId}/join` | Học sinh | `Practice Service` | Nhận link phòng học và ghi nhận thời điểm vào lớp `JoinedAt`. |
+| | **API 13** | `GET /api/practice/live-sessions/teacher-schedule` | Giáo viên | `Practice Service` | Tra cứu thời khóa biểu giảng dạy và thống kê sĩ số lớp. |
+| | **API 12** | `POST /api/practice/live-sessions/{sessionId}/attendance` | Giáo viên | `Practice Service` | Điểm danh chuyên cần chính thức (`ATTENDED` hoặc `ABSENT`). |
+| | **API 14** | `PUT /api/practice/live-sessions/{sessionId}/recording` | Giáo viên | `Practice Service` | Đăng link video ghi hình buổi học và đổi trạng thái `COMPLETED`. |
+| | **API 15** | `PUT /api/practice/live-sessions/{sessionId}/cancel` | Quản trị / Giáo viên | `Practice Service` | Hủy buổi học khi bận đột xuất kèm lý do hủy. |
+| **Xử Lý Vắng Mặt** | **API 7** | `POST /api/practice/roadmaps/nodes/{nodeId}/submit-makeup-quiz`| Học sinh vắng mặt | `Practice Service` | Làm bài Quiz bù (sau khi xem lại video recap) để giải phóng phong tỏa. |
+| **Chuyển Giao Core 5** | **API 22** | `GET /api/practice/classes/{classId}/students` | Academic Manager | `Practice Service` | Theo dõi tiến độ học tập và chuyên cần của tất cả học sinh lớp. |
+| | **API 23** | `GET /api/practice/classes/{classId}/at-risk-students` | Academic Manager | `Practice Service` | Lọc học sinh có nguy cơ sa sút (vắng Live, trượt Quiz, trễ hạn). |
+
 ---
 
 ## 🏗️ 2. Kiến Trúc Liên Thông Hệ Thống & Phân Định Trách Nhiệm
