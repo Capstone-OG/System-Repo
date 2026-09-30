@@ -1,6 +1,6 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [01/10/2026] - Nâng Cấp Core Flow 2 (Bước 1, 2 & 3): Entity Class, Migration CSDL, gRPC DomainCode & Thuật Toán K-Means Phân Cụm Lỗ Hổng
+## [01/10/2026] - Nâng Cấp Core Flow 2 (Bước 1 -> 4): Entity Class, Migration CSDL, gRPC DomainCode, Thuật Toán K-Means & API Auto-Cluster Lớp Chuyên Đề
 
 - **Triển Khai Bước 1 Kế Hoạch Nâng Cấp Core Flow 2 Trong Practice Service**:
   - **Mở Rộng Mô Hình Thực Thể [`Class.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Class.cs)**: Bổ sung 4 trường dữ liệu mới: `ClassType`, `DomainId`, `DomainCode`, `ClusterIndex`.
@@ -22,5 +22,12 @@
     - Tự động nhận diện lỗ hổng kiến thức chính (< 0.60), gợi ý tên lớp chuyên đề và gán mã miền tương ứng.
     - Đăng ký `IStudentKMeansClusterer` vào DI container ([`DependencyInjection.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/DependencyInjection.cs)).
     - Kiểm thử thực nghiệm với 45 học sinh phân bổ 4 nhóm lỗ hổng $\rightarrow$ tự động tìm ra $K = 4$ tối ưu (WCSS giảm mạnh từ 4.2867 xuống 0.1173), phân lớp chính xác 100%.
+- **Triển Khai Bước 4 Kế Hoạch Nâng Cấp Core Flow 2 (API Tự Động Phân Cụm Lớp Chuyên Đề)**:
+  - **Khởi Tạo DTOs & Handler Phân Cụm Tự Động**:
+    - Xây dựng DTOs [`AutoClusterThematicClassesDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/DTOs/AutoClusterThematicClassesDtos.cs) (`AutoClusterThematicClassesRequestDto`, `ThematicClassCreatedDto`, `AutoClusterThematicClassesResponseDto`).
+    - Bổ sung `GetByStudentIdsAsync` trong [`ILearningProfileRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/ILearningProfileRepository.cs) & `LearningProfileRepository.cs`.
+    - Bổ sung `GetEnrolledStudentIdsByCampusIdAsync` và `CreateThematicClassWithEnrollmentsAsync` trong [`IClassEnrollmentRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/IClassEnrollmentRepository.cs) & `ClassEnrollmentRepository.cs`.
+    - Xây dựng `AutoClusterThematicClassesCommand`, `AutoClusterThematicClassesCommandValidator` và handler [`AutoClusterThematicClassesCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Commands/AutoClusterThematicClasses/AutoClusterThematicClassesCommandHandler.cs).
+    - Thêm endpoint `[HttpPost("auto-cluster")]` vào [`ClassesController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/ClassesController.cs).
 - **Kiểm Thử Toàn Diện & Biên Dịch Solution**:
   - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
