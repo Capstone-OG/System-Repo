@@ -1,6 +1,6 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [01/10/2026] - Nâng Cấp Core Flow 2 (Bước 1 -> 4): Entity Class, Migration CSDL, gRPC DomainCode, Thuật Toán K-Means & API Auto-Cluster Lớp Chuyên Đề
+## [01/10/2026] - Nâng Cấp Core Flow 2 (Bước 1 -> 5): Entity Class, Migration CSDL, gRPC DomainCode, Thuật Toán K-Means, API Auto-Cluster & Gắn LiveSession Theo Miền Chuyên Đề
 
 - **Triển Khai Bước 1 Kế Hoạch Nâng Cấp Core Flow 2 Trong Practice Service**:
   - **Mở Rộng Mô Hình Thực Thể [`Class.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Class.cs)**: Bổ sung 4 trường dữ liệu mới: `ClassType`, `DomainId`, `DomainCode`, `ClusterIndex`.
@@ -29,5 +29,9 @@
     - Bổ sung `GetEnrolledStudentIdsByCampusIdAsync` và `CreateThematicClassWithEnrollmentsAsync` trong [`IClassEnrollmentRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/IClassEnrollmentRepository.cs) & `ClassEnrollmentRepository.cs`.
     - Xây dựng `AutoClusterThematicClassesCommand`, `AutoClusterThematicClassesCommandValidator` và handler [`AutoClusterThematicClassesCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Commands/AutoClusterThematicClasses/AutoClusterThematicClassesCommandHandler.cs).
     - Thêm endpoint `[HttpPost("auto-cluster")]` vào [`ClassesController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/ClassesController.cs).
+- **Triển Khai Bước 5 Kế Hoạch Nâng Cấp Core Flow 2 (Gắn LiveSession Theo Miền Chuyên Đề)**:
+  - **Cơ Chế Phân Phối Buổi Live Đa Miền**:
+    - Bổ sung `GetUpcomingThematicLiveSessionsAsync` trong [`ILearningRoadmapRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/ILearningRoadmapRepository.cs) & [`LearningRoadmapRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/LearningRoadmapRepository.cs) với chiến lược fallback 3 cấp.
+    - Cập nhật Bước 6 [`GenerateRoadmapCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Commands/GenerateRoadmap/GenerateRoadmapCommandHandler.cs) liên kết chính xác `LiveSessionId` theo từng mã miền `DomainCode` của chặng học.
 - **Kiểm Thử Toàn Diện & Biên Dịch Solution**:
   - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
