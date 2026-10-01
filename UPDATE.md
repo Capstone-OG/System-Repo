@@ -1,42 +1,13 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [30/09/2026] - Triển Khai Hoàn Thiện APIs 12, 13, 14, 15: Điểm Danh Chuyên Cần, Thời Khóa Biểu Giảng Dạy, Video Ghi Hình & Hủy Buổi Học Trực Tuyến
+## [01/10/2026] - Tích Hợp Toàn Diện Web Client Vào Kiến Trúc Microservices Hệ Thống & Chuẩn Hóa Cấu Hình YARP Gateway
 
-- **Triển Khai Hoàn Tất Giai Đoạn 3 (Phân Hệ Live Q&A, Điểm Danh, Lịch Dạy Giáo Viên & Hủy Buổi Học) Trong Practice Service**:
-  - **API 12 (`POST /api/v1/practice/live-sessions/{sessionId}/attendance`)**: Giáo viên thực hiện điểm danh chuyên cần chính thức cho học sinh (`ATTENDED` hoặc `ABSENT`), bảo lưu thời điểm `JoinedAt` thực tế của học sinh. Chặn điểm danh buổi học đã bị hủy (`400 Bad Request`).
-  - **API 13 (`GET /api/v1/practice/live-sessions/teacher-schedule`)**: Giáo viên tra cứu toàn bộ thời khóa biểu giảng dạy các buổi Live Q&A được phân công (`TeacherId`), kiểm tra giáo viên tồn tại (`404 Not Found` `TeacherNotFound`), thống kê sĩ số lớp học, số học sinh tham gia, số vắng mặt và link phòng họp.
-  - **API 14 (`PUT /api/v1/practice/live-sessions/{sessionId}/recording`)**: Giáo viên cập nhật link video ghi hình buổi học trực tuyến (`RecordingUrl`), chặn cập nhật buổi học đã hủy (`400 Bad Request`), đánh dấu `IsRecorded = true` và chuyển trạng thái sang `COMPLETED`.
-  - **API 15 (`PUT /api/v1/practice/live-sessions/{sessionId}/cancel`)**: Giáo viên / Giáo vụ hủy buổi học trực tuyến khi có việc đột xuất. Không xóa vật lý bản ghi trong CSDL (buổi học do Academic Manager tạo, bảo lưu lịch sử đào tạo), chuyển trạng thái sang `CANCELLED` kèm lý do hủy `reason`. Ngăn chặn toàn bộ thao tác Join phòng (API 11), điểm danh (API 12) và nộp video ghi hình (API 14) đối với buổi học đã hủy.
-- **Cơ Sở Dữ Liệu & Tầng Lưu Trữ (Infrastructure & Persistence)**:
-  - Bổ sung `GetSessionsForTeacherAsync`, `TeacherExistsAsync` và `GetEnrolledStudentCountByClassIdAsync` vào [`ILiveSessionRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/ILiveSessionRepository.cs) và [`LiveSessionRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/LiveSessionRepository.cs).
-- **Kiểm Thử Toàn Hệ Thống & Vận Hành Thực Tế (Live End-to-End Test)**:
-  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
-  - Kiểm thử trực tiếp các kịch bản qua REST API & Swagger UI:
-    1. **API 12 (Teacher Attendance)**: Giáo viên điểm danh 2 học sinh (`1111...` ATTENDED, `2222...` ABSENT) cho Session `2a196c82...` -> `200 OK`, `totalAttended: 1`, `totalAbsent: 1`. Điểm danh buổi học đã hủy -> `400 Bad Request`.
-    2. **API 13 (Teacher Schedule)**: Giáo viên `99999999-9999-9999-9999-999999999999` tra cứu lịch dạy -> `200 OK`, trả về 5 buổi Live đầy đủ số liệu sĩ số lớp, số tham gia, số vắng mặt. Tra cứu giáo viên không tồn tại -> `404 Not Found` (`TeacherNotFound`).
-    3. **API 14 (Update Recording)**: Cập nhật URL ghi hình -> `200 OK`, `isRecorded: true`, `status: "COMPLETED"`. Cập nhật buổi học đã hủy -> `400 Bad Request`.
-    4. **API 15 (Cancel Session)**: Hủy buổi học `8ebfe3ee...` với lý do bận công tác -> `200 OK`, `status: "CANCELLED"`. Hủy lại -> `400 Bad Request`. Học sinh gọi API 11 Join phòng -> `400 Bad Request` ("Buổi học này đã bị hủy bỏ").
-    5. **Xác thực dữ liệu thời gian thực (API 10)**: Học sinh tra cứu thời khóa biểu cá nhân thấy ngay trạng thái `ATTENDED`, link video recording và trạng thái `COMPLETED`.
-- **Kế Hoạch & Phân Công Nhiệm Vụ Giai Đoạn 4 (Content Service)**:
-  - Phân công nhân sự **ThinhTT** phụ trách 4 API Quản trị Ngân hàng câu hỏi gốc & Bộ đề Quiz củng cố chuyên đề: **API 16** (`POST /api/v1/content/questions`), **API 17** (`PUT /api/v1/content/questions/{id}`), **API 18** (`DELETE /api/v1/content/questions/{id}`), **API 19** (`POST /api/v1/content/exams/quiz`).
-  - Đã cập nhật chi tiết bảng phân công và phạm vi nghiệp vụ trong `docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md`, `Content Service/docs/daily.md` và `Content Service/docs/process.md`.
-
-## [29/09/2026] - Tích Hợp Web Client Repository, Nâng Cấp Bộ Script Điều Khiển & Mở Rộng Docker Compose
-
-- **Tích Hợp Repository Web Client**:
-  - Bổ sung cấu hình tracking repository [`git_config.txt`](./git_config.txt):
-    ```ini
-    V-Eval-Web_Client=https://github.com/Capstone-OG/v-eval-web-client.git|develop
-    ```
-  - Khởi tạo thư mục dịch vụ chuẩn [`All Services/V-Eval-Web_Client`](./All%20Services/V-Eval-Web_Client) liên kết nhánh `develop` của repo `https://github.com/Capstone-OG/v-eval-web-client.git`.
-- **Nâng Cấp Bộ Script Hệ Thống (`Scripts/`)**:
-  - [`Scripts/setup/setup.bat`](./Scripts/setup/setup.bat): Bổ sung kiểm tra `package.json` (`IS_NODE=1`) để tự động nhận diện ứng dụng Node/Web, ngăn chặn khởi tạo nhầm Clean Architecture của .NET.
-  - [`Scripts/run_local/run_local.bat`](./Scripts/run_local/run_local.bat): Bổ sung tùy chọn [1] Khởi chạy Full 7 dịch vụ (kèm Web Client cổng 5173) và tùy chọn [4] Khởi chạy riêng Web Client (Vite Dev Server).
-  - [`All Services/V-Eval-Web_Client/Scripts/push.bat`](./All%20Services/V-Eval-Web_Client/Scripts/push.bat): Thiết lập script push độc lập tương tự như các Microservices backend.
-- **Mở Rộng Hạ Tầng Docker Compose**:
-  - Soạn thảo [`Dockerfile`](./All%20Services/V-Eval-Web_Client/Dockerfile) và [`nginx.conf`](./All%20Services/V-Eval-Web_Client/nginx.conf) cho Web Client hỗ trợ multi-stage build (Node 22 + Nginx Alpine SPA routing).
-  - Cập nhật [`docker-compose.yml`](./docker-compose.yml) bổ sung container `v_eval_web_client` phục vụ tại cổng `5173:80`.
-  - Cập nhật ma trận dịch vụ trong [`README.md`](./README.md).
-- **Kiểm Thử Hoàn Tất**:
-  - `npm install` và `npm run build` cho Web Client thành công 100% (thời gian build 3.87s).
-  - `docker compose config` hợp lệ hoàn toàn với 6 dịch vụ hoạt động độc lập và liên thông.
+- **Đồng Bộ Kiến Trúc Giao Tiếp Web Client (`V-Eval-Web_Client`)**:
+  - Hoàn thiện tầng giao tiếp trung tâm `src/services/` (`apiClient.js`, `authService.js`, `contentService.js`, `practiceService.js`, `aiService.js`) kết nối trực tiếp đến YARP API Gateway (`http://localhost:5212`).
+  - Thiết lập cơ chế tự động đính kèm Bearer token và silent refresh qua response header `X-Token-Refresh-Required` của Gateway.
+- **Hạ Tầng Docker & Runner Hệ Thống**:
+  - Container hóa Web Client qua Dockerfile đa tầng (Node 22 + Nginx Alpine SPA routing) và tích hợp vào [`docker-compose.yml`](./docker-compose.yml) tại cổng `5173:80`.
+  - Cập nhật [`Scripts/run_local/run_local.bat`](./Scripts/run_local/run_local.bat) và [`Scripts/setup/setup.bat`](./Scripts/setup/setup.bat) đồng bộ vận hành 7 dịch vụ hệ sinh thái V-Eval.
+- **Kiểm Thử Vận Hành & Tuân Thủ Quy Chuẩn**:
+  - `npm run build` cho Web Client hoàn thành trong 619ms với 0 cảnh báo/lỗi cú pháp.
+  - Cú pháp [`docker-compose.yml`](./docker-compose.yml) đạt chuẩn 100% qua `docker compose config` và vượt qua kiểm tra định dạng `yamllint`.
