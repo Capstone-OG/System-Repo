@@ -1,13 +1,17 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [01/10/2026] - Tích Hợp Toàn Diện Web Client Vào Kiến Trúc Microservices Hệ Thống & Chuẩn Hóa Cấu Hình YARP Gateway
+## [02/10/2026] - Hoàn Thiện Khảo Sát 30 Câu: Tích Hợp Đề Content Service & Gemini AI Cloud, Bảng Đáp Án Chi Tiết, Phân Tích Tốc Độ Pacing & Render KaTeX
 
-- **Đồng Bộ Kiến Trúc Giao Tiếp Web Client (`V-Eval-Web_Client`)**:
-  - Hoàn thiện tầng giao tiếp trung tâm `src/services/` (`apiClient.js`, `authService.js`, `contentService.js`, `practiceService.js`, `aiService.js`) kết nối trực tiếp đến YARP API Gateway (`http://localhost:5212`).
-  - Thiết lập cơ chế tự động đính kèm Bearer token và silent refresh qua response header `X-Token-Refresh-Required` của Gateway.
-- **Hạ Tầng Docker & Runner Hệ Thống**:
-  - Container hóa Web Client qua Dockerfile đa tầng (Node 22 + Nginx Alpine SPA routing) và tích hợp vào [`docker-compose.yml`](./docker-compose.yml) tại cổng `5173:80`.
-  - Cập nhật [`Scripts/run_local/run_local.bat`](./Scripts/run_local/run_local.bat) và [`Scripts/setup/setup.bat`](./Scripts/setup/setup.bat) đồng bộ vận hành 7 dịch vụ hệ sinh thái V-Eval.
+- **Nâng Cấp Web Client (`V-Eval-Web_Client`)**:
+  - **Hỗ Trợ 2 Nguồn Đề Thi Khảo Sát Thực Tế**: Tích hợp lấy trực tiếp từ Database Content Service (`/api/v1/content/exams/...`) hoặc sinh đề Live AI Cloud bằng Google Gemini 3.6 Flash. Loại bỏ hoàn toàn tùy chọn hardcoded mock bank.
+  - **Bảng Tra Cứu & Đáp Án Chi Tiết 30 Câu**: Cho phép thí sinh đối chiếu từng câu hỏi (phương án chọn vs đáp án đúng), xem lời giải chi tiết KaTeX, và lọc theo câu đúng/sai/phân vân.
+  - **Phân Tích Tốc Độ & Chiến Thuật Pacing**: Đo lường thời gian trung bình từng câu, phân loại nhóm làm nhanh (&lt;25s), chuẩn nhịp độ (25-90s), tốn nhiều thời gian (&gt;90s) và câu phân vân gắn cờ 🚩.
+  - **Biểu Đồ Năng Lực Chuẩn Xác & Không Bịa**: Dữ liệu Recharts Radar Chart 5 trục và năng lực IRT 2PL `\theta_0` phản ánh chính xác kết quả 30 câu làm bài thực tế của thí sinh.
+  - **Tích Hợp Bộ Render Toán Học KaTeX**: Xử lý toàn diện các công thức toán học phân số, căn thức, số mũ đa thức, khoảng vô cực cho câu hỏi, đáp án, gia sư AI Socratic và bảng giải thích.
+- **Cấu hình & Sửa Lỗi API Gateway YARP (`V-Eval-Gateway`)**:
+  - Khắc phục lỗi thiếu dịch vụ `IAuthenticationSchemeProvider`: Bổ sung package `Microsoft.AspNetCore.Authentication.JwtBearer` và đăng ký `services.AddAuthentication(...).AddJwtBearer(...)`.
+  - Mở rộng định tuyến tới cả 2 thành phần AI Engine: `.NET Core AI Engine` (Port `:5104`) và `Python FastAPI RAG Service` (Port `:8000`).
 - **Kiểm Thử Vận Hành & Tuân Thủ Quy Chuẩn**:
-  - `npm run build` cho Web Client hoàn thành trong 619ms với 0 cảnh báo/lỗi cú pháp.
-  - Cú pháp [`docker-compose.yml`](./docker-compose.yml) đạt chuẩn 100% qua `docker compose config` và vượt qua kiểm tra định dạng `yamllint`.
+  - `dotnet build V-Eval-Gateway.sln` đạt 100% (**0 Error, 0 Warning**).
+  - `npm run build` trên Web Client thành công trong 1.03s (0 lỗi cú pháp, toàn bộ assets font KaTeX được đóng gói).
+  - Cú pháp [`docker-compose.yml`](./docker-compose.yml) đạt chuẩn 100% qua lệnh `docker compose config`.
