@@ -1,17 +1,20 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [02/10/2026] - Hoàn Thiện Khảo Sát 30 Câu: Tích Hợp Đề Content Service & Gemini AI Cloud, Bảng Đáp Án Chi Tiết, Phân Tích Tốc Độ Pacing & Render KaTeX
+## [06/10/2026] - Hợp Nhất Giao Diện Xác Thực (TNhan UI/UX) Với Tầng API IAM (ThinhTT), Cấp Quyền Đa Vai Trò & Tích Hợp Discord CI Tracker
 
-- **Nâng Cấp Web Client (`V-Eval-Web_Client`)**:
-  - **Hỗ Trợ 2 Nguồn Đề Thi Khảo Sát Thực Tế**: Tích hợp lấy trực tiếp từ Database Content Service (`/api/v1/content/exams/...`) hoặc sinh đề Live AI Cloud bằng Google Gemini 3.6 Flash. Loại bỏ hoàn toàn tùy chọn hardcoded mock bank.
-  - **Bảng Tra Cứu & Đáp Án Chi Tiết 30 Câu**: Cho phép thí sinh đối chiếu từng câu hỏi (phương án chọn vs đáp án đúng), xem lời giải chi tiết KaTeX, và lọc theo câu đúng/sai/phân vân.
-  - **Phân Tích Tốc Độ & Chiến Thuật Pacing**: Đo lường thời gian trung bình từng câu, phân loại nhóm làm nhanh (&lt;25s), chuẩn nhịp độ (25-90s), tốn nhiều thời gian (&gt;90s) và câu phân vân gắn cờ 🚩.
-  - **Biểu Đồ Năng Lực Chuẩn Xác & Không Bịa**: Dữ liệu Recharts Radar Chart 5 trục và năng lực IRT 2PL `\theta_0` phản ánh chính xác kết quả 30 câu làm bài thực tế của thí sinh.
-  - **Tích Hợp Bộ Render Toán Học KaTeX**: Xử lý toàn diện các công thức toán học phân số, căn thức, số mũ đa thức, khoảng vô cực cho câu hỏi, đáp án, gia sư AI Socratic và bảng giải thích.
-- **Cấu hình & Sửa Lỗi API Gateway YARP (`V-Eval-Gateway`)**:
-  - Khắc phục lỗi thiếu dịch vụ `IAuthenticationSchemeProvider`: Bổ sung package `Microsoft.AspNetCore.Authentication.JwtBearer` và đăng ký `services.AddAuthentication(...).AddJwtBearer(...)`.
-  - Mở rộng định tuyến tới cả 2 thành phần AI Engine: `.NET Core AI Engine` (Port `:5104`) và `Python FastAPI RAG Service` (Port `:8000`).
-- **Kiểm Thử Vận Hành & Tuân Thủ Quy Chuẩn**:
-  - `dotnet build V-Eval-Gateway.sln` đạt 100% (**0 Error, 0 Warning**).
-  - `npm run build` trên Web Client thành công trong 1.03s (0 lỗi cú pháp, toàn bộ assets font KaTeX được đóng gói).
-  - Cú pháp [`docker-compose.yml`](./docker-compose.yml) đạt chuẩn 100% qua lệnh `docker compose config`.
+- **Hợp Nhất Toàn Diện Hệ Thống Xác Thực Web Client (`V-Eval-Web_Client`)**:
+  - Tích hợp thiết kế split-screen hiện đại, dynamic activity ticker, hình ảnh học sinh thực tế `vietnamese_student_real.jpg`, bộ form module hóa (`LoginForm.jsx`, `RegisterForm.jsx`, `ForgotPasswordModal.jsx`, `AuthModal.jsx`) từ nhánh `TNhan`.
+  - Tích hợp Custom Rounded Select bo tròn cao cấp cho việc chọn Khối Lớp, Điểm mục tiêu ĐGNL và chọn Cơ sở đào tạo (`GET /api/v1/campuses`).
+  - Đấu nối 100% logic API thật vào form: `authService.login()`, `authService.register()`, `authService.verifyOtp()`, `authService.forgotPassword()`, `authService.resetPassword()`.
+  - Bắt mã lỗi tài khoản chưa kích hoạt (`Auth.AccountNotActivated`) chuyển sang xác thực mã OTP 6 số.
+  - Bảo toàn 1-Click Demo Login 4 vai trò (Học sinh, Giáo viên, Quản lý, Phụ huynh).
+- **Bảo Toàn 100% Các Thành Phần IAM & Dashboard Mới Của ThinhTT**:
+  - Trang Quản trị Cấp phát Tài khoản IAM (`AccountProvisioningView.jsx`).
+  - Dashboard Học thuật Cơ sở (`CampusManagerDashboardView.jsx`) và Dashboard Phụ huynh (`ParentDashboardView.jsx`).
+  - Dịch vụ người dùng `userService.js` và dịch vụ xác thực `authService.js`.
+  - Quản trị trạng thái và điều hướng phân quyền RBAC trong `App.jsx`.
+- **Sửa Lỗi Thiếu Thông Báo Discord & Thiết Lập CI/CD GitHub Actions Cho Web Client**:
+  - Bổ sung workflow `.github/workflows/discord-commit-tracker.yml` gửi webhook embed thông báo commit thời gian thực về kênh Discord hệ thống.
+  - Bổ sung workflow `.github/workflows/ci.yml` tự động kiểm thử và biên dịch ứng dụng web trên Node.js 20.
+- **Kiểm Thử Vận Hành & Build Verification**:
+  - `npm run build` Web Client hoàn tất thành công trong 679ms (0 error, 0 warning).
