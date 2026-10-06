@@ -1,19 +1,20 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [04/10/2026] - Triển Khai Hoàn Chỉnh Hệ Thống API & Trang Cấp Phát Tài Khoản Đa Vai Trò (IAM Provisioning), Smart RBAC & Seed Admin CSDL
+## [06/10/2026] - Hợp Nhất Giao Diện Xác Thực (TNhan UI/UX) Với Tầng API IAM (ThinhTT), Cấp Quyền Đa Vai Trò & Tích Hợp Discord CI Tracker
 
-- **Phát Triển API Cấp Phát Tài Khoản Nội Bộ Trực Tiếp (`V-Eval-Identity_Service`)**:
-  - `POST /api/v1/users/provision`: Cấp phát tài khoản trực tiếp cho bất kỳ vai trò nào (`TEACHER`, `ACADEMIC_MANAGER`, `ACADEMIC_DIRECTOR`, `ADMINISTRATOR`, `PARENT`, `STUDENT`) với trạng thái kích hoạt ngay (`IsActive = true`) mà không cần qua OTP email.
-  - `GET /api/v1/users`: Tra cứu, phân trang, lọc vai trò/cơ sở và tìm kiếm người dùng.
-  - `PATCH /api/v1/users/{id}/toggle-status`: Khóa hoặc mở khóa trạng thái tài khoản.
-  - Seed tài khoản Quản trị viên `admin` / `1234` (`admin@veval.edu.vn`) băm BCrypt, lưu trực tiếp trong PostgreSQL (`v_eval_identity`).
-- **Phát Triển Trang Cấp Phát & Quản Lý Tài Khoản Đa Vai Trò (`V-Eval-Web_Client`)**:
-  - Xây dựng giao diện `AccountProvisioningView.jsx` chuẩn executive: thống kê tài khoản theo thời gian thực, bảng người dùng phân quyền màu sắc, lọc theo vai trò, tìm kiếm thông minh và nút gạt bật/tắt trạng thái hoạt động tức thì.
-  - Modal cấp tài khoản trực quan với 6 vai trò, chọn cơ sở đào tạo, bộ sinh mật khẩu ngẫu nhiên an toàn, và nút sao chép thông tin bàn giao một chạm.
-  - Tích hợp dịch vụ `userService.js` kết nối qua Gateway YARP `:5212`.
-  - Điều hướng hợp nhất: Nút tab "Cấp Tài Khoản (IAM)" trên thanh điều hướng đầu trang, menu tài khoản và bảng điều khiển quản lý cơ sở.
-- **Kiểm Thử Vận Hành & Tuân Thủ Quy Chuẩn**:
-  - `dotnet build` Identity Service thành công 100% (0 warning, 0 error).
-  - `npm run build` Web Client thành công 100% trong 758ms (0 warning, 0 error).
-  - Cú pháp [`docker-compose.yml`](./docker-compose.yml) đạt chuẩn 100% qua lệnh `docker compose config`.
-  - Đã kiểm thử live: Tạo thành công giảng viên `thaynam.toan@veval.edu.vn` qua Gateway, tài khoản đăng nhập thành công nhận JWT token hợp lệ.
+- **Hợp Nhất Toàn Diện Hệ Thống Xác Thực Web Client (`V-Eval-Web_Client`)**:
+  - Tích hợp thiết kế split-screen hiện đại, dynamic activity ticker, hình ảnh học sinh thực tế `vietnamese_student_real.jpg`, bộ form module hóa (`LoginForm.jsx`, `RegisterForm.jsx`, `ForgotPasswordModal.jsx`, `AuthModal.jsx`) từ nhánh `TNhan`.
+  - Tích hợp Custom Rounded Select bo tròn cao cấp cho việc chọn Khối Lớp, Điểm mục tiêu ĐGNL và chọn Cơ sở đào tạo (`GET /api/v1/campuses`).
+  - Đấu nối 100% logic API thật vào form: `authService.login()`, `authService.register()`, `authService.verifyOtp()`, `authService.forgotPassword()`, `authService.resetPassword()`.
+  - Bắt mã lỗi tài khoản chưa kích hoạt (`Auth.AccountNotActivated`) chuyển sang xác thực mã OTP 6 số.
+  - Bảo toàn 1-Click Demo Login 4 vai trò (Học sinh, Giáo viên, Quản lý, Phụ huynh).
+- **Bảo Toàn 100% Các Thành Phần IAM & Dashboard Mới Của ThinhTT**:
+  - Trang Quản trị Cấp phát Tài khoản IAM (`AccountProvisioningView.jsx`).
+  - Dashboard Học thuật Cơ sở (`CampusManagerDashboardView.jsx`) và Dashboard Phụ huynh (`ParentDashboardView.jsx`).
+  - Dịch vụ người dùng `userService.js` và dịch vụ xác thực `authService.js`.
+  - Quản trị trạng thái và điều hướng phân quyền RBAC trong `App.jsx`.
+- **Sửa Lỗi Thiếu Thông Báo Discord & Thiết Lập CI/CD GitHub Actions Cho Web Client**:
+  - Bổ sung workflow `.github/workflows/discord-commit-tracker.yml` gửi webhook embed thông báo commit thời gian thực về kênh Discord hệ thống.
+  - Bổ sung workflow `.github/workflows/ci.yml` tự động kiểm thử và biên dịch ứng dụng web trên Node.js 20.
+- **Kiểm Thử Vận Hành & Build Verification**:
+  - `npm run build` Web Client hoàn tất thành công trong 679ms (0 error, 0 warning).
