@@ -73,33 +73,33 @@ if "%CHOICE%"=="2" goto start_identity
 goto check_ai
 
 :start_identity
-set "ID_PATH=%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\V-Eval-Identity_Service.API.csproj"
-if exist "%ID_PATH%" (
+set "ID_DIR=%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API"
+if exist "%ID_DIR%\V-Eval-Identity_Service.API.csproj" (
     echo [START] Dang khoi dong Identity Service [Port 5155 / 5156]...
-    start "V-Eval - Identity Service [HTTP:5155 | gRPC:5156]" cmd /k "dotnet run --project "%ID_PATH%""
+    start "V-Eval - Identity Service [HTTP:5155 | gRPC:5156]" cmd /k "cd /d "%ID_DIR%" && dotnet run"
     timeout /t 2 /nobreak >nul
 ) else (
-    echo [WARNING] Khong tim thay Identity Service tai: %ID_PATH%
+    echo [WARNING] Khong tim thay Identity Service tai: %ID_DIR%
 )
 
 REM 2. Content Service
-set "CONTENT_PATH=%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\V-Eval-Content_Service.API.csproj"
-if exist "%CONTENT_PATH%" (
+set "CONTENT_DIR=%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API"
+if exist "%CONTENT_DIR%\V-Eval-Content_Service.API.csproj" (
     echo [START] Dang khoi dong Content Service [Port 5249 / 5250]...
-    start "V-Eval - Content Service [HTTP:5249 | gRPC:5250]" cmd /k "dotnet run --project "%CONTENT_PATH%""
+    start "V-Eval - Content Service [HTTP:5249 | gRPC:5250]" cmd /k "cd /d "%CONTENT_DIR%" && dotnet run"
     timeout /t 2 /nobreak >nul
 ) else (
-    echo [WARNING] Khong tim thay Content Service tai: %CONTENT_PATH%
+    echo [WARNING] Khong tim thay Content Service tai: %CONTENT_DIR%
 )
 
 REM 3. Practice Service
-set "PRACTICE_PATH=%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API\V-Eval-Practice_Service.API.csproj"
-if exist "%PRACTICE_PATH%" (
+set "PRACTICE_DIR=%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API"
+if exist "%PRACTICE_DIR%\V-Eval-Practice_Service.API.csproj" (
     echo [START] Dang khoi dong Practice Service [Port 5261]...
-    start "V-Eval - Practice Service [HTTP:5261]" cmd /k "dotnet run --project "%PRACTICE_PATH%""
+    start "V-Eval - Practice Service [HTTP:5261]" cmd /k "cd /d "%PRACTICE_DIR%" && dotnet run"
     timeout /t 2 /nobreak >nul
 ) else (
-    echo [WARNING] Khong tim thay Practice Service tai: %PRACTICE_PATH%
+    echo [WARNING] Khong tim thay Practice Service tai: %PRACTICE_DIR%
 )
 
 :check_ai
@@ -111,13 +111,13 @@ goto check_gateway
 
 :start_ai
 :start_ai_net
-set "AI_NET_PATH=%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API\V-Eval-Ai_Engine.API.csproj"
-if exist "%AI_NET_PATH%" (
+set "AI_NET_DIR=%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API"
+if exist "%AI_NET_DIR%\V-Eval-Ai_Engine.API.csproj" (
     echo [START] Dang khoi dong AI Engine .NET API [Port 5104]...
-    start "V-Eval - AI Engine .NET API [HTTP:5104]" cmd /k "dotnet run --project "%AI_NET_PATH%""
+    start "V-Eval - AI Engine .NET API [HTTP:5104]" cmd /k "cd /d "%AI_NET_DIR%" && dotnet run"
     timeout /t 2 /nobreak >nul
 ) else (
-    echo [WARNING] Khong tim thay AI Engine .NET tai: %AI_NET_PATH%
+    echo [WARNING] Khong tim thay AI Engine .NET tai: %AI_NET_DIR%
 )
 
 if "%CHOICE%"=="2" goto check_gateway
@@ -140,13 +140,13 @@ if exist "%AI_PY_DIR%\main.py" (
 if "%CHOICE%"=="3" goto show_summary
 
 REM 6. API Gateway YARP
-set "GATEWAY_PATH=%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\V-Eval-Gateway.API.csproj"
-if exist "%GATEWAY_PATH%" (
+set "GATEWAY_DIR=%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API"
+if exist "%GATEWAY_DIR%\V-Eval-Gateway.API.csproj" (
     echo [START] Dang khoi dong API Gateway YARP [Port 5212]...
-    start "V-Eval - API Gateway YARP [HTTP:5212]" cmd /k "dotnet run --project "%GATEWAY_PATH%""
+    start "V-Eval - API Gateway YARP [HTTP:5212]" cmd /k "cd /d "%GATEWAY_DIR%" && dotnet run"
     timeout /t 2 /nobreak >nul
 ) else (
-    echo [WARNING] Khong tim thay API Gateway tai: %GATEWAY_PATH%
+    echo [WARNING] Khong tim thay API Gateway tai: %GATEWAY_DIR%
 )
 
 if "%CHOICE%"=="1" goto start_web

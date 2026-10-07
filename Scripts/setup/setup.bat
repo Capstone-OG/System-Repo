@@ -154,6 +154,10 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             popd
             echo [SUCCESS] Updated !SERVICE_NAME!.
         ) else (
+            if exist "!TARGET_PATH!" (
+                echo [INFO] Phat hien thu muc "!TARGET_PATH!" chua phai Git repo hop le. Dang don dep de clone lai...
+                rmdir /s /q "!TARGET_PATH!" >nul 2>&1
+            )
             echo Folder "!TARGET_PATH!" does not exist. Cloning repository...
             git clone -b !BRANCH! !REPO_URL! "!TARGET_PATH!"
             
@@ -189,11 +193,6 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             )
         )
         
-        REM Tu dong nap cau hinh neu con thieu cho service vua duoc clone hoac cap nhat
-        if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
-            call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
-        )
-        
         REM Phuc hoi va Build tu dong cho tat ca cac service sau khi Setup/Pull
         if exist "!TARGET_PATH!" (
             pushd "!TARGET_PATH!"
@@ -216,8 +215,13 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
     )
 )
 
-REM Kiem tra trang thai cau hinh tong the
+REM --- BƯỚC 3: Nap va dong bo cau hinh chuan tu Configs ---
+echo.
+echo =====================================================================
+echo Nap cau hinh chuan tu Configs cho tat ca cac Service...
+echo =====================================================================
 if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --force
     call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --check
 )
 

@@ -48,13 +48,13 @@ echo [SYNC DOWN] Dang nap cau hinh chuan vao cac Service...
 echo =====================================================================
 echo.
 
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Gateway\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\appsettings.json" "V-Eval-Gateway"
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Identity_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\appsettings.json" "V-Eval-Identity_Service"
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Content_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\appsettings.json" "V-Eval-Content_Service"
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Practice_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API\appsettings.json" "V-Eval-Practice_Service"
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Ai_Engine\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API\appsettings.json" "V-Eval-Ai_Engine API"
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Ai_Engine\rag-service\.env" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\rag-service\.env" "V-Eval-Ai_Engine Python RAG"
-call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Web_Client\.env" "%ALL_SERVICES_DIR%\V-Eval-Web_Client\.env" "V-Eval-Web_Client"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Gateway\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\appsettings.json" "V-Eval-Gateway" "%ALL_SERVICES_DIR%\V-Eval-Gateway"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Identity_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\appsettings.json" "V-Eval-Identity_Service" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Content_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\appsettings.json" "V-Eval-Content_Service" "%ALL_SERVICES_DIR%\V-Eval-Content_Service"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Practice_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API\appsettings.json" "V-Eval-Practice_Service" "%ALL_SERVICES_DIR%\V-Eval-Practice_Service"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Ai_Engine\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API\appsettings.json" "V-Eval-Ai_Engine API" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Ai_Engine\rag-service\.env" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\rag-service\.env" "V-Eval-Ai_Engine Python RAG" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine"
+call :SYNC_ONE_DOWN "%CONFIGS_DIR%\V-Eval-Web_Client\.env" "%ALL_SERVICES_DIR%\V-Eval-Web_Client\.env" "V-Eval-Web_Client" "%ALL_SERVICES_DIR%\V-Eval-Web_Client"
 
 echo.
 echo [HOAN TAT] Da dong bo toan bo cau hinh chuan vao cac Service!
@@ -112,13 +112,13 @@ REM =====================================================================
 :DO_INSTALL_MISSING
 echo [INFO] Kiem tra va tu dong bo sung cau hinh neu con thieu...
 
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Gateway\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\appsettings.json" "V-Eval-Gateway"
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Identity_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\appsettings.json" "V-Eval-Identity_Service"
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Content_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\appsettings.json" "V-Eval-Content_Service"
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Practice_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API\appsettings.json" "V-Eval-Practice_Service"
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Ai_Engine\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API\appsettings.json" "V-Eval-Ai_Engine API"
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Ai_Engine\rag-service\.env" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\rag-service\.env" "V-Eval-Ai_Engine Python RAG"
-call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Web_Client\.env" "%ALL_SERVICES_DIR%\V-Eval-Web_Client\.env" "V-Eval-Web_Client"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Gateway\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\appsettings.json" "V-Eval-Gateway" "%ALL_SERVICES_DIR%\V-Eval-Gateway"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Identity_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\appsettings.json" "V-Eval-Identity_Service" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Content_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\appsettings.json" "V-Eval-Content_Service" "%ALL_SERVICES_DIR%\V-Eval-Content_Service"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Practice_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Service.API\appsettings.json" "V-Eval-Practice_Service" "%ALL_SERVICES_DIR%\V-Eval-Practice_Service"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Ai_Engine\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API\appsettings.json" "V-Eval-Ai_Engine API" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Ai_Engine\rag-service\.env" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\rag-service\.env" "V-Eval-Ai_Engine Python RAG" "%ALL_SERVICES_DIR%\V-Eval-Ai_Engine"
+call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Web_Client\.env" "%ALL_SERVICES_DIR%\V-Eval-Web_Client\.env" "V-Eval-Web_Client" "%ALL_SERVICES_DIR%\V-Eval-Web_Client"
 
 goto :EOF
 
@@ -129,9 +129,15 @@ REM =====================================================================
 set "SRC_FILE=%~1"
 set "DST_FILE=%~2"
 set "LABEL=%~3"
+set "SVC_ROOT=%~4"
 
 if not exist "%SRC_FILE%" (
     echo [BO QUA] Khong tim thay file nguon Configs cho %LABEL%
+    exit /b 0
+)
+
+if not "!SVC_ROOT!"=="" if not exist "!SVC_ROOT!" (
+    echo [BO QUA] Service %LABEL% chua duoc clone tai local.
     exit /b 0
 )
 
@@ -187,8 +193,10 @@ exit /b 0
 set "SRC_FILE=%~1"
 set "DST_FILE=%~2"
 set "LABEL=%~3"
+set "SVC_ROOT=%~4"
 
 if not exist "%SRC_FILE%" exit /b 0
+if not "!SVC_ROOT!"=="" if not exist "!SVC_ROOT!" exit /b 0
 
 if not exist "%DST_FILE%" (
     for %%F in ("%DST_FILE%") do set "DST_DIR=%%~dpF"
