@@ -91,7 +91,15 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
         
         set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
         
+        set "IS_VALID_REPO=0"
         if exist "!TARGET_PATH!\.git" (
+            pushd "!TARGET_PATH!"
+            git rev-parse --verify HEAD >nul 2>&1
+            if !ERRORLEVEL! equ 0 set "IS_VALID_REPO=1"
+            popd
+        )
+        
+        if "!IS_VALID_REPO!"=="1" (
             echo Folder "!TARGET_PATH!" exists. Fetching and pulling...
             pushd "!TARGET_PATH!"
             git fetch origin >nul 2>&1
