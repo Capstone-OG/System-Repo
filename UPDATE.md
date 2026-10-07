@@ -1,43 +1,13 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [01/10/2026] - Nâng Cấp Toàn Diện Core Flow 2 (Bước 1 -> 6): Thematic Cohort, K-Means Clustering, Roadmap Binding & Multi-Class Schedule
+## [07/10/2026] - Đặc Tả Chi Tiết Mục 3 (Functional Requirements) & Tích Hợp 25 Business Rules (BR-01 Đến BR-25)
 
-- **Triển Khai Bước 1 Kế Hoạch Nâng Cấp Core Flow 2 Trong Practice Service**:
-  - **Mở Rộng Mô Hình Thực Thể [`Class.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Class.cs)**: Bổ sung 4 trường dữ liệu mới: `ClassType`, `DomainId`, `DomainCode`, `ClusterIndex`.
-  - **Ánh Xạ Fluent API Trong [`PracticeDbContext.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/PracticeDbContext.cs)**: Cấu hình ánh xạ cột `class_type`, `domain_id`, `domain_code`, `cluster_index`.
-  - **Di Trú Database Migration & Xác Thực Schema PostgreSQL**: Áp dụng migration `20260930184119_AddThematicCohortFields` vào CSDL PostgreSQL trên Supabase.
-- **Triển Khai Bước 2 Kế Hoạch Nâng Cấp Core Flow 2 (Đồng Bộ DomainCode Qua gRPC & DTOs)**:
-  - **Content Service**:
-    - Cập nhật hợp đồng [`content.proto`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Protos/content.proto) bổ sung `string domain_code = 8;` trong message `SkillNode`.
-    - Hiện thực RPC `GetSkillsTree` trong [`ContentGrpcService.cs`](./All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Services/ContentGrpcService.cs) tự động ánh xạ mã miền chuẩn (`DOM_LANG`, `DOM_MATH`, `DOM_NAT_SCI`, `DOM_SOC_SCI`).
-  - **Practice Service**:
-    - Đồng bộ [`content.proto`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Protos/content.proto) và trích xuất `DomainCode` qua [`IContentGrpcClient.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/IContentGrpcClient.cs) & [`ContentGrpcClient.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/GrpcClients/ContentGrpcClient.cs).
-    - Bổ sung `DomainCode` vào [`RoadmapNodeSummaryDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/RoadmapNodeSummaryDto.cs), [`RoadmapStageDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/RoadmapStageDto.cs), [`RoadmapNodeDetailDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/RoadmapNodeDetailDto.cs).
-    - Bổ sung `PlacementClass` vào [`GenerateRoadmapResponseDto.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/DTOs/GenerateRoadmapResponseDto.cs).
-    - Cập nhật các Command/Query Handler ([`GenerateRoadmapCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Commands/GenerateRoadmap/GenerateRoadmapCommandHandler.cs), [`GetMyRoadmapQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Queries/GetMyRoadmap/GetMyRoadmapQueryHandler.cs), [`GetRoadmapNodeDetailQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Queries/GetRoadmapNodeDetail/GetRoadmapNodeDetailQueryHandler.cs)) map trọn vẹn `DomainCode` và `PlacementClass`.
-- **Triển Khai Bước 3 Kế Hoạch Nâng Cấp Core Flow 2 (Thuật Toán K-Means Student Clustering)**:
-  - **Xây Dựng Động Cơ Phân Cụm [`StudentKMeansClusterer.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/StudentKMeansClusterer.cs)**:
-    - Hỗ trợ số lượng học sinh $N$ động ($N \ge 2$), tự động thích ứng giới hạn số cụm $K_{\max} = \min(8, \max(2, \lfloor N / 3 \rfloor))$.
-    - Kết hợp khởi tạo tâm cụm K-Means++, vòng lặp hội tụ Lloyd's và thuật toán Elbow Method (khoảng cách cực đại đến dây cung).
-    - Tự động nhận diện lỗ hổng kiến thức chính (< 0.60), gợi ý tên lớp chuyên đề và gán mã miền tương ứng.
-    - Đăng ký `IStudentKMeansClusterer` vào DI container ([`DependencyInjection.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/DependencyInjection.cs)).
-    - Kiểm thử thực nghiệm với 45 học sinh phân bổ 4 nhóm lỗ hổng $\rightarrow$ tự động tìm ra $K = 4$ tối ưu (WCSS giảm mạnh từ 4.2867 xuống 0.1173), phân lớp chính xác 100%.
-- **Triển Khai Bước 4 Kế Hoạch Nâng Cấp Core Flow 2 (API Tự Động Phân Cụm Lớp Chuyên Đề)**:
-  - **Khởi Tạo DTOs & Handler Phân Cụm Tự Động**:
-    - Xây dựng DTOs [`AutoClusterThematicClassesDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/DTOs/AutoClusterThematicClassesDtos.cs) (`AutoClusterThematicClassesRequestDto`, `ThematicClassCreatedDto`, `AutoClusterThematicClassesResponseDto`).
-    - Bổ sung `GetByStudentIdsAsync` trong [`ILearningProfileRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/ILearningProfileRepository.cs) & `LearningProfileRepository.cs`.
-    - Bổ sung `GetEnrolledStudentIdsByCampusIdAsync` và `CreateThematicClassWithEnrollmentsAsync` trong [`IClassEnrollmentRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/IClassEnrollmentRepository.cs) & `ClassEnrollmentRepository.cs`.
-    - Xây dựng `AutoClusterThematicClassesCommand`, `AutoClusterThematicClassesCommandValidator` và handler [`AutoClusterThematicClassesCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Commands/AutoClusterThematicClasses/AutoClusterThematicClassesCommandHandler.cs).
-    - Thêm endpoint `[HttpPost("auto-cluster")]` vào [`ClassesController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/ClassesController.cs).
-- **Triển Khai Bước 5 Kế Hoạch Nâng Cấp Core Flow 2 (Gắn LiveSession Theo Miền Chuyên Đề)**:
-  - **Cơ Chế Phân Phối Buổi Live Đa Miền**:
-    - Bổ sung `GetUpcomingThematicLiveSessionsAsync` trong [`ILearningRoadmapRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/ILearningRoadmapRepository.cs) & [`LearningRoadmapRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/LearningRoadmapRepository.cs) với chiến lược fallback 3 cấp.
-    - Cập nhật Bước 6 [`GenerateRoadmapCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Commands/GenerateRoadmap/GenerateRoadmapCommandHandler.cs) liên kết chính xác `LiveSessionId` theo từng mã miền `DomainCode` của chặng học.
-- **Triển Khai Bước 6 Kế Hoạch Nâng Cấp Core Flow 2 (Hỗ Trợ Multi-Class Schedule Trong API 10)**:
-  - Nâng cấp [`LiveSessionRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/LiveSessionRepository.cs) truy vấn lịch Live của toàn bộ lớp học sinh tham gia.
-  - Bổ sung thông tin định danh `ClassId`, `ClassName`, `DomainCode` vào [`GetMyLiveScheduleDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/LiveSessions/DTOs/GetMyLiveScheduleDtos.cs) và cập nhật [`GetMyLiveScheduleQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/LiveSessions/Queries/GetMyLiveSchedule/GetMyLiveScheduleQueryHandler.cs).
-- **Chuẩn Hóa & Cập Nhật Toàn Diện Tài Liệu Báo Cáo Kỹ Thuật Core Flow 2**:
-  - Biên soạn lại hoàn chỉnh [`docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md`](./docs/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md): Tích hợp trọn vẹn sơ đồ kiến trúc luồng tuần tự và Bảng ma trận phân vai trách nhiệm đầy đủ 24 APIs (Practice Service, Content Service, Core Flow 5 và Phân hệ K-Means Auto-cluster mới). Sửa triệt để các lỗi cú pháp Mermaid (loại bỏ mũi tên ngắt dòng không có node nguồn, bọc an toàn nhãn chứa ký tự đặc biệt) giúp sơ đồ hiển thị 100% dạng trực quan đồ họa trên MD Editor Plus.
-- **Kiểm Thử Toàn Diện & Biên Dịch Solution**:
-  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
-  - Kiểm thử live end-to-end thành công trên Swagger UI và PowerShell script.
+- **Biên Soạn Toàn Diện Tài Liệu Mục 3 Chuẩn Nghiệp Vụ [`docs/muc_3_dac_ta_chuc_nang_chi_tiet.md`](./docs/muc_3_dac_ta_chuc_nang_chi_tiet.md)**:
+  - Tích hợp trọn vẹn danh mục 25 Quy tắc nghiệp vụ (**BR-01 đến BR-25**) phân theo từng mảng: Xác thực & Bảo mật, Khảo thí, Psychometrics IRT 2PL & BKT, Sư phạm, RAG AI Guardrails, K-Means Clustering, Kỷ luật học tập và Liêm chính thi cử.
+  - Phân tích và đặc tả chi tiết 100% tất cả các chức năng **đã được triển khai** theo đúng mẫu tài liệu Software Requirements Specification (SRS):
+    - \`Function trigger\`: Sự kiện kích hoạt từ người dùng hoặc hệ thống.
+    - \`Function description\`: Actors tham gia và Mục đích nghiệp vụ (\`Purpose\`).
+    - \`Function details\`: Yêu cầu dữ liệu (\`Data requirement\`), Tiêu chuẩn kiểm tra tính hợp lệ (\`Validation\`) và Quy tắc nghiệp vụ liên đới (\`Business rules\`).
+    - \`Vị trí kỹ thuật thực tế\`: Ánh xạ chính xác tới từng Service, Controller, Command/Query Handler, CSDL Supabase.
+  - Đối với các chức năng **chưa triển khai** (như phân hệ Phụ huynh P3, xuất báo cáo PDF/Excel, dự phóng điểm thi...): Giữ nguyên cấu trúc định danh UC, Actors, Mục đích và gắn cờ \`[Chưa triển khai / Backlog]\` rõ ràng.
+  - Đảm bảo tuân thủ 100% quy chuẩn hiển thị trên **MD Editor Plus** (không dùng ký tự \`$\` thô, liên kết tương đối \`./\`).
