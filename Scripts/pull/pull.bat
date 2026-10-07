@@ -71,9 +71,19 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
     )
 )
 
+REM --- BƯỚC 3: Kiem tra va bo sung cau hinh neu con thieu ---
+if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+    echo =============================================================
+    echo Kiem tra va bo sung cau hinh sau khi pull...
+    echo =============================================================
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
+    echo [INFO] Neu can ap dung lai toan bo cau hinh chuan tu remote, chay: sync_config.bat
+    echo:
+)
+
 :END
 echo =====================================================================
-echo                Dong bo hoàn tat
+echo                Dong bo hoan tat
 echo =====================================================================
 echo:
 pause

@@ -189,6 +189,11 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             )
         )
         
+        REM Tu dong nap cau hinh neu con thieu cho service vua duoc clone hoac cap nhat
+        if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+            call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
+        )
+        
         REM Phuc hoi va Build tu dong cho tat ca cac service sau khi Setup/Pull
         if exist "!TARGET_PATH!" (
             pushd "!TARGET_PATH!"
@@ -209,6 +214,11 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             popd
         )
     )
+)
+
+REM Kiem tra trang thai cau hinh tong the
+if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --check
 )
 
 echo.

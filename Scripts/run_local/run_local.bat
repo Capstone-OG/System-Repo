@@ -56,6 +56,11 @@ if "%CHOICE%"=="4" goto start_web_only
 
 set "ALL_SERVICES_DIR=%ROOT_DIR%\All Services"
 
+REM --- Step 2.5: Kiem tra va tu dong bo sung cau hinh neu con thieu ---
+if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
+)
+
 REM --- Step 3: Khoi dong cac Service theo lua chon ---
 echo =====================================================================
 echo [BƯỚC 2] Tien hanh khoi dong cac Service...
