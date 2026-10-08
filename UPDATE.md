@@ -1,13 +1,14 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [08/10/2026] - Khởi Động Triển Khai Core Flow 3: Luyện Tập Thích Ứng P-L-A-R (Bước 0 & API 1: StartStage)
+## [08/10/2026] - Triển Khai Hoàn Tất Core Flow 3: API 2 - Nộp Bài Quick Check & Chuyển Bước LEARN (SubmitPreview)
 
-- **Biên Soạn Bản Kế Hoạch Kỹ Thuật Toàn Diện Core Flow 3 [`docs/ke_hoach_trien_khai_core_flow_3_adaptive_practice.md`](./docs/ke_hoach_trien_khai_core_flow_3_adaptive_practice.md)**:
-  - Phân định rõ phạm vi trách nhiệm: Độc lập với Core 1 và Core 2 (phân cụm xếp lớp do đồng đội phụ trách); tập trung 100% vào Chu trình tự học thích ứng P-L-A-R, Sổ tay lỗi sai & Lặp lại ngắt quãng, Gói bài phân hóa trên lớp, và Phòng thi thử mô phỏng Proctored.
-  - Thiết kế lược đồ CSDL PostgreSQL schema `practice` cho 5 bảng: `stage_progress`, `adaptive_quiz_attempts`, `mistake_notebook`, `mock_exam_submissions`, `proctoring_snapshots`.
-- **Triển Khai Mã Nguồn Practice Service (Bước 0 & API 1)**:
-  - Mở rộng Domain Entities: [`StageProgress.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/StageProgress.cs) và [`AdaptiveQuizAttempt.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/AdaptiveQuizAttempt.cs).
-  - Cấu hình EF Core Fluent API trong `PracticeDbContext`, đăng ký `IStageProgressRepository` & `StageProgressRepository`.
-  - Hiện thực API 1: `POST /api/practice/stages/{roadmapNodeId}/start` (khởi tạo tiến trình `StageProgress` tại bước `PREVIEW` và cấp 3 câu Quick Check khởi động).
-  - Xây dựng Controller [`StagesController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/StagesController.cs) với route chuẩn không có `v1`: `[Route("api/practice/stages")]`.
+- **Hiện Thực Hoàn Tất API 2 Cho Chu Trình P-L-A-R (Practice Service)**:
+  - Bổ sung endpoint `POST /api/practice/stages/{stageProgressId}/preview-submit` trong [`StagesController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/StagesController.cs).
+  - Hoàn thiện CQRS Command `SubmitPreviewCommand` và Handler `SubmitPreviewCommandHandler`.
+  - Kiểm tra trạng thái máy trạng thái (State Machine): Xác thực chặng đang ở `PREVIEW`, chấm điểm 3 câu Quick Check và kích hoạt chuyển bước `CurrentStep = "LEARN"`.
+  - Cập nhật tài liệu tiến độ và nghiệm thu kiến trúc chuẩn hóa Markdown Editor Plus:
+    - [`All Services/V-Eval-Practice_Service/docs/architecture_acceptance.md`](./All%20Services/V-Eval-Practice_Service/docs/architecture_acceptance.md) (Mục 7.3).
+    - [`All Services/V-Eval-Practice_Service/docs/daily.md`](./All%20Services/V-Eval-Practice_Service/docs/daily.md)
+    - [`All Services/V-Eval-Practice_Service/docs/process.md`](./All%20Services/V-Eval-Practice_Service/docs/process.md) (STT 48).
+  - Đã chạy kiểm thử trực tiếp trên Service API: Kết quả trả về `200 OK`, chuyển trạng thái thành công sang bước `LEARN`.
   - Biên dịch toàn bộ Solution `V-Eval-Practice_Service.sln` sạch 100% (**0 Warning, 0 Error**).
