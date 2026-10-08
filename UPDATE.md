@@ -1,14 +1,12 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [28/09/2026] - Hoàn Tất Giai Đoạn 2 Core Flow 2 (Path Planning): Graph Engine 4 Thuật Toán Đồ Thị & Toán Học
+## [03/10/2026] - Bổ Sung Tài Liệu Chuyên Sâu: Tổng Hợp Thuật Toán Toàn Hệ Thống (Flow 1 đến Flow 4)
 
-- **Nâng Cấp V-Eval Practice Service — Module `Application/Common/Graph/`**:
-  - Triển khai 4 thuật toán đồ thị cốt lõi phục vụ sinh lộ trình học tập cá nhân hóa:
-    1. [`TarjanCycleDetector.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/TarjanCycleDetector.cs): Thuật toán Tarjan SCC phát hiện chu trình kín trong đồ thị tiên quyết kỹ năng.
-    2. [`PathPruner.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/PathPruner.cs): Phân tích quỹ thời gian tự học & chiến lược cắt tỉa 3 tầng (trọng số < 5%, `P(L0) >= 85%`, dồn trọng tâm điểm rơi).
-    3. [`TopologicalSorter.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/TopologicalSorter.cs): Thuật toán Kahn Topological Sort kết hợp PriorityQueue ưu tiên sư phạm đa tiêu chí.
-    4. [`MilestoneBinder.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/MilestoneBinder.cs): Bộ tích hợp 3 thành phần (Video lý thuyết + Quiz củng cố + Lịch Live Q&A) và khởi tạo State Machine.
-- **Cập Nhật Bản Kế Hoạch Triển Khai Core Flow 2**:
-  - Check off toàn bộ checklist Giai đoạn 2 trong [`docs/ke_hoach_trien_khai_core_flow_2_path_planning.md`](./docs/ke_hoach_trien_khai_core_flow_2_path_planning.md).
-- **Kiểm Thử Biên Dịch**:
-  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**) sau từng thuật toán.
+- **Tài Liệu Kiến Trúc Toán Học & AI**:
+  - Tạo mới tài liệu chuyên sâu [`docs/ai_architecture/tong_hop_thuat_toan_va_cong_thuc_toan.md`](./docs/ai_architecture/tong_hop_thuat_toan_va_cong_thuc_toan.md):
+    1. Bản đồ tổng thể toàn bộ các thuật toán và mô hình từ Core Flow 1 đến Core Flow 4.
+    2. Chi tiết công thức toán học và lý do bắt buộc phải sử dụng của từng giải thuật: IRT 2PL, MAP (Brent), Anti-Guessing Penalty, Sigmoid Mapping, Phân lớp năng lực, Cấu trúc DAG, Thuật toán Tarjan, Cắt tỉa Heuristic, Sắp xếp Tô-pô (Topological Sort), Mô hình BKT (Bayesian Knowledge Tracing), Semantic Embedding 3072 chiều, Cosine Similarity trên pgvector, Phương pháp Socrates và Sinh câu hỏi tương đương.
+    3. Bảng tra cứu đối chiếu nhanh toàn diện phục vụ thuyết trình và phản biện Hội đồng.
+  - Tạo mới tài liệu [`docs/ai_architecture/phan_biet_sigmoid_irt_va_bkt.md`](./docs/ai_architecture/phan_biet_sigmoid_irt_va_bkt.md):
+    1. Phân định rõ ràng bản chất 2 lần xuất hiện của hàm Sigmoid trong Core Flow 1 (Cấp độ câu hỏi trong IRT 2PL vs Cấp độ học sinh quy đổi sang BKT Prior).
+    2. Sơ đồ dòng chảy dữ liệu Mermaid chuẩn mực và kịch bản trả lời phản biện giảng viên.
