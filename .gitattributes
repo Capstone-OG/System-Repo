@@ -1,0 +1,7 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Explicitly declare YAML files always use LF
+*.yml text eol=lf
+*.yaml text eol=lf
+docker-compose.yml text eol=lf
