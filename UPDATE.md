@@ -1,7 +1,12 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [08/10/2026] - Triển Khai Giai Đoạn 1 Core Flow 4 GraphRAG AI Tutor: CSDL Knowledge Graph & Archetype Seeder
+## [08/10/2026] - Triển Khai Core Flow 4 GraphRAG AI Tutor: Giai Đoạn 1 (CSDL Knowledge Graph) & Giai Đoạn 2 (Novelty Detector)
 
+- **Hoàn Thành Giai Đoạn 2 (Novelty Detector & Academic Graph API — `V-Eval-Ai_Engine/rag-service`)**:
+  - `graph/novelty_detector.py`: so khớp cosine câu hỏi với `archetype_patterns`, ngưỡng `0.75`, gắn cờ `NOVEL_PATTERN_CANDIDATE` và staging idempotent vào `novel_pattern_proposals`.
+  - Nhận trực tiếp JSON `ParsedExamDto` từ `GeminiExamParserService.cs` (.NET), không cần sửa pipeline Vision OCR.
+  - `routers/academic_graph.py`: API kiểm tra dạng mới, liệt kê đề xuất và duyệt `APPROVED / MERGED / REJECTED`.
+  - Kiểm thử live Supabase + 7/7 unit tests; `dotnet build` 0 error.
 - **Hoàn Thành Triển Khai Giai Đoạn 1 (Database DDL & Archetype Knowledge Graph Seeding)**:
   - Khởi tạo thành công 5 bảng trong schema `v_eval_ai` trên Supabase PostgreSQL (`archetype_patterns`, `pattern_exemplars`, `pattern_traps`, `novel_pattern_proposals`, `ai_tutor_interaction_logs`).
   - Viết và chạy script seeding dữ liệu thực tế `seed_archetypes.py`: tích hợp Google Gemini Embedding (`models/gemini-embedding-001`) sinh vector 3072 chiều, nạp dạng bài chuẩn Toán học `MATH_ASYMPTOTE_PARAM_01`, 1 câu hỏi mẫu chuẩn và 2 bẫy tư duy thường gặp.
