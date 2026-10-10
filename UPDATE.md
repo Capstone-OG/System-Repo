@@ -1,13 +1,11 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [09/10/2026] - Triển Khai Giai Đoạn 3 Core Flow 4 GraphRAG AI Tutor: Hybrid GraphRAG Retriever (Vector + Graph Traversal)
+## [10/10/2026] - Triển Khai Giai Đoạn 4 Core Flow 4 GraphRAG AI Tutor: Socratic Tutor & LLM-as-a-Judge
 
-- **Hoàn Thành Giai Đoạn 3 (Hybrid GraphRAG Retriever — `V-Eval-Ai_Engine/rag-service`)**:
-  - `graph/hybrid_retriever.py`: Truy vết đồ thị 2 bước (Hop 1: Neo vector cosine kết hợp phân vùng kỹ năng & fallback toàn cục; Hop 2: Mở rộng sang câu hỏi mẫu chuẩn và danh mục bẫy nhận thức).
-  - Cơ chế **Fail-Closed Grounding**: Chặn đứng nguy cơ ảo giác tri thức bằng cách khóa trả về định lý khi độ tương đồng cosine $< 0.75$ (`LOW_CONFIDENCE`).
-  - Cơ chế **Safe Trap Alignment**: Phân biệt câu hỏi mẫu gốc (ánh xạ trực tiếp theo phương án A/B/C/D) và câu hỏi biến thể xáo trộn (trả về danh sách bẫy ứng viên cho LLM đối sánh ngữ nghĩa ở Giai đoạn 4).
-  - Tái cấu trúc `seed_archetypes.py` data-driven, sửa liên kết Kỹ năng Toán học và bổ sung dạng bài chuẩn Vật lý Dao động điều hòa `PHYS_SHM_MAX_SPEED_01`.
-  - `routers/academic_graph.py`: Bổ sung endpoint nội bộ `POST /api/v1/academic-graph/subgraph/preview` cho phép xem trước toàn bộ Subgraph Context.
-  - Kiểm thử: 15/15 unit tests passed, 5 kịch bản live trên Supabase Cloud đạt chuẩn, biên dịch .NET 9 thành công 100% (0 error).
+- **Hoàn Thành Giai Đoạn 4 (Socratic Tutor & LLM-as-a-Judge — `V-Eval-Ai_Engine/rag-service`)**:
+  - `socratic/validator_judge.py`: Hội đồng thẩm định độc lập (`temperature = 0.0`) thực thi 3 quy tắc sư phạm bất khả xâm phạm (chống giải thay/lộ đáp án, nhất quán với Ground-Truth CSDL, và neo chặt định lý tri thức). Tích hợp regex Heuristic guard chặn lộ đáp án tức thì.
+  - `socratic/socratic_engine.py`: Động cơ Socrates 2 lớp (Two-Layer Gating). Nếu Judge từ chối bản thảo, tự động kích hoạt Fallback tổng hợp từ định lý chuẩn CSDL, bảo vệ trải nghiệm của học sinh.
+  - `routers/socratic_tutor.py`: Bổ sung 2 endpoint `POST /api/v1/socratic/ask` (JSON đồng bộ) và `POST /api/v1/socratic/ask-stream` (SSE thời gian thực `text/event-stream`), tự động ghi nhật ký kiểm định vào `v_eval_ai.ai_tutor_interaction_logs`.
+  - Kiểm thử & Vận hành: 22/22 unit tests passed (100%), xác thực live SSE streaming 236 lines và audit logging thành công trên Supabase PostgreSQL, biên dịch .NET 9 đạt 0 error.
 - **Tài Liệu Kỹ Thuật & Cập Nhật Hệ Thống**:
-  - Cập nhật chi tiết tiến độ tại `docs/daily.md`, `docs/process.md` (mục 24), và `docs/architecture_acceptance.md`.
+  - Cập nhật chi tiết tiến độ tại `docs/daily.md`, `docs/process.md` (mục 25), và `docs/architecture_acceptance.md`.
