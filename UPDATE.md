@@ -1,18 +1,18 @@
 # Nhật Ký Cập Nhật (Update Log) - System Repo
 
-## [10/10/2026] - Giao Diện Quản Lý Nhóm Học Tập Vi Mô (Micro Study Groups: 3 - 5 Học Sinh) & Phân Bổ Sơ Đồ Bàn Học Offline
+## [11/10/2026] - Hợp Nhất Toàn Diện Hệ Thống: Mô Hình Giảng Dạy Offline (Trần Sĩ Số 20 Em), Phân Nhóm Vi Mô (3 - 5 Em) & Đồng Bộ Core Flow 3
 
-- **Xây Dựng Modal Sơ Đồ Nhóm Bàn Học Vi Mô (`Web Client`)**:
+- **Hợp Nhất Toàn Diện Nhánh Develop (Core Flow 2 & Core Flow 3)**:
+  - Đồng bộ thành công cấu trúc toàn hệ thống tích hợp đồng thời chặng học P-L-A-R, nhánh cứu trợ Remedial Node, Sổ tay lỗi sai SM-2 và mô hình phân nhóm học tập vi mô.
+- **Giao Diện Quản Lý Nhóm Học Tập Vi Mô & Sơ Đồ Bàn Học Offline (`Web Client`)**:
   - Triển khai component `ClassMicroGroupsModal.jsx` hiển thị sơ đồ phân bổ trạm bàn học offline của lớp (Trần sĩ số 20 học sinh, mỗi nhóm bàn từ 3 đến 5 học sinh).
   - Tích hợp bộ chọn quy mô nhóm bàn (`3 bạn/bàn`, `4 bạn/bàn`, `5 bạn/bàn`) kết nối trực tiếp với thuật toán gom cụm đồng nhất (Homogeneous Clustering) theo lỗ hổng kiến thức.
-  - Hiển thị chi tiết từng trạm bàn học: Tên bàn học sư phạm, chủ đề trọng tâm `FocusArea`, tag các kỹ năng yếu chung (`CommonWeakSkills`), danh sách học sinh tại bàn kèm chỉ số thành thạo kiến thức.
-  - Tính năng **Phân phối đề luyện tập thích ứng** trực tiếp cho bàn học (`practiceService.assignGroupWorksheet`), hiển thị trạng thái phát đề và thời gian thực.
-  - Bổ sung nút xuất file sơ đồ bàn học dạng PDF cho Giảng viên in ra phát tận bàn offline.
+  - Phân phối đề luyện tập thích ứng trực tiếp cho bàn học (`practiceService.assignGroupWorksheet`) và xuất sơ đồ bàn học PDF cho Giảng viên.
 - **Nâng Cấp Cổng Điều Hành Học Thuật Cơ Sở (`CampusManagerDashboardView.jsx`)**:
   - Chuẩn hóa danh sách lớp học offline theo cơ chế trần 20 học sinh và số thứ tự tăng dần (`Lớp Nền tảng 01`, `Lớp Nền tảng 02`, `Lớp Tăng tốc 01`, `Lớp Bứt phá 01`).
-  - Hiển thị badge sĩ số chuẩn hóa: `Sĩ số: {studentCount}/20`.
-  - Tích hợp nút hành động **"Sơ Đồ Nhóm Bàn (3 - 5 Bạn)"** trên từng thẻ lớp học, mở modal tương tác trực tiếp.
-  - Bổ sung nút **"Tự Động Gom Cụm AI"** trên thanh công cụ lớp học gọi trực tiếp API K-Means Elbow Method (`practiceService.autoClusterClasses`).
+  - Hiển thị badge sĩ số chuẩn hóa: `Sĩ số: {studentCount}/20` và tích hợp nút mở sơ đồ nhóm bàn học vi mô.
+- **Bộ Scripts Đa Nền Tảng Trong System-Repo**:
+  - Bổ sung bộ script Bash shell (`.sh`) tương ứng với `.bat`: `pull.sh`, `run_docker.sh`, `run_local.sh`, `setup.sh`, `sync_config.sh` tương thích macOS/Linux/WSL.
 - **Kiểm Thử Toàn Diện & Trạng Thái Hệ Thống**:
   - Frontend `Web Client` build Vite thành công 100% (**0 Error, 0 Warning**).
   - Toàn bộ Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
