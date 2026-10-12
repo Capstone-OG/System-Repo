@@ -1,18 +1,15 @@
-# Nhật Ký Cập Nhật (Update Log) - System Repo
+# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [09/10/2026] - Tích Hợp Động Trực Tiếp Content Service Cho Nhánh Cứu Trợ (Remedial Node) & Hoàn Tất Module 2
+## [12/10/2026] - Khởi Động Core Flow 3 (Module 3): CSDL Giám Sát Thi Thử & API 1 Khởi Tạo Bài Thi Thử Chuẩn Hóa (StartMockExam)
 
-- **Tích Hợp Động 100% Content Service Cho Gói Cứu Trợ (Remedial Node - BR-03)**:
-  - Loại bỏ hoàn toàn mã hardcode Guid tĩnh trong câu hỏi và đáp án cứu trợ.
-  - Phân phối câu hỏi cứu trợ từ Ngân hàng đề của Content Service qua gRPC (`GetMilestoneQuizAsync`), tự động loại trừ các câu hỏi đã làm ở các đợt trước để chống học vẹt và cấp bộ câu hỏi biến thể (*Isomorphic Questions*) mới khi học sinh làm lại.
-  - Chấm điểm và đối soát đáp án, lời giải chi tiết trực tiếp từ CSDL của Content Service thông qua `GetQuestionDetailAsync`.
-  - Khắc phục lỗi `DbUpdateConcurrencyException` của EF Core trong [`StageProgressRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/StageProgressRepository.cs).
-- **Hoàn Tất Module 2: Sổ Tay Lỗi Sai & Thuật Toán Lặp Lại Ngắt Quãng SM-2 (Mistake Notebook & Spaced Repetition)**:
-  - Khởi tạo bảng CSDL `v_eval_practice."MistakeNotebooks"` và thực thể [`MistakeNotebook.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/MistakeNotebook.cs) quản lý lỗi sai cá nhân của học sinh.
-  - Tự động lưu câu sai (Luật sư phạm BR-15) khi học sinh làm sai ở bước `APPLY` của chặng học P-L-A-R, đặt lịch hẹn ôn tập ban đầu vào ngày hôm sau.
-  - Hiện thực thuật toán SuperMemo-2 (SM-2): tính toán khoảng cách ngày ôn tập tiếp theo (+1, +3, +7 ngày...), tự động gắn cờ làm chủ (`IsMastered = true`) khi làm đúng liên tiếp 3 lần.
-  - Hoàn thiện 4 RESTful Endpoints tại [`MistakesController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/MistakesController.cs): `GET /mistakes`, `GET /mistakes/daily-review`, `POST /mistakes/{id}/tag-error`, `POST /mistakes/{id}/review-submit`.
-- **Kiểm Thử Trực Tiếp Hai Dịch Vụ Đang Chạy (Live Services)**:
-  - Chạy đồng thời `Content Service` (Port 5249/5250) và `Practice Service` (Port 5261).
-  - Kiểm thử qua Swagger và PowerShell: Chấm điểm bài cứu trợ trực tiếp từ Content Service đạt 100% chính xác, xoay vòng câu hỏi biến thể hoạt động hoàn hảo.
-  - Biên dịch toàn bộ Solution `V-Eval-Practice_Service.sln` sạch 100% (**0 Warning, 0 Error**).
+- **Mở Rộng Mô Hình CSDL & Thực Thể Giám Sát Liêm Chính Học Thuật**:
+  - Mở rộng thực thể [`ExamSubmission.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/ExamSubmission.cs): Tái sử dụng bảng `ExamSubmissions` (`ExamType = "MOCK_EXAM"`), bổ sung 4 trường giám sát liêm chính: `TabDepartureCount`, `IntegrityStatus`, `MentorVerdict`, `MentorNotes` và navigation collection `ProctoringSnapshots`.
+  - Tạo thực thể [`ProctoringSnapshot.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/ProctoringSnapshot.cs): Lưu trữ ảnh chụp định kỳ từ webcam phục vụ hậu kiểm danh tính người thi.
+  - Cấu hình Fluent API trong [`PracticeDbContext.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/PracticeDbContext.cs) và cập nhật DDL bootstrapping tự động trong [`Program.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Program.cs).
+  - Triển khai repository [`IMockExamRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/IMockExamRepository.cs) và [`MockExamRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/MockExamRepository.cs).
+- **Hiện Thực API 1: Khởi Tạo Phiên Thi Thử Chuẩn Hóa 120 Câu (StartMockExam)**:
+  - Khởi tạo chuỗi CQRS: [`StartMockExamDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/StartMockExamDtos.cs), `StartMockExamCommand.cs`, `StartMockExamCommandValidator.cs` và [`StartMockExamCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/StartMockExam/StartMockExamCommandHandler.cs).
+  - Tích hợp Content Service qua gRPC lấy 120 câu hỏi bảo mật (ẩn đáp án đúng), kích hoạt đồng hồ đếm ngược 150 phút (9000 giây) và thiết lập cơ chế khôi phục phiên thi đang dang dở.
+  - Tạo Controller [`MockExamsController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/MockExamsController.cs) với endpoint `POST /api/practice/mock-exams/{examId}/start`.
+- **Kiểm Thử & Biên Dịch**:
+  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
