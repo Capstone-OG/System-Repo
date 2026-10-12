@@ -1,7 +1,10 @@
-# Nhật Ký Cập Nhật (Update Log) - System Repo
+# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [12/10/2026] - Hoàn Tất Giai Đoạn 6 Core Flow 4 GraphRAG AI Tutor: Human-in-the-Loop Feedback & Mentor Studio
+## [12/10/2026] - Hợp Nhất Hoàn Tất Toàn Diện Core Flow 3 (Module 3) & Core Flow 4 (GraphRAG Socratic AI Tutor)
 
+- **Hoàn Tất Toàn Diện Core Flow 3 (Module 3 — Thi Thử Mô Phỏng & Giám Sát Liêm Chính)**:
+  - `ExamSubmissions` & `ProctoringSnapshots`: Bổ sung 4 trường liêm chính (`TabDepartureCount`, `IntegrityStatus`, `MentorVerdict`, `MentorNotes`) và lưu vết webcam hậu kiểm.
+  - Bộ 6 APIs Thi thử chuẩn hóa: `POST /mock-exams/{examId}/start` (khởi tạo đề thi 120 câu ĐGNL), `POST /{submissionId}/log-tab-departure` (cắm cờ rời tab > 3 lần), `POST /{submissionId}/upload-snapshot` (ảnh webcam), `POST /{submissionId}/submit` (chấm điểm 1200, nạp câu sai vào SM-2), `GET /{submissionId}` (visual audit trail), `PATCH /{submissionId}/mentor-review` (Mentor thẩm duyệt gian lận).
 - **Hoàn Thành Giai Đoạn 6 (Human-in-the-Loop Feedback & Mentor Studio — `V-Eval-Ai_Engine`)**:
   - `rag-service/routers/socratic_tutor.py`: Bổ sung bộ 4 endpoint API hoàn thiện vòng lặp phản hồi:
     - `POST /api/v1/socratic/interactions/{id}/report`: Ghi nhận cờ báo cáo sai từ học sinh (`student_reported = TRUE`) và lưu lý do.
@@ -11,7 +14,7 @@
     - `GET /api/v1/socratic/view-mentor`: Phục vụ giao diện thẩm định Mentor Studio.
   - `V-Eval-Ai_Engine.API/wwwroot/view-tutor-mentor.html`: Xây dựng giao diện web Mentor Studio phong cách Glassmorphic Dark Mode hiện đại, tích hợp KaTeX kết xuất công thức toán học STEM, thanh tra Subgraph Context và form hành động nhanh lưu Lời giải mẫu / Bẫy tư duy vào đồ thị tri thức.
   - `V-Eval-Ai_Engine.API/Endpoints/ExamEndpoints.cs`: Ánh xạ route `GET /api/ai-engine/view-tutor-mentor` phục vụ trực tiếp qua .NET Engine.
-  - Kiểm thử: Xây dựng bộ test `rag-service/tests/test_socratic_mentor.py` với 5/5 unit tests passed. Toàn bộ 27/27 unit tests của AI Engine đạt 100%.
+  - Kiểm thử: Xây dựng bộ test `rag-service/tests/test_socratic_mentor.py` với 5/5 unit tests passed. Toàn bộ 37/37 unit tests của AI Engine đạt 100%.
 - **Tích Hợp Dịch Vụ Thực Hành (`V-Eval-Practice_Service`)**:
   - `Application/Common/Interfaces/IAiTutorClient.cs`: Mở rộng giao thức `ReportInteractionAsync` và `GetInteractionsAsync`.
   - `Infrastructure/HttpClients/AiTutorClient.cs`: Hiện thực hóa HTTP client gọi dịch vụ AI Engine kèm cơ chế Resilient Fallback bảo đảm hệ thống vận hành liên tục.
