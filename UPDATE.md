@@ -14,4 +14,4 @@
   - **API 19: `POST /api/content/exams/quiz`**: Đóng gói đề Quiz củng cố thích ứng 5-10 câu hỏi chuẩn Bloom từ `SkillIds` / `CommonWeakSkillIds` kết nối trực tiếp với bàn học của Practice Service.
 - **Trạng Thái Kiểm Thử Toàn Hệ Thống**:
   - `V-Eval-Content_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
-  - Toàn bộ thay đổi nằm trên nhánh `ThinhTT/feature-content-questions-quiz-apis`.
+  - Toàn bộ thay đổi nằm trên nhánh `ThinhTT/feature-question-bank-adaptive-quiz`.
