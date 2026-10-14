@@ -1,17 +1,21 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [13/10/2026] - Thiết Kế GraphRAG Tri Thức Liên Môn & Triển Khai Hoàn Tất Bộ APIs 16 - 19 Content Service
+## [14/10/2026] - Chuyển Đổi Dàn Kiến Thức Thành Dữ Liệu Động Từ Database & Liên Thông API 19
 
-- **Thiết Kế Kiến Trúc GraphRAG Tri Thức Liên Môn (Cross-Disciplinary Knowledge Graph)**:
-  - Hoàn thiện tài liệu kiến trúc chuyên sâu `docs/ai_architecture/thiet_ke_graph_rag_tri_thuc_lien_mon.md` giải quyết bản chất liên môn kỳ thi ĐGNL ĐHQG-HCM (V-ACT).
-  - Phân tích ưu thế vượt trội của GraphRAG so với Vector RAG: Vượt qua bẫy cô lập từ vựng đơn môn, liên kết các cạnh `[APPLIES_MODEL]` giữa Toán, Lý, Hóa, Sinh, Logic với cùng một mô hình toán học lõi (ví dụ Hệ PT 2 ẩn).
-  - Thiết kế lược đồ CSDL PostgreSQL `v_eval_ai.cross_disciplinary_models` & `v_eval_ai.skill_model_cross_links`, thuật toán Graph Traversal và Prompt Socratic AI chẩn đoán lỗi gốc rễ.
-- **Hoàn Tất Triển Khai Bộ APIs 16 - 19 Quản Trị Ngân Hàng Câu Hỏi & Sinh Đề Quiz (Content Service)**:
-  - **API 16: `POST /api/content/questions`**: Thêm mới câu hỏi gốc với công thức LaTeX stem, 4 đáp án A-D, phương án đúng `CorrectOption`, độ khó Bloom 1-6 và lời giải chi tiết `Explanation`.
-  - **API 17: `PUT /api/content/questions/{id}`**: Hiệu đính nội dung, đáp án, độ khó Bloom và giải thích chi tiết.
-  - **API 18: `DELETE /api/content/questions/{id}`**: Xóa câu hỏi khỏi ngân hàng đề và giải phóng liên kết đề thi `exam_questions`.
-  - **APIs Tra Cứu**: `GET /api/content/questions/{id}` và `GET /api/content/questions/by-skill/{skillId}` (lọc theo Bloom).
-  - **API 19: `POST /api/content/exams/quiz`**: Đóng gói đề Quiz củng cố thích ứng 5-10 câu hỏi chuẩn Bloom từ `SkillIds` / `CommonWeakSkillIds` kết nối trực tiếp với bàn học của Practice Service.
-- **Trạng Thái Kiểm Thử Toàn Hệ Thống**:
-  - `V-Eval-Content_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
-  - Toàn bộ thay đổi nằm trên nhánh `ThinhTT/feature-question-bank-adaptive-quiz`.
+- **Gỡ Bỏ Hoàn Toàn Hardcode Dàn Kiến Thức Trên Frontend (Web Client)**:
+  - Xóa bỏ toàn bộ dữ liệu tĩnh `DOMAINS_DATA` trên Frontend.
+  - Tích hợp `contentService.getCurriculum()` gọi API Gateway `GET /api/content/curriculum` để nạp trực tiếp toàn bộ 4 miền năng lực và 12 kỹ năng chuẩn từ cơ sở dữ liệu.
+- **Triển Khai REST API Dàn Kiến Thức Trên Content Service**:
+  - Xây dựng `CurriculumController.cs` và `GetCurriculumTreeQuery.cs` truy vấn cơ sở dữ liệu EF Core (`CompetencyDomains`, `Skills`, `Materials`, `Questions`).
+  - Phục vụ động toàn bộ sơ đồ tri thức liên môn GraphRAG, công thức KaTeX, câu hỏi mẫu và bài giảng video.
+- **Liên Thông Tự Động Practice Service <-> Content Service (Core Flow 2 - API 19)**:
+  - Triển khai `IContentHttpClient` và `ContentHttpClient` trong Practice Service kết nối REST API `POST /api/content/exams/quiz` của Content Service.
+  - Tự động trích xuất `CommonWeakSkillIds` từ nhóm học tập vi mô khi giáo viên bỏ trống `WorksheetId` để đóng gói tức thì đề củng cố thích ứng.
+- **Hợp Nhất Phân Hệ Khảo Sát Năng Lực & Định Vị Vùng Trũng Động**:
+  - Nhúng trực tiếp `DiagnosticAssessmentPage` (`embedded = true`) vào Dashboard học sinh.
+  - Tự động định vị và gắn cờ củng cố `⚠️ Vùng trũng` cho các kỹ năng có xác suất làm chủ $P(L_t) < 0.60$.
+- **Trạng Thái Kiểm Thử Vận Hành Toàn Hệ Thống**:
+  - `V-Eval-Content_Service.sln`: Biên dịch sạch 100% (**0 Warning, 0 Error** trên .NET 9).
+  - `V-Eval-Practice_Service.sln`: Biên dịch sạch 100% (**0 Warning, 0 Error** trên .NET 9).
+  - `V-Eval-Web_Client`: `npm run build` thành công 100% (**0 Error, 0 Warning**).
+  - Nhánh duy nhất đồng bộ: `ThinhTT/feature-question-bank-adaptive-quiz`.
