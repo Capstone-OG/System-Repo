@@ -1,13 +1,12 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [13/10/2026] - Triển Khai Giai Đoạn 1 Core Flow 4 Trên Frontend (AI Socratic Tutor & GraphRAG Live Streaming)
+## [14/10/2026] - Triển Khai Giai Đoạn 2 Core Flow 4 Trên Frontend: Tích Hợp Ngữ Cảnh Bài Tập Socratic (ZPD & Diagnostic)
 
-- **Triển Khai Giai Đoạn 1 Core Flow 4 Trên Web Client (`V-Eval-Web_Client`)**:
-  - `src/services/practiceService.js`: Bổ sung `askAiTutorStream` (kết nối SSE stream qua Gateway `:5212` đến Practice Service `:5261`), `askAiTutor` (REST fallback), `reportAiTutorInteraction` (`POST /api/practice/ai-tutor/report`) và `getAiTutorInteractions`. Xử lý bắt mã lỗi `429 Too Many Requests` (Rate limit 10 req/phút).
-  - `src/components/dashboard/AISocraticTutorWidget.jsx`: Chuyển đổi từ 100% Mock Data sang kết nối live SSE stream thực tế, tích hợp `MathText` (KaTeX), nút dừng stream và cảnh báo rate limit.
-  - `src/components/modals/AISocraticTutorModal.jsx`: Xây dựng mới modal chat toàn diện 2 cột kết hợp khung chat Socratic gợi mở tư duy và bảng phân tích Đồ thị Tri thức 3-Hop (Archetype, Định lý cốt lõi, Bẫy sai lầm Misconception Traps).
-  - `src/components/modals/index.js` & `src/App.jsx`: Xuất bản modal và sửa lỗi điều hướng trên Sidebar / Dashboard, mở chính xác màn hình gia sư Socratic thay vì mở nhầm modal ZPD Flow 3.
-  - Kiểm thử đóng gói: `npm run build` thành công 100% (0 error, 0 warning), kiểm tra `oxlint` sạch sẽ.
+- **Triển Khai Giai Đoạn 2 Core Flow 4 Trên Web Client (`V-Eval-Web_Client`)**:
+  - `src/components/modals/AdaptiveQuizModal.jsx`: Tích hợp nút hành động sư phạm **"💡 Chưa hiểu bản chất câu này? Hỏi Gia sư Socratic bẻ khóa tư duy"** xuất hiện ngay khi học sinh chọn sai hoặc phân vân đáp án; thêm nút gọi nhanh Socratic; tích hợp `MathText` (KaTeX) cho câu hỏi và các phương án trắc nghiệm; tự động đóng gói toàn bộ gói bối cảnh bài tập (`questionId`, `question`, `options`, `skill`, `selectedWrong`, `difficultyB`, `predictedProb`) chuyển tiếp đến `AISocraticTutorModal`.
+  - `src/components/modals/AISocraticTutorModal.jsx`: Nâng cấp xử lý `initialContext`, hiển thị thanh thông tin ngữ cảnh nổi bật (*Target Context Banner*); khởi tạo lời dẫn cá nhân hóa theo bẫy sai lầm của bài tập; thích ứng bộ Quick Prompts theo ngữ cảnh câu hỏi; Đồ thị Tri thức 3-Hop Subgraph ghim Dạng bài Archetype tương ứng.
+  - `src/components/diagnostic/DiagnosticAssessmentPage.jsx`: Chuyển đổi phương thức `handleAskSocraticTutor` sang gọi trực tiếp `practiceService.askAiTutorStream` qua Gateway `:5212`, truyền mã câu hỏi, công thức KaTeX và phương án chọn sai; bắt mã lỗi `429 Too Many Requests`.
+  - `src/App.jsx`: Điều phối state `tutorContext` và hàm `handleOpenAiTutor(context)`, kết nối dữ liệu mượt mà giữa bài thi thích ứng và khung chat Socratic.
+  - Kiểm thử đóng gói: Chạy `npm run build` (`vite build`) thành công 100% (**0 Error, 0 Warning**), lint sạch 100%.
 - **Tài Liệu Kỹ Thuật Hệ Thống**:
-  - Biên soạn và ban hành `docs/ke_hoach_trien_khai_core_flow_4_frontend.md`: Rà soát toàn bộ hiện trạng mã nguồn Web Client, phân định ma trận đối soát hạ tầng và xác lập lộ trình 3 giai đoạn triển khai Flow 4 trên Frontend.
   - Cập nhật bộ 3 tài liệu chuẩn `docs/daily.md`, `docs/process.md` và `docs/architecture_acceptance.md` của `V-Eval-Web_Client`.
