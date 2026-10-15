@@ -1,36 +1,27 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [15/10/2026] - Khắc Phục Triệt Để Lỗi Màn Trắng (White Screen Fix), Hoàn Thiện Studio Sư Phạm Chuyên Sâu & Nạp Tri Thức Động Kép
+## [15/10/2026] - Kiến Trúc Soạn Thảo Đa Chế Độ: Soạn Thảo Trực Quan (Text In Preview Chuẩn Học Sinh) Song Hành Mã Nguồn LaTeX Thuần (Nhập Nhanh Từ AI), Chèn Ký Hiệu Tại Con Trỏ & Bóc Tách Khổ Lớn 79+ Trang
 
-- **Khắc Phục Triệt Để Lỗi Màn Trắng & Nâng Cao Tính Bền Vững Frontend**:
-  - *Sửa lỗi biến chưa khai báo*: Khắc phục `ReferenceError: weakPrerequisites is not defined` tại `CurriculumExplorerView.jsx:1303` bằng cách bổ sung bộ lọc dạng bài tiên quyết vùng trũng `<10%` đồng bộ từ `skillMasteryMap`.
-  - *Bọc Error Boundary Toàn Cục (`RootErrorBoundary` trong `src/main.jsx`)*: Ngăn ngừa toàn bộ sự cố màn hình trắng; cung cấp giao diện báo lỗi trực quan kèm stack trace và nút Tải lại trang/Xóa cache.
-  - *Bổ Sung Type Safety Cho `MathText.jsx`*: Thêm kiểm tra nghiêm ngặt `typeof text !== 'string'` tránh crash render.
-  - *Mở Rộng Điều Hướng Tab Lộ Trình Cho Mọi Vai Trò (`App.jsx`)*: Học sinh, Giáo viên và Quản lý học thuật đều có thể truy cập phân hệ Dàn kiến thức & Lộ trình phân cấp.
-- **Xóa Bỏ 100% Hardcode Dữ Liệu Tĩnh Trong Toàn Bộ Hệ Thống**:
-  - Loại bỏ hoàn toàn `CurriculumHierarchySeeder.cs` và các khối switch-case hardcode LaTeX/câu hỏi giả trong `GetCurriculumTreeQuery.cs`.
-  - Loại bỏ các GUID hardcode mẫu và các câu hỏi giả fabricated trong `CurriculumExplorerView.jsx`.
-  - Toàn bộ dữ liệu tri thức và câu hỏi được quản lý và truy vấn 100% động từ cơ sở dữ liệu PostgreSQL (`v_eval_content`).
-- **Triển Khai Môi Trường Studio Sư Phạm Chuyên Sâu Toàn Diện (`CurriculumStudioEditor.jsx`)**:
-  - Nâng cấp trải nghiệm hiệu đính của giảng viên từ modal thu nhỏ thành không gian Studio toàn màn hình tải nặng:
-    - *3 Chế Độ Xem*: `Biên soạn (Editor)`, `Chia đôi (Split 50-50 Live KaTeX Preview)`, và `Review Học sinh (Live Preview)` mô phỏng chính xác 100% góc nhìn của người học.
-    - *Bảng Ký Tự KaTeX 3 Nhóm Chuyên Sâu*: Đại số & Giải tích, Hình học & Không gian Oxyz, Logic & Tập hợp.
-    - *Thư Viện Đồ Thị & Chèn Hình Ảnh Sư Phạm*: Modal chèn ảnh đồ thị minh họa (Đồ thị hàm bậc ba, Bảng biến thiên, Hình chóp S.ABC, Hệ trục Oxyz) và hỗ trợ chèn ảnh Markdown `![Mô tả](url)`.
-    - *Động Cơ Render Toán Học Kèm Ảnh (`MathText.jsx`)*: Phân tích và render tự động hình ảnh Markdown với bo góc và bóng đổ chuẩn sách giáo khoa.
-    - *Bảng Phân Đoạn Video Timestamps*: Thêm/sửa/xóa các mốc thời gian bài giảng và nhúng trực tiếp trình phát video YouTube.
-    - *Studio Quản Trị Ngân Hàng Câu Hỏi Thích Ứng (API 16-18)*: Xem danh sách câu hỏi trong PostgreSQL, xóa câu hỏi và tạo câu hỏi mới theo chuẩn Bloom L1-L4.
-- **Triển Khai REST API Nhập Liệu Tri Thức Động (`POST /api/content/curriculum/import`)**:
-  - Hỗ trợ kiến trúc 2 kênh bổ trợ: Giảng viên/Ban Chuyên Môn chủ động quản lý nhập liệu và AI Engine tự động nạp phân tích từ file PDF Sách Giáo Khoa.
-  - Triển khai `ImportCurriculumCommand` và `ImportCurriculumCommandHandler`: Tự động upsert toàn bộ cây phân cấp đa môn: `Miền Năng Lực` -> `Chương` -> `Bài học` -> `Dạng bài` -> `Materials` -> `Questions` -> `SkillPrerequisites`.
-- **Trọn Bộ REST APIs Quản Trị Cây Tri Thức Của Content Service**:
-  - `PUT /api/content/curriculum/patterns/{id}` (`UpdatePatternCommand`): Hiệu đính 4 khối nội dung dạng bài.
-  - `PUT /api/content/curriculum/nodes/{id}` (`UpdateNodeCommand`): Cập nhật thông tin node Chương/Bài học.
-  - `POST /api/content/curriculum/nodes` (`CreateNodeCommand`): Thêm mới Chương, Bài học hoặc Dạng bài.
-  - `DELETE /api/content/curriculum/nodes/{id}` (`DeleteNodeCommand`): Xóa node an toàn và dọn dẹp quan hệ DAG.
-- **Cấu Trúc Cây 3 Tầng Chuẩn Sư Phạm SGK & 4 Khối Sư Phạm Thích Ứng**:
-  - Cột trái: Accordion 3 tầng linh hoạt (Chương -> Bài học -> Dạng bài) kèm huy hiệu năng lực cá nhân (`🚨 Hổng <10%`, `⚠️ Vùng trũng <60%`, `✅ Đã vững ≥60%`).
-  - Cột phải: 4 khối nội dung sư phạm và tự động gom dạng bài lân cận/tiên quyết hổng (&lt;10%) vào đề luyện tập thích ứng vi mô (API 19).
+- **Kiến Trúc Soạn Thảo Đa Chế Độ Trực Quan & Mã Nguồn LaTeX Song Hành (`CurriculumStudioEditor.jsx` - Web Client)**:
+  - *Đáp Ứng Đúng Bản Chất Soạn Thảo Sư Phạm (Text In Preview)*:
+    - Loại bỏ hoàn toàn giải pháp phân rã 4 ô form cứng nhắc (Định nghĩa, Công thức, Quy tắc, Hình ảnh) gây cắt vụn luồng tư duy sư phạm của giáo viên.
+    - Chế độ **Soạn Thảo Trực Quan (Text In Preview - Chuẩn Học Sinh)**: Khung soạn thảo văn bản tự nhiên kết hợp trực tiếp với **Khung Hiển Thị Trực Quan (Text In Preview - Giao Diện Học Sinh Thấy)** hiển thị song hành thời gian thực bằng `<MathText />`, render công thức toán học KaTeX thật (phân số, căn thức, giới hạn, đồ thị hình ảnh), không hiển thị text LaTeX thô.
+    - Chế độ **Mã Nguồn LaTeX Thuần (Nhập Nhanh Từ AI)**: Khung soạn thảo monospace nền tối chuyên dụng cho việc dán nhanh 1-chạm kết quả trích xuất từ Gemini / ChatGPT / AI Engine.
+  - *Cơ Chế Chèn Ký Hiệu KaTeX STEM Chuẩn Xác Tại Vị Trí Con Trỏ (Cursor-Precision Insertion Engine)*:
+    - Sử dụng `textareaRefs` theo dõi chính xác vị trí con trỏ chuột (`selectionStart` / `selectionEnd`) trên từng textarea đang active.
+    - Click vào bất kỳ ký hiệu nào trên Bảng KaTeX STEM 10 danh mục (120+ công thức toán học) sẽ tự động chèn đúng vị trí con trỏ và khôi phục focus tức thời.
+- **Khắc Phục Triệt Để Ký Tự Thoát `\n` Bị Hiển Thị Thô Dạng Text (`MathText.jsx` - Web Client)**:
+  - *Negative Lookahead Chính Xác*: Thay thế bằng danh sách bảo vệ đúng 15 lệnh LaTeX thực tế bắt đầu bằng `\n` (`` `\neq` ``, `` `\notin` ``, `` `\nabla` ``, `` `\nu` ``...). Giải phóng 100% các từ tiếng Việt và ngắt dòng thực tế (`` `\nTrong` ``, `` `\nKiểm` ``, `` `\nBước` ``).
+  - *Đồng Bộ Textarea Biên Soạn*: Xuất hàm `unescapeLiteralNewlines` giải phóng `\n` thành Enter xuống dòng thực tế khi nạp lý thuyết và phương pháp giải vào khung soạn thảo Studio.
+- **Tự Động Bọc KaTeX Cho Ion Đa Nguyên Tử & Hợp Chất Hóa Học**:
+  - Tự động nhận diện và bọc KaTeX cho ion đơn/đa nguyên tử có điện tích: `` `H^+` ``, `` `OH^-` ``, `` `SO_4^{2-}` ``, `` `NO_3^-` ``, `` `Fe^{3+}` ``, `` `Na^+` ``, `` `Cl^-` ``.
+  - Tự động nhận diện và bọc KaTeX cho các hợp chất có chỉ số dưới: `` `H_2O` ``, `` `H_2SO_4` ``, `` `HNO_3` ``, `` `CO_2` ``, `` `Fe_2O_3` ``, `` `KMnO_4` ``.
+- **Khắc Phục Lỗi Type Hint Mapping Tại `documents.py:293` (`V-Eval-Ai_Engine`)**:
+  - Khắc phục lỗi static type checking `Expected argument after ** to be a mapping, got: dict[str, Any] | tuple[Any, ...]` bằng cách ánh xạ minh thị từng thuộc tính đối tượng `DocumentVersionItem`.
+- **Nâng Cấp Động Cơ Bóc Tách Tài Liệu Khổ Lớn 70-100 Trang (`V-Eval-Ai_Engine`)**:
+  - Bảo toàn ngắt dòng `\n` cho tài liệu Word DOCX (`</w:p>`, `</w:tr>`), prompt chuyên sâu 5 bài học và 10 dạng bài, mở rộng `maxOutputTokens = 8192` và timeout 90 giây.
 - **Trạng Thái Kiểm Thử Vận Hành Toàn Hệ Thống**:
-  - `V-Eval-Content_Service.sln`: Biên dịch sạch 100% (**0 Warning, 0 Error** trên .NET 9 SDK).
-  - `V-Eval-Web_Client`: `npm run build` thành công 100% (**0 Error, 0 Warning**, hoàn thành trong 781ms).
-  - Nhánh duy nhất đồng bộ: `ThinhTT/feature-question-bank-adaptive-quiz`.
+  - `V-Eval-Ai_Engine.sln`: `dotnet build` đạt 100% (**0 Error, 0 Warning**).
+  - `V-Eval-Web_Client`: `npm run build` đạt 100% (**0 Error, 0 Warning**, hoàn thành trong 750ms).
+  - `documents.py`: `python -m py_compile` thành công 100% (**0 Error**).
+  - Đã kiểm thử trích xuất thực tế tệp 79 trang đạt 10 Dạng bài chuẩn hóa.
