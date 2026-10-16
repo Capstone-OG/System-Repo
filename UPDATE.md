@@ -1,27 +1,18 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [15/10/2026] - Kiến Trúc Soạn Thảo Đa Chế Độ: Soạn Thảo Trực Quan (Text In Preview Chuẩn Học Sinh) Song Hành Mã Nguồn LaTeX Thuần (Nhập Nhanh Từ AI), Chèn Ký Hiệu Tại Con Trỏ & Bóc Tách Khổ Lớn 79+ Trang
+## [16/10/2026] - Nâng Cấp Cây Tri Thức Đa Tầng 16 Dạng Bài, Làm Sâu Sắc Lý Thuyết Khối 1, Ngân Hàng 4-5 Câu Vận Dụng (L3/L4) Mỗi Dạng Bài & Bộ Lọc Bloom Panoramic Workspace
 
-- **Kiến Trúc Soạn Thảo Đa Chế Độ Trực Quan & Mã Nguồn LaTeX Song Hành (`CurriculumStudioEditor.jsx` - Web Client)**:
-  - *Đáp Ứng Đúng Bản Chất Soạn Thảo Sư Phạm (Text In Preview)*:
-    - Loại bỏ hoàn toàn giải pháp phân rã 4 ô form cứng nhắc (Định nghĩa, Công thức, Quy tắc, Hình ảnh) gây cắt vụn luồng tư duy sư phạm của giáo viên.
-    - Chế độ **Soạn Thảo Trực Quan (Text In Preview - Chuẩn Học Sinh)**: Khung soạn thảo văn bản tự nhiên kết hợp trực tiếp với **Khung Hiển Thị Trực Quan (Text In Preview - Giao Diện Học Sinh Thấy)** hiển thị song hành thời gian thực bằng `<MathText />`, render công thức toán học KaTeX thật (phân số, căn thức, giới hạn, đồ thị hình ảnh), không hiển thị text LaTeX thô.
-    - Chế độ **Mã Nguồn LaTeX Thuần (Nhập Nhanh Từ AI)**: Khung soạn thảo monospace nền tối chuyên dụng cho việc dán nhanh 1-chạm kết quả trích xuất từ Gemini / ChatGPT / AI Engine.
-  - *Cơ Chế Chèn Ký Hiệu KaTeX STEM Chuẩn Xác Tại Vị Trí Con Trỏ (Cursor-Precision Insertion Engine)*:
-    - Sử dụng `textareaRefs` theo dõi chính xác vị trí con trỏ chuột (`selectionStart` / `selectionEnd`) trên từng textarea đang active.
-    - Click vào bất kỳ ký hiệu nào trên Bảng KaTeX STEM 10 danh mục (120+ công thức toán học) sẽ tự động chèn đúng vị trí con trỏ và khôi phục focus tức thời.
-- **Khắc Phục Triệt Để Ký Tự Thoát `\n` Bị Hiển Thị Thô Dạng Text (`MathText.jsx` - Web Client)**:
-  - *Negative Lookahead Chính Xác*: Thay thế bằng danh sách bảo vệ đúng 15 lệnh LaTeX thực tế bắt đầu bằng `\n` (`` `\neq` ``, `` `\notin` ``, `` `\nabla` ``, `` `\nu` ``...). Giải phóng 100% các từ tiếng Việt và ngắt dòng thực tế (`` `\nTrong` ``, `` `\nKiểm` ``, `` `\nBước` ``).
-  - *Đồng Bộ Textarea Biên Soạn*: Xuất hàm `unescapeLiteralNewlines` giải phóng `\n` thành Enter xuống dòng thực tế khi nạp lý thuyết và phương pháp giải vào khung soạn thảo Studio.
-- **Tự Động Bọc KaTeX Cho Ion Đa Nguyên Tử & Hợp Chất Hóa Học**:
-  - Tự động nhận diện và bọc KaTeX cho ion đơn/đa nguyên tử có điện tích: `` `H^+` ``, `` `OH^-` ``, `` `SO_4^{2-}` ``, `` `NO_3^-` ``, `` `Fe^{3+}` ``, `` `Na^+` ``, `` `Cl^-` ``.
-  - Tự động nhận diện và bọc KaTeX cho các hợp chất có chỉ số dưới: `` `H_2O` ``, `` `H_2SO_4` ``, `` `HNO_3` ``, `` `CO_2` ``, `` `Fe_2O_3` ``, `` `KMnO_4` ``.
-- **Khắc Phục Lỗi Type Hint Mapping Tại `documents.py:293` (`V-Eval-Ai_Engine`)**:
-  - Khắc phục lỗi static type checking `Expected argument after ** to be a mapping, got: dict[str, Any] | tuple[Any, ...]` bằng cách ánh xạ minh thị từng thuộc tính đối tượng `DocumentVersionItem`.
-- **Nâng Cấp Động Cơ Bóc Tách Tài Liệu Khổ Lớn 70-100 Trang (`V-Eval-Ai_Engine`)**:
-  - Bảo toàn ngắt dòng `\n` cho tài liệu Word DOCX (`</w:p>`, `</w:tr>`), prompt chuyên sâu 5 bài học và 10 dạng bài, mở rộng `maxOutputTokens = 8192` và timeout 90 giây.
-- **Trạng Thái Kiểm Thử Vận Hành Toàn Hệ Thống**:
-  - `V-Eval-Ai_Engine.sln`: `dotnet build` đạt 100% (**0 Error, 0 Warning**).
-  - `V-Eval-Web_Client`: `npm run build` đạt 100% (**0 Error, 0 Warning**, hoàn thành trong 750ms).
-  - `documents.py`: `python -m py_compile` thành công 100% (**0 Error**).
-  - Đã kiểm thử trích xuất thực tế tệp 79 trang đạt 10 Dạng bài chuẩn hóa.
+- **Làm Sâu Sắc Lý Thuyết Nền Tảng Khối 1 (`CurriculumAiService.cs` - AI Engine)**:
+  - Tự động làm giàu Khối 1 với lý thuyết chuẩn SGK GDPT 2018 đa đoạn văn, 4 quy tắc vàng xác định số oxi hóa, bảng các trường hợp ngoại lệ đặc biệt ($H_2O_2$, $KO_2$, $OF_2$, $NaH$, hợp chất hữu cơ), lưu ý thi cử ĐGNL và ví dụ minh họa SGK có lời giải KaTeX chi tiết.
+- **Mở Rộng Cây Tri Thức 16 Dạng Bài & 5 Bài Học Chi Tiết (`GenerateHeuristicCurriculum`)**:
+  - Mở rộng toàn diện cấu trúc chương học lên 16 dạng bài chuyên sâu trải dài 5 bài học (Hóa học) và 11 dạng bài qua 4 bài học (Toán học), bao phủ từ xác định số oxi hóa, cân bằng ion-electron, bảo toàn electron nâng cao đến bài toán thực tế điện hóa và ăn mòn kim loại.
+- **Ngân Hàng Câu Hỏi Sư Phạm 14 Câu/Dạng Bài (224 Câu) Với 5 Câu L3 & 5 Câu L4 (`EnrichPatternPedagogyAndQuestions`)**:
+  - Thiết lập chuẩn tối thiểu 14 câu hỏi trắc nghiệm/dạng bài: 2 câu L1 (Nhận biết), 2 câu L2 (Thông hiểu), 5 câu L3 (Vận dụng) và 5 câu L4 (Vận dụng cao), đáp ứng triệt để yêu cầu ngân hàng câu hỏi vận dụng chuyên sâu của giáo viên.
+  - Tự động sinh đầy đủ đề bài KaTeX, 4 phương án A-B-C-D, đáp án đúng và lời giải chi tiết KaTeX từng bước cho toàn bộ 16 dạng bài (tổng 224 câu hỏi).
+- **Bộ Lọc Phân Cấp Bloom & Duyệt Câu Hỏi Thông Minh (`CurriculumExplorerView.jsx` - Web Client)**:
+  - Tích hợp thanh tab lọc Bloom trực quan trên Khối 4: `[Tất cả (14)]`, `[L1: Nhận biết (2)]`, `[L2: Thông hiểu (2)]`, `[L3: Vận dụng (5 câu)]`, `[L4: Vận dụng cao (5 câu)]`.
+  - Hiển thị huy hiệu mật độ câu hỏi ở Pane 1: `(L1: 2 • L2: 2 • L3: 5 • L4: 5)` và `Chuẩn ĐGNL: L3 (5 câu) • L4 (5 câu)`.
+- **Kiểm Thử Vận Hành & Biên Dịch Hệ Thống**:
+  - `V-Eval-Ai_Engine`: Biên dịch .NET 9 thành công 100% (**0 Error, 2 Warning**), service đang chạy ngầm trên cổng HTTP `5104`.
+  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn thành trong 732ms).
+  - Kiểm thử `python test_ai_extract.py`: Trích xuất thành công 16 dạng bài với **224 câu hỏi mẫu**, mỗi dạng bài chứa đúng 2 L1, 2 L2, 5 L3 và 5 L4 câu hỏi.
