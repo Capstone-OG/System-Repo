@@ -1,18 +1,19 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [17/10/2026] - Hợp Nhất Nhánh Develop: GraphRAG Tri Thức Liên Môn & Giai Đoạn 2 Core Flow 4 Frontend
+## [18/10/2026] - Hoàn Tất Giai Đoạn 1 Core Flow 5: Thực Thể CSDL & Cấu Hình Fluent API Practice Service
 
-- **Hợp Nhất Tài Liệu Kiến Trúc GraphRAG Liên Môn (System-Repo)**:
-  - Tiếp nhận tài liệu `docs/ai_architecture/thiet_ke_graph_rag_tri_thuc_lien_mon.md`: Thiết kế liên kết tri thức liên môn (Cross-Disciplinary Knowledge Graph) giải quyết bài toán thi ĐGNL ĐHQG-HCM, mô hình `[APPLIES_MODEL]` nối giữa Toán, Lý, Hóa, Sinh và Logic.
-  - Đồng bộ cập nhật tiến độ hoàn tất bộ APIs 16 - 19 Quản trị ngân hàng câu hỏi & Sinh đề Quiz từ Content Service.
-- **Hoàn Tất Giai Đoạn 2 Core Flow 4 Trên Web Client (`V-Eval-Web_Client`)**:
-  - `src/components/modals/AdaptiveQuizModal.jsx`: Tích hợp nút hành động sư phạm **"💡 Chưa hiểu bản chất câu này? Hỏi Gia sư Socratic bẻ khóa tư duy"** khi học sinh làm sai; bổ sung thanh cảnh báo suy ngẫm sau 45 giây (**Contemplation Nudge**) khi học sinh dừng lại lâu ở câu hỏi khó; chuẩn hóa mã định danh GUID (`a1b2c3d4-0001-...`); tích hợp KaTeX `MathText` cho đề bài và phương án; tự động đóng gói toàn bộ bối cảnh (`questionId`, `question`, `options`, `skill`, `selectedWrong`, `correctOption`, `difficultyB`, `predictedProb`) chuyển tiếp đến `AISocraticTutorModal`.
-  - `src/services/practiceService.js`: Xây dựng bộ lọc chuẩn hóa DTO `ensureGuid`, `cleanOptionKey` và `normalizeOptions` đảm bảo 100% tương thích với schema ASP.NET Core `AskTutorRequest`; bổ sung callback `onInteractionId` bắt GUID phiên tương tác từ luồng SSE stream.
-  - `src/components/modals/AISocraticTutorModal.jsx`: Nâng cấp xử lý `initialContext`, hiển thị thanh thông tin ngữ cảnh nổi bật (*Target Context Banner*); khởi tạo lời dẫn cá nhân hóa theo bẫy sai lầm của bài tập; chuyển tiếp `questionLatex`, `options`, `correctOption` khi học sinh tương tác; liên kết `interactionId` động phục vụ cắm cờ báo cáo vi phạm.
-  - `src/components/diagnostic/DiagnosticAssessmentPage.jsx`: Chuyển đổi phương thức `handleAskSocraticTutor` sang gọi trực tiếp `practiceService.askAiTutorStream` qua Gateway `:5212`, truyền mã câu hỏi, công thức KaTeX và phương án chọn sai; bắt mã lỗi `429 Too Many Requests`.
-  - `src/App.jsx`: Điều phối state `tutorContext` và hàm `handleOpenAiTutor(context)`, kết nối dữ liệu mượt mà giữa bài thi thích ứng và khung chat Socratic.
-  - Kiểm thử đóng gói: Chạy `npm run build` (`vite build`) thành công 100% (**0 Error, 0 Warning**), lint sạch 100%.
-- **Tài Liệu Kỹ Thuật Hệ Thống & Bản Thiết Kế Kiến Trúc Core Flow 5**:
-  - Ban hành tài liệu `./docs/ke_hoach_trien_khai_core_flow_5_analytics_heatmap.md`: Bản kế hoạch kỹ thuật, công thức khảo thí và đặc tả triển khai chi tiết cho **Core Flow 5: Phân tích tiến độ & Bản đồ nhiệt lớp học (Learning Analytics & Class Heatmap)**.
-  - Tinh chỉnh 7 điểm nghiệp vụ & kỹ thuật then chốt ([MODIFIED 01 - 07]): Ngưỡng cảnh báo đỏ 3 cấp độ (khi có >= 40% học sinh yếu hoặc trung bình lớp < 0.50), phát hiện phân hóa cực đoan (Bimodal Distribution), mở rộng Actor Trưởng cơ sở (Campus Director), chuẩn hóa công thức Exam Readiness Index, chuẩn hóa tiêu chí Streak, khép kín hành động sư phạm 1-Click tạo Live Q&A, kiến trúc Hybrid Aggregation (Write-Through + 15m Background Worker), và Onboarding Ghost UI cho học sinh mới.
-  - Cập nhật đồng bộ bộ 3 tài liệu chuẩn `docs/daily.md`, `docs/process.md` và `docs/architecture_acceptance.md` của các phân hệ liên quan.
+- **Triển Khai 4 Thực Thể CSDL Mới Cho Core Flow 5 (`V-Eval-Practice_Service`)**:
+  - `ClassSkillHeatmap`: Lưu trữ từng ô ma trận nhiệt $P(L_t)$ cho học sinh và kỹ năng.
+  - `ClassHeatmapSummary`: Tổng hợp thống kê cột kỹ năng toàn lớp (Mean, StdDev, StrugglingRate, Bimodal Flag, AlertStatus).
+  - `StudentDailyActivity`: Ghi nhận chuyên cần và thời gian học tập hằng ngày theo chuẩn Active Study Day (Streak & Streak Freeze).
+  - `StudentReadinessMetric`: Chỉ số sẵn sàng thi tổng hợp $R_{\text{exam}}$ cho Cổng Phụ huynh & Học sinh.
+- **Cấu Hình Tầng Dữ Liệu & Hạ Tầng (`PracticeDbContext.cs`)**:
+  - Đăng ký 4 `DbSet` trong schema `v_eval_practice`.
+  - Cấu hình Fluent API: Khóa chính, ràng buộc unique index (`uq_class_student_skill`, `uq_class_skill_summary`, `uq_student_activity_date`, `idx_readiness_student_id`) và quan hệ cascade delete với bảng `Classes`.
+- **Tự Động Hóa DDL Khởi Tạo Database (`Program.cs` & `docs/SQL`)**:
+  - Tích hợp câu lệnh `CREATE TABLE IF NOT EXISTS` và chỉ mục tự động khởi tạo khi service khởi động trong `Program.cs`.
+  - Tạo script DDL độc lập `./docs/SQL/SQL_Migration_Flow5_Analytics.sql`.
+- **Kiểm Thử & Biên Dịch**:
+  - Biên dịch `dotnet build` toàn bộ solution `V-Eval-Practice_Service.sln` thành công 100% (**0 Warning, 0 Error**).
+- **Tài Liệu Kỹ Thuật Hệ Thống**:
+  - Cập nhật đồng bộ bộ 3 tài liệu chuẩn `docs/daily.md`, `docs/process.md` và `docs/architecture_acceptance.md` của `V-Eval-Practice_Service`.
