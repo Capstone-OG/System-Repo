@@ -12,5 +12,7 @@
   - `src/components/diagnostic/DiagnosticAssessmentPage.jsx`: Chuyển đổi phương thức `handleAskSocraticTutor` sang gọi trực tiếp `practiceService.askAiTutorStream` qua Gateway `:5212`, truyền mã câu hỏi, công thức KaTeX và phương án chọn sai; bắt mã lỗi `429 Too Many Requests`.
   - `src/App.jsx`: Điều phối state `tutorContext` và hàm `handleOpenAiTutor(context)`, kết nối dữ liệu mượt mà giữa bài thi thích ứng và khung chat Socratic.
   - Kiểm thử đóng gói: Chạy `npm run build` (`vite build`) thành công 100% (**0 Error, 0 Warning**), lint sạch 100%.
-- **Tài Liệu Kỹ Thuật Hệ Thống**:
-  - Cập nhật đồng bộ bộ 3 tài liệu chuẩn `docs/daily.md`, `docs/process.md` và `docs/architecture_acceptance.md` của `V-Eval-Web_Client`.
+- **Tài Liệu Kỹ Thuật Hệ Thống & Bản Thiết Kế Kiến Trúc Core Flow 5**:
+  - Ban hành tài liệu `./docs/ke_hoach_trien_khai_core_flow_5_analytics_heatmap.md`: Bản kế hoạch kỹ thuật, công thức khảo thí và đặc tả triển khai chi tiết cho **Core Flow 5: Phân tích tiến độ & Bản đồ nhiệt lớp học (Learning Analytics & Class Heatmap)**.
+  - Tinh chỉnh 7 điểm nghiệp vụ & kỹ thuật then chốt ([MODIFIED 01 - 07]): Ngưỡng cảnh báo đỏ 3 cấp độ (khi có >= 40% học sinh yếu hoặc trung bình lớp < 0.50), phát hiện phân hóa cực đoan (Bimodal Distribution), mở rộng Actor Trưởng cơ sở (Campus Director), chuẩn hóa công thức Exam Readiness Index, chuẩn hóa tiêu chí Streak, khép kín hành động sư phạm 1-Click tạo Live Q&A, kiến trúc Hybrid Aggregation (Write-Through + 15m Background Worker), và Onboarding Ghost UI cho học sinh mới.
+  - Cập nhật đồng bộ bộ 3 tài liệu chuẩn `docs/daily.md`, `docs/process.md` và `docs/architecture_acceptance.md` của các phân hệ liên quan.
