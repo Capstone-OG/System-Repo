@@ -1,7 +1,10 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [14/10/2026] - Hoàn Tất Giai Đoạn 2 Core Flow 4 Trên Frontend: Tích Hợp Ngữ Cảnh Bài Tập Socratic (ZPD & Diagnostic)
+## [17/10/2026] - Hợp Nhất Nhánh Develop: GraphRAG Tri Thức Liên Môn & Giai Đoạn 2 Core Flow 4 Frontend
 
+- **Hợp Nhất Tài Liệu Kiến Trúc GraphRAG Liên Môn (System-Repo)**:
+  - Tiếp nhận tài liệu `docs/ai_architecture/thiet_ke_graph_rag_tri_thuc_lien_mon.md`: Thiết kế liên kết tri thức liên môn (Cross-Disciplinary Knowledge Graph) giải quyết bài toán thi ĐGNL ĐHQG-HCM, mô hình `[APPLIES_MODEL]` nối giữa Toán, Lý, Hóa, Sinh và Logic.
+  - Đồng bộ cập nhật tiến độ hoàn tất bộ APIs 16 - 19 Quản trị ngân hàng câu hỏi & Sinh đề Quiz từ Content Service.
 - **Hoàn Tất Giai Đoạn 2 Core Flow 4 Trên Web Client (`V-Eval-Web_Client`)**:
   - `src/components/modals/AdaptiveQuizModal.jsx`: Tích hợp nút hành động sư phạm **"💡 Chưa hiểu bản chất câu này? Hỏi Gia sư Socratic bẻ khóa tư duy"** khi học sinh làm sai; bổ sung thanh cảnh báo suy ngẫm sau 45 giây (**Contemplation Nudge**) khi học sinh dừng lại lâu ở câu hỏi khó; chuẩn hóa mã định danh GUID (`a1b2c3d4-0001-...`); tích hợp KaTeX `MathText` cho đề bài và phương án; tự động đóng gói toàn bộ bối cảnh (`questionId`, `question`, `options`, `skill`, `selectedWrong`, `correctOption`, `difficultyB`, `predictedProb`) chuyển tiếp đến `AISocraticTutorModal`.
   - `src/services/practiceService.js`: Xây dựng bộ lọc chuẩn hóa DTO `ensureGuid`, `cleanOptionKey` và `normalizeOptions` đảm bảo 100% tương thích với schema ASP.NET Core `AskTutorRequest`; bổ sung callback `onInteractionId` bắt GUID phiên tương tác từ luồng SSE stream.
