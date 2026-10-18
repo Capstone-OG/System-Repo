@@ -1,31 +1,29 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [19/10/2026] - Trình Soạn Thảo Ký Hiệu Trực Quan WYSIWYG Như Microsoft Word Equation: Studio Toàn Màn Hình Thay Thế Sidebar App, Thẻ Nổi Rê Chuột 2 Giây KaTeX & Thanh Tra Công Thức Siêu Linh Hoạt 4 Tab
+## [19/10/2026] - Chuẩn Hóa Toàn Diện Studio Soạn Thảo Sư Phạm WYSIWYG: Chèn Công Thức Tại Vị Trí Con Trỏ, Giao Diện Trắng Sáng Thanh Lịch, Cây Thư Mục Accordion Hợp Chất & Ký Hiệu Đồ Sộ, Nhấp Khoảng Trống Nhảy Cuối Dòng & Xóa Sổ Lỗi Ký Tự
 
-- **Web Client (`V-Eval-Web_Client`) - Trình Soạn Thảo Sư Phạm Độc Lập Kiểu Microsoft Word Equation**:
-  - *Studio Toàn Màn Hình Độc Lập (Dedicated Standalone Fullscreen Mode)*:
-    + Giải phóng toàn bộ diện tích làm việc khỏi khung con `max-w-7xl` trong `CurriculumExplorerView.jsx`, hiển thị dạng full-screen workspace (`fixed inset-0 z-50 w-screen h-screen bg-slate-950 overflow-hidden`), ẩn hoàn toàn layout ngoài của app.
-    + Đưa `HierarchicalMathPalette.jsx` lên làm Left Sidebar chính của toàn bộ Studio, thay thế trực tiếp vị trí của sidebar app cũ.
-    + Tích hợp nút thu gọn/mở rộng: Thu hẹp thành thanh icon rail siêu mỏng 44px (`w-11`), mở rộng (`w-64`/`w-72`) chỉ với 1 click, giúp canvas soạn thảo chiếm trọn vẹn 100% chiều ngang màn hình.
-    + Bổ sung thanh điều hướng đỉnh trang (Studio Navbar h-14) với nút `← Quay lại Lộ trình`, breadcrumb bài học, nút chuyển 3 chế độ xem, nút AI nhận diện và nút lưu PostgreSQL.
-  - *Thẻ Nổi KaTeX Rê Chuột 2 Giây (2-Second Hover Preview Card)*:
-    + Tích hợp bộ đếm thời gian trễ chính xác 2000ms (`hoverTimerRef`) khi rê chuột vào bất kỳ ký hiệu nào trong sidebar.
-    + Hiển thị thẻ nổi preview phong phú (Rich Floating Hover Card): Công thức KaTeX cỡ lớn, tên danh mục, mô tả công năng chi tiết chuẩn SGK GDPT 2018, cú pháp LaTeX thô và chỉ dẫn chèn 1-click.
-  - *Thanh Tra Công Thức Siêu Linh Hoạt Phân Cấp 4 Tab (Hierarchical Quick Formula Inspector)*:
-    + Popup thanh tra công thức nổi mở ra với 4 tab phân cấp: `📐 Cấu trúc`, `🧪 Hóa học`, `🔣 Ký hiệu`, `🧱 Ngoặc & Logic` cho phép chèn tức thì 45+ ký tự toán/hóa.
-    + Bổ sung dòng nhập và sửa mã LaTeX trực tiếp (`input`) đồng bộ 0ms với Live KaTeX preview, song hành cùng các ô visual slot (tử số, mẫu số, số mũ...).
-  - *Khắc Phục Triệt Để Hiện Tượng Nhảy Dòng & Tiết Diện Công Thức Quá Lớn*:
-    + Xóa bỏ `flex-wrap`, chuyển sang dòng văn bản tự nhiên theo đoạn (`tokenizeLine`, `parseDocumentLines`, `serializeDocumentLines`), đảm bảo dấu chấm `.` và dấu phẩy `,` bám sát từ ngữ trên cùng dòng, không bao giờ bị rơi rớt xuống dòng độc lập.
-    + Tiết diện công thức siêu gọn `text-[13.5px]`, padding `px-0.5 py-0 mx-0.5`, hairline dashed underline khi nghỉ.
-    + Hỗ trợ phím Enter tách dòng tự nhiên như Microsoft Word.
+- **Web Client (`V-Eval-Web_Client`) - Nâng Cấp Studio Soạn Thảo Sư Phạm Trực Tiếp**:
+  - *Chèn Công Thức Ngay Tại Vị Trí Con Trỏ (Active Caret Precision Insertion)*:
+    + Nâng cấp `WordStyleFormulaCanvas` bằng `forwardRef` và `useImperativeHandle` xuất bản hàm `insertSnippet`.
+    + Bắt chính xác vị trí con trỏ văn bản (`activePositionRef`) khi người dùng gõ hoặc click. Khi chọn ký hiệu từ sidebar, hệ thống chia tách text token tại `caretOffset`, chèn công thức ngay vị trí con trỏ thay vì nối vào cuối văn bản (`. a/b a/b a/b`).
+    + Kết nối `theoryCanvasRef` và `methodCanvasRef` trong `CurriculumStudioEditor.jsx` điều hướng chính xác vào khối đang chỉnh sửa.
+  - *Giao Diện Trắng Sáng Thanh Lịch (Clean White Tone Reversion)*:
+    + Chuyển toàn bộ khung thanh công cụ ký hiệu (`HierarchicalMathPalette.jsx`) từ dark theme `bg-slate-900` về giao diện màu trắng sáng hiện đại `bg-white border-r border-slate-200 text-slate-800 shadow-sm`.
+    + Bổ sung thanh tìm kiếm nhanh tức thì `🔍 Tìm nhanh H2SO4, NaOH, √x, a/b, sin...` tìm kiếm trên toàn bộ hàng trăm công thức trong thời gian thực.
+  - *Cây Thư Mục Accordion Toggle & Kho Tàng Ký Hiệu, Hợp Chất Đồ Sộ*:
+    + Tổ chức danh mục ký hiệu theo các folder Accordion Toggle mở/đóng mượt mà (`ChevronDown` / `ChevronRight`) với badge số lượng phần tử.
+    + Nhãn nút tối giản, gọn nhẹ sắp xếp lưới 2 cột, hỗ trợ hàng trăm công thức toán học, hợp chất hóa học (Axit, Bazơ, Muối, Oxit, Hữu cơ, Ion, Số oxi hóa), vật lý và ký hiệu logic.
+    + Thẻ nổi 2 giây (Hover Card) nền trắng mờ viền cyan sắc nét, hiển thị KaTeX cỡ lớn, giải thích chuẩn SGK GDPT 2018 và mã LaTeX.
+  - *Tự Động Nhảy Con Trỏ Về Cuối Dòng Khi Nhấp Khoảng Trống (Whitespace Click Focus)*:
+    + Xử lý sự kiện nhấp chuột trên khoảng đệm trống của từng dòng (`handleLineRowClick`), tự động focus vào span text cuối dòng và collapse con trỏ về đuôi chữ như Microsoft Word.
+  - *Loại Bỏ Nút "+ Thêm dòng mới" Dư Thừa & Xóa Sổ Ký Tự `\` Cuối Dòng*:
+    + Sử dụng phím `Enter` để tách dòng tự nhiên, loại bỏ nút bấm dư thừa dưới chân canvas.
+    + Làm sạch triệt để các dấu gạch chéo ngược thừa `\` hoặc `/` ở cuối câu (`sanitizeLineText`).
+  - *Khắc Phục Lỗi Hiển Thị Emoji `📝`*:
+    + Thay thế toàn diện emoji `📝` bằng các icon vector Lucide chuẩn (`FileEdit`, `FileText`, `BookOpen`, `AlertTriangle`, `Sparkles`), khắc phục triệt để lỗi tofu/ô vuông trên Windows.
 
-- **AI Engine (`V-Eval-Ai_Engine`) - Khắc Phục Lỗi Dấu Phẩy Sau Tên Thuộc Tính JSON Gemini & Fallback Regex Zero-Crash**:
-  - *Khắc Phục Lỗi Dị Dạng JSON Từ Gemini AI (`CurriculumAiService.cs`)*:
-    + Bổ sung bộ lọc regex phát hiện và thay thế dấu phẩy nằm ngay sau tên thuộc tính: `Regex.Replace(cleaned, @"(""[a-zA-Z0-9_]+"")\s*,\s*(?=""|\[|\{|-?[0-9]|true|false)", "$1: ")`.
-    + Loại bỏ các dấu phẩy trailing thừa trước dấu đóng ngoặc nhọn `}` hoặc ngoặc vuông `]`: `Regex.Replace(cleaned, @",\s*([}\]])", "$1")`.
-  - *Cơ Chế Bóc Tách Câu Hỏi Dự Phòng Tầng Hai (`ExtractQuestionsViaRegex`)*:
-    + Bọc an toàn khối giải mã JSON `JsonNode.Parse` và fallback sang regex bóc tách trực tiếp các trường dữ liệu khi JSON bị cụt/dị dạng, luôn đảm bảo HTTP 200 OK.
+- **AI Engine (`V-Eval-Ai_Engine`) - Chuẩn Hóa Tiêu Đề Bài Mẫu Sư Phạm**:
+  - Chuẩn hóa tiền tố bài toán mẫu trong `CurriculumAiService.cs` từ `### 📝` sang `### 📄` tương thích hoàn hảo với bộ giải mã Markdown / KaTeX trên Web Client.
 
 - **Kiểm Thử Toàn Diện Hệ Thống**:
-  - `V-Eval-Ai_Engine.Infrastructure` & `V-Eval-Ai_Engine.API`: Biên dịch C# .NET 9 Clean Architecture thành công 100% (**0 Error, 0 Warning**).
-  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn tất trong 777ms trên Vite 8 và React 19).
+  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn tất trong 773ms trên Vite 8 và React 19).
