@@ -1,37 +1,14 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [12/10/2026] - Hoàn Tất Toàn Diện Core Flow 3 (Module 3): CSDL Giám Sát & Trọn Bộ 6 APIs Thi Thử Mô Phỏng Chuẩn Hóa
+## [18/10/2026] - Khởi Tạo Nhánh Core Flow 6, CSDL Chuẩn Hóa Schema V3 & Bản Đặc Tả ERD Mức Khái Niệm (46 Entities)
 
-- **Mở Rộng Mô Hình CSDL & Thực Thể Giám Sát Liêm Chính Học Thuật**:
-  - Mở rộng thực thể [`ExamSubmission.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/ExamSubmission.cs): Tái sử dụng bảng `ExamSubmissions` (`ExamType = "MOCK_EXAM"`), bổ sung 4 trường giám sát liêm chính: `TabDepartureCount`, `IntegrityStatus`, `MentorVerdict`, `MentorNotes` và navigation collection `ProctoringSnapshots`.
-  - Tạo thực thể [`ProctoringSnapshot.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/ProctoringSnapshot.cs): Lưu trữ ảnh chụp định kỳ từ webcam phục vụ hậu kiểm danh tính người thi.
-  - Cấu hình Fluent API trong [`PracticeDbContext.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/PracticeDbContext.cs) và cập nhật DDL bootstrapping tự động trong [`Program.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Program.cs).
-  - Triển khai repository [`IMockExamRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/IMockExamRepository.cs) và [`MockExamRepository.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/MockExamRepository.cs).
-- **Hiện Thực API 1: Khởi Tạo Phiên Thi Thử Chuẩn Hóa 120 Câu (StartMockExam)**:
-  - Khởi tạo chuỗi CQRS: [`StartMockExamDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/StartMockExamDtos.cs), `StartMockExamCommand.cs`, `StartMockExamCommandValidator.cs` và [`StartMockExamCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/StartMockExam/StartMockExamCommandHandler.cs).
-  - Tích hợp Content Service qua gRPC lấy 120 câu hỏi bảo mật (ẩn đáp án đúng), kích hoạt đồng hồ đếm ngược 150 phút (9000 giây) và thiết lập cơ chế khôi phục phiên thi đang dang dở.
-  - Endpoint: `POST /api/practice/mock-exams/{examId}/start`.
-- **Hiện Thực API 2: Ghi Nhận Rời Tab & Cắm Cờ Gian Lận (LogTabDeparture - BR-20)**:
-  - Khởi tạo chuỗi CQRS: [`LogTabDepartureDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/LogTabDepartureDtos.cs), `LogTabDepartureCommand.cs`, `LogTabDepartureCommandValidator.cs` và [`LogTabDepartureCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/LogTabDeparture/LogTabDepartureCommandHandler.cs).
-  - Nghiệp vụ: Đếm số lần rời tab/màn hình (`TabDepartureCount += 1`). Khi số lần vi phạm vượt quá 3 lần (`> 3`), hệ thống tự động cắm cờ `IntegrityStatus = "FLAGGED_FOR_REVIEW"` để Mentor thẩm định.
-  - Endpoint: `POST /api/practice/mock-exams/{submissionId}/log-tab-departure`.
-- **Hiện Thực API 3: Lưu Ảnh Chụp Webcam Giám Sát Ngẫu Nhiên (UploadSnapshot)**:
-  - Khởi tạo chuỗi CQRS: [`UploadSnapshotDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/UploadSnapshotDtos.cs), `UploadSnapshotCommand.cs`, `UploadSnapshotCommandValidator.cs` và [`UploadSnapshotCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/UploadSnapshot/UploadSnapshotCommandHandler.cs).
-  - Nghiệp vụ: Lưu trữ URL ảnh chụp webcam định kỳ, mốc thời gian UTC và kết quả nhận diện khuôn mặt (`FaceDetected`) vào bảng `ProctoringSnapshots`.
-  - Endpoint: `POST /api/practice/mock-exams/{submissionId}/upload-snapshot`.
-- **Hiện Thực API 4: Nộp Bài Thi Thử, Chấm Điểm & Phân Luồng Giám Sát Liêm Chính (SubmitMockExam)**:
-  - Khởi tạo chuỗi CQRS: [`SubmitMockExamDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/SubmitMockExamDtos.cs), `SubmitMockExamCommand.cs`, `SubmitMockExamCommandValidator.cs` và [`SubmitMockExamCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/SubmitMockExam/SubmitMockExamCommandHandler.cs).
-  - Nghiệp vụ: Chấm điểm bài thi 120 câu theo thang điểm chuẩn hóa ĐGNL 1200 điểm, lưu vết từng câu vào `SubmissionAnswers`.
-  - Phân luồng liêm chính: Nếu vi phạm rời màn hình (`FLAGGED_FOR_REVIEW` hoặc `TabDepartureCount > 3`), chuyển sang `UNDER_REVIEW` và `MentorVerdict = "PENDING"` chờ Mentor duyệt.
-  - Khép kín vòng lặp sư phạm: Tự động nạp toàn bộ các câu trả lời sai vào Sổ tay lỗi sai cá nhân (`MistakeNotebook`) phục vụ chu kỳ lặp lại ngắt quãng SM-2, đồng thời cập nhật năng lực thành phần vào `LearningProfiles` phục vụ phân nhóm bàn học vi mô (Micro-groups 3-5 bạn) tuần tới.
-  - Endpoint: `POST /api/practice/mock-exams/{submissionId}/submit`.
-- **Hiện Thực API 5: Xem Chi Tiết Bài Thi & Dấu Vết Giám Sát Thị Giác (GetMockExamDetail)**:
-  - Khởi tạo chuỗi CQRS: [`GetMockExamDetailDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/GetMockExamDetailDtos.cs), `GetMockExamDetailQuery.cs`, `GetMockExamDetailQueryValidator.cs` và [`GetMockExamDetailQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Queries/GetMockExamDetail/GetMockExamDetailQueryHandler.cs).
-  - Nghiệp vụ: Truy xuất toàn diện thông tin bài thi, điểm số, câu trả lời, trạng thái liêm chính học thuật và chuỗi bằng chứng ảnh chụp webcam (Visual Audit Trail) sắp xếp theo thời gian kèm cờ nhận diện khuôn mặt (`FaceDetected`).
-  - Endpoint: `GET /api/practice/mock-exams/{submissionId}`.
-- **Hiện Thực API 6: Mentor Thẩm Định & Phê Duyệt Kết Quả Thi Thử (MentorReview)**:
-  - Khởi tạo chuỗi CQRS: [`MentorReviewDtos.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/DTOs/MentorReviewDtos.cs), `MentorReviewCommand.cs`, `MentorReviewCommandValidator.cs` và [`MentorReviewCommandHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/MentorReview/MentorReviewCommandHandler.cs).
-  - Nghiệp vụ: Mentor thẩm duyệt bài thi có dấu hiệu gian lận (`UNDER_REVIEW`). Nếu `APPROVED`, phục hồi `Status = "COMPLETED"`, `IntegrityStatus = "NORMAL"` và công nhận điểm số; nếu `DISQUALIFIED`, đưa `Status = "DISQUALIFIED"`, hủy điểm số về 0 và lưu ghi chú giải trình lý do.
-  - Endpoint: `PATCH /api/practice/mock-exams/{submissionId}/mentor-review`.
-- **Kiểm Thử & Biên Dịch**:
-  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
+- **Khởi Tạo CSDL Hợp Nhất Schema V3 (`docs/SQL/V_EVAL_SCHEMA_V3.sql`)**:
+  - Tích hợp 100% các thực thể đã triển khai từ cả 3 service cốt lõi (`Identity_Service`, `Content_Service`, `Practice_Service`) cùng phân hệ `Ai_Engine` (RAG pgvector).
+  - Tinh gọn lược bỏ các thực thể Live trực tuyến (`LiveSessions`, `LiveSessionAttendance`) do chuyển dịch sang mô hình đào tạo trực tiếp tại lớp. Giữ nguyên trạng 100% file gốc `docs/SQL/SQL.sql`.
+  - Bổ sung các thực thể vận hành thực tế: `RefreshTokens`, `OtpVerifications`, `SkillPrerequisites` (Đồ thị DAG tiên quyết), `ClassGroups` & `ClassGroupMembers` (Nhóm vi mô 3–5 học sinh), `StageProgress` (P-L-A-R), `AdaptiveQuizAttempts` (BKT & IRT ZPD), `MistakeNotebooks` (SM-2 Spaced Repetition), `ProctoringSnapshots` (Webcam giám sát thi cử).
+  - Bổ sung đầy đủ thực thể Core Flow 6: `ScorePredictions` (dải điểm SEM, thâm hụt điểm, Toa thuốc bù điểm Knapsack ROI trong `prescription_items` JSONB) và `SystemAlerts` (cảnh báo sớm 3 cấp BR-04, phân quyền Mentor can thiệp sư phạm `handled_by`).
+- **Nâng Cấp Bản Đặc Tả ERD Mức Khái Niệm Toàn Diện (`docs/SQL/Mo_Ta_Thiet_Ke_ERD_Concept.md`)**:
+  - Hệ thống hóa toàn diện **10 Miền Nghiệp Vụ (Bounded Contexts)** chứa trọn vẹn **46 Thực thể**.
+  - Xây dựng sơ đồ **Mermaid Conceptual ERD chi tiết** với từng khối thực thể chứa đầy đủ thuộc tính định danh (PK), khóa ngoại (FK) và các trường thông tin ngữ nghĩa (không còn hộp rỗng).
+  - Biên soạn **Từ điển thực thể khái niệm (Concept Entity Dictionary)** phân tích sâu sắc vai trò sư phạm và dữ liệu cho toàn bộ 46 thực thể.
+  - Cung cấp **Ma trận bản số quan hệ (Cardinality Matrix)** và bộ Prompt chuẩn cho các công cụ AI và phần mềm trực quan hóa ERD.
