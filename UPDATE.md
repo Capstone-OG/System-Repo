@@ -13,6 +13,7 @@
   - *Chuẩn Hóa Sư Phạm Đa Miền: Phân Biệt Rõ STEM vs Ngữ Văn / KHXH (`CurriculumStudioEditor.jsx` & `CurriculumExplorerView.jsx`)*:
     + Loại bỏ hoàn toàn nhãn `Mẹo Casio` cho môn Ngữ văn và KHXH; thay bằng Thẻ `💡 Mẹo tư duy & Chiến thuật làm bài (Ngữ văn)` với viền tím violet sư phạm, hướng dẫn chiến thuật đọc hiểu, cấu trúc đoạn văn, dẫn chứng và phân bổ thời gian.
     + Đối với môn STEM (Toán, Lý, Hóa, Sinh, Tin): Giữ nguyên Thẻ `💡 Kỹ thuật Casio & mẹo tư duy nhanh` với hướng dẫn phím bấm fx-580 / fx-880.
+    + **Khắc phục triệt để lỗi nút `+ AI Tạo Thêm 2 Bài Mẫu` sinh nhầm biến số `$X = 2,07$`**: Hàm `handleAddAiPracticeQuestions` được nâng cấp kiểm tra lĩnh vực `isStem`: với môn Ngữ văn/KHXH, tự động sinh 2 câu hỏi rèn luyện L3 & L4 chuẩn mực về lập ý, phân tích luận điểm, nghệ thuật dẫn chứng và đánh giá tư tưởng nhân văn, loại bỏ hoàn toàn các biến số $X$ và thuật ngữ đại số.
     + Cập nhật bộ parser `parseTheoryRecapSections` và `parseSolutionMethodSections` unescape ký tự `\n` thô và hỗ trợ cả icon `📄` lẫn tiêu đề Ngữ văn.
 - **AI Engine (`V-Eval-Ai_Engine`) - Domain-Aware Prompting Trong `CurriculumAiService.cs`**:
   - Bổ sung helper `IsStemDomain(string? domain)` phân biệt chính xác lĩnh vực STEM vs Khoa học xã hội / Ngữ văn.
