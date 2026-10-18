@@ -1,28 +1,24 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [17/10/2026] - Trình Soạn Thảo Ký Hiệu Trực Quan WYSIWYG (Ẩn Triệt Để Mã \frac), Bộ Công Cụ Hóa Học & Toán Học Thực Tế Chèn Số & Tự Tính Toán (Interactive Smart Science Calculator), Xóa Bỏ Text In Preview, Triệt Tiêu 100% Hardcode AI Engine, Trích Xuất Dữ Liệu Thật, Bộ Renderer Đồ Thị Oxy / Bảng Biến Thiên Nội Sinh & Desmos Calculator
+## [18/10/2026] - Khắc Phục Lỗi Render Markdown Đầu Dòng (Heading ###, Bold **, Italic ***), Chuẩn Hóa Sư Phạm Phân Định Rõ STEM vs Ngữ Văn / KHXH & Loại Bỏ Triệt Để Mẹo Casio Trong Ngữ Văn
 
-- **Web Client (`V-Eval-Web_Client`) - Trình Soạn Thảo Ký Hiệu Trực Quan WYSIWYG & Bộ Công Cụ Hóa Học / Toán Học Thực Tế**:
-  - *Ẩn Hoàn Toàn Mã Code Lệnh Thô `\frac` ("frag"), `\lim`, `\Delta`, `$`*:
-    + Chấm dứt hiện tượng lộ mã LaTeX thô trong khung soạn thảo; chuyển sang chế độ **Ký Hiệu Trực Quan WYSIWYG** mặc định: Các công thức toán/hóa hiển thị chuẩn ký hiệu sách giáo khoa (phân số có thanh kẻ ngang tử/mẫu, căn thức, tích phân, số gia, nồng độ mol).
-    + Nút chuyển đổi 1-chạm: `[Xem Ký Hiệu Thật (WYSIWYG)]` ⟷ `[Gõ Văn Bản Bàn Phím]`.
-  - *Bộ Công Cụ Hóa Học Thực Tế - Chèn Số & Tự Động Tính Toán (`InteractiveFormulaBuilderModal.jsx`)*:
-    + 🧪 Nồng độ mol dung dịch ($C_M = \frac{n}{V}$): Nhập $n$ (mol), $V$ (Lít) -> Tự động tính ra $C_M = n / V$ (M) và chèn cả chuỗi: $C_M = \frac{n}{V} = \frac{0.2}{0.5} = 0.4\text{ M}$.
-    + 💧 Nồng độ phần trăm ($C\% = \frac{m_{ct}}{m_{dd}} \times 100\%$): Nhập $m_{ct}, m_{dd}$ -> Tự động tính ra $C\%$.
-    + ⚖️ Khối lượng chất ($m = n \times M$): Nhập $n, M$ -> Tự động tính ra khối lượng $m$ (gam).
-    + ⚡ Hiệu suất phản ứng ($H = \frac{m_{tt}}{m_{lt}} \times 100\%$): Nhập $m_{tt}, m_{lt}$ -> Tự động tính ra $H\%$.
-  - *Bộ Tính Toán Phân Số & Đạo Hàm Số Gia SGK*:
-    + ➗ Phân số tính toán ($A/B$): Nhập số vào ô Tử và Mẫu -> Tự động rút gọn và tính ra kết quả (ví dụ: $\frac{12}{4} = 3$).
-    + 🎯 Đạo hàm bằng số gia ($f'(x_0) = \lim_{\Delta x \to 0}\frac{\Delta y}{\Delta x}$): Tự động tạo quy trình số gia đối số $\Delta x$, số gia hàm số $\Delta y$ và tính toán đạo hàm tại điểm $x_0$.
-  - *Xóa Bỏ Mô Hình Text In Preview Thụ Động & Tách Riêng Trang LaTeX Thuần Cho AI*:
-    + Xóa bỏ 100% ô Text In Preview thụ động bên dưới; tách riêng tab mã nguồn LaTeX Dark Mode cho AI.
-    + Bộ renderer Bảng biến thiên SVG vector 3 dòng (`VariationTable.jsx`), Đồ thị Oxy & Desmos Calculator (`MathGraphView.jsx`), Dán ảnh clipboard Ctrl+V.
-- **AI Engine (`V-Eval-Ai_Engine`) - Triệt Tiêu 100% Hardcode & Trích Xuất Dữ Liệu Thật**:
-  - Tuân thủ nguyên tắc Dữ liệu thật 100%, xóa bỏ triệt để hơn 1.780 dòng code hardcode, heuristic mock patterns và câu hỏi mẫu tự tạo trước đây trong `CurriculumAiService.cs`.
-  - Ném `InvalidOperationException` minh thị nếu AI gặp sự cố thay vì ngụy tạo dữ liệu giả.
-  - Tích hợp `System.Diagnostics.Stopwatch` đo lường thời gian thực tế xử lý tệp và bóc tách AI (`ProcessingTimeSeconds`, `IsRealExtraction = true`, `SourceFileName`, `TotalPagesProcessed`, `TotalCharactersExtracted`).
-  - Nâng trần `maxOutputTokens` lên `32768`, xây dựng bộ tự động sửa JSON cắt cụt `RepairTruncatedJson` và bộ tokenizer `SanitizeAndRepairGeminiJson` double-escape các ký tự escape LaTeX RFC 8259 (`\\{`, `\\}`, `\\Delta`, `\\frac`, `\\sqrt`...).
-  - Nâng cấp độ phủ bóc tách: Bắt buộc quét đủ 5 Phần của tài liệu chuyên đề lớn, mở rộng thành 4-5 Bài học toàn diện và 8-12 Dạng bài chi tiết (tối thiểu 2-3 dạng/bài) kèm bài toán thực tế ĐGNL.
-- **Kiểm Thử Biên Dịch Toàn Hệ Thống**:
-  - `V-Eval-Ai_Engine`: .NET 9 Clean Architecture biên dịch thành công 100% (**0 Error**).
-  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn thành trong 743ms trên Vite 8 và React 19).
+- **Web Client (`V-Eval-Web_Client`) - Khắc Phục Lỗi Render Markdown & Chuẩn Hóa Sư Phạm Phân Hệ Môn Học**:
+  - *Khắc Phục Triệt Để Lỗi Render Đầu Dòng (`MathText.jsx`)*:
+    + Cập nhật Regex bullet từ `^(\s*)(?:[-*•]|\u2022)\s*` sang `^(\s*)(?:[-+•\u2022]|\*(?!\*))\s+(?:[-+•\u2022]\s+)?(.*)$`, ngăn chặn tuyệt đối lỗi nuốt ký tự in đậm `**Ví dụ:**` thành bullet `• Ví dụ:**`.
+    + Hỗ trợ đầy đủ cú pháp Markdown Headings (`#`, `##`, `###`, `####`).
+    + Thiết kế riêng Component Callout Card thanh lịch:
+      * `### 📌 Ví dụ minh họa SGK:`: Render Thẻ Ví Dụ Minh Họa SGK màu Emerald/Teal (`bg-teal-50/70 border border-teal-200/80 rounded-xl`).
+      * `### 📝` / `### 📄 Bài toán mẫu áp dụng phương pháp:`: Render Thẻ Bài Toán Mẫu Áp Dụng màu Amber/Orange (`bg-amber-50/70 border border-amber-200/80 rounded-xl`).
+    + Tự động khép cặp in đậm đối với nhãn mồ côi `([A-ZÀ-Ỹa-zà-ỹ0-9\s&]{2,30}):\*\*` -> `**$1:**`.
+  - *Chuẩn Hóa Sư Phạm Đa Miền: Phân Biệt Rõ STEM vs Ngữ Văn / KHXH (`CurriculumStudioEditor.jsx` & `CurriculumExplorerView.jsx`)*:
+    + Loại bỏ hoàn toàn nhãn `Mẹo Casio` cho môn Ngữ văn và KHXH; thay bằng Thẻ `💡 Mẹo tư duy & Chiến thuật làm bài (Ngữ văn)` với viền tím violet sư phạm, hướng dẫn chiến thuật đọc hiểu, cấu trúc đoạn văn, dẫn chứng và phân bổ thời gian.
+    + Đối với môn STEM (Toán, Lý, Hóa, Sinh, Tin): Giữ nguyên Thẻ `💡 Kỹ thuật Casio & mẹo tư duy nhanh` với hướng dẫn phím bấm fx-580 / fx-880.
+    + Cập nhật bộ parser `parseTheoryRecapSections` và `parseSolutionMethodSections` unescape ký tự `\n` thô và hỗ trợ cả icon `📄` lẫn tiêu đề Ngữ văn.
+- **AI Engine (`V-Eval-Ai_Engine`) - Domain-Aware Prompting Trong `CurriculumAiService.cs`**:
+  - Bổ sung helper `IsStemDomain(string? domain)` phân biệt chính xác lĩnh vực STEM vs Khoa học xã hội / Ngữ văn.
+  - Tinh chỉnh Prompt Gemini trong `ExtractCurriculumStructureAsync` và `AnalyzePatternAsync`:
+    + Với môn Ngữ văn/KHXH: Chỉ thị bắt buộc Gemini **TUYỆT ĐỐI KHÔNG đề cập máy tính Casio**, thay bằng mẹo tư duy đọc hiểu, lập luận, cách dùng từ, dẫn chứng thực tế hoặc phân bổ thời gian làm bài; mục bài mẫu chuyển thành `### 📄 Bài mẫu áp dụng phương pháp:` với đoạn văn mẫu hoặc phân tích mẫu.
+    + Với môn STEM: Giữ nguyên hướng dẫn máy tính Casio và bài toán mẫu số học.
+- **Kiểm Thử Toàn Diện Hệ Thống**:
+  - `V-Eval-Ai_Engine.Infrastructure`: Biên dịch C# .NET 9 Clean Architecture đạt 100% (**0 Error, 0 Warning**).
+  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn thành trong 5.26s trên Vite 8 và React 19).
