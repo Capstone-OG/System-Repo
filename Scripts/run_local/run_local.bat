@@ -22,9 +22,8 @@ echo   [4] Khoi dong chi Web Client [React 19 Vite - Port 5173]
 echo   [5] Giai phong / Kill tat ca cac Port va Tien trinh dang chiem dung
 echo   [6] Thoat
 echo.
-set "CHOICE=%~1"
-if "%CHOICE%"=="" set "CHOICE=1"
-if "%~1"=="" set /p "CHOICE=Nhap lua chon cua ban [Mac dinh: 1]: "
+set "CHOICE=1"
+set /p "CHOICE=Nhap lua chon cua ban [Mac dinh: 1]: "
 
 if "%CHOICE%"=="6" (
     echo Tam biet!
@@ -34,7 +33,7 @@ if "%CHOICE%"=="6" (
 REM --- Step 2: Giai phong cac cong Port phat trien ---
 echo.
 echo =====================================================================
-echo [B??C 1] Giai phong cac cong Port tranh xung dot...
+echo [BƯỚC 1] Giai phong cac cong Port tranh xung dot...
 echo =====================================================================
 set "PORTS_TO_CLEAN=5212 5155 5156 5249 5250 5261 5104 8000 5000 5001 5002 5005 5006 5173 5174 8080 3000"
 
@@ -58,11 +57,13 @@ if "%CHOICE%"=="4" goto start_web_only
 set "ALL_SERVICES_DIR=%ROOT_DIR%\All Services"
 
 REM --- Step 2.5: Kiem tra va tu dong bo sung cau hinh neu con thieu ---
-if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
+if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
+)
 
 REM --- Step 3: Khoi dong cac Service theo lua chon ---
 echo =====================================================================
-echo [B??C 2] Tien hanh khoi dong cac Service...
+echo [BƯỚC 2] Tien hanh khoi dong cac Service...
 echo =====================================================================
 echo.
 
@@ -76,7 +77,7 @@ set "ID_DIR=%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.A
 if exist "%ID_DIR%\V-Eval-Identity_Service.API.csproj" (
     echo [START] Dang khoi dong Identity Service [Port 5155 / 5156]...
     start "V-Eval - Identity Service [HTTP:5155 | gRPC:5156]" cmd /k "cd /d "%ID_DIR%" && dotnet run"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay Identity Service tai: %ID_DIR%
 )
@@ -86,7 +87,7 @@ set "CONTENT_DIR=%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Servic
 if exist "%CONTENT_DIR%\V-Eval-Content_Service.API.csproj" (
     echo [START] Dang khoi dong Content Service [Port 5249 / 5250]...
     start "V-Eval - Content Service [HTTP:5249 | gRPC:5250]" cmd /k "cd /d "%CONTENT_DIR%" && dotnet run"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay Content Service tai: %CONTENT_DIR%
 )
@@ -96,7 +97,7 @@ set "PRACTICE_DIR=%ALL_SERVICES_DIR%\V-Eval-Practice_Service\V-Eval-Practice_Ser
 if exist "%PRACTICE_DIR%\V-Eval-Practice_Service.API.csproj" (
     echo [START] Dang khoi dong Practice Service [Port 5261]...
     start "V-Eval - Practice Service [HTTP:5261]" cmd /k "cd /d "%PRACTICE_DIR%" && dotnet run"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay Practice Service tai: %PRACTICE_DIR%
 )
@@ -114,7 +115,7 @@ set "AI_NET_DIR=%ALL_SERVICES_DIR%\V-Eval-Ai_Engine\V-Eval-Ai_Engine.API"
 if exist "%AI_NET_DIR%\V-Eval-Ai_Engine.API.csproj" (
     echo [START] Dang khoi dong AI Engine .NET API [Port 5104]...
     start "V-Eval - AI Engine .NET API [HTTP:5104]" cmd /k "cd /d "%AI_NET_DIR%" && dotnet run"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay AI Engine .NET tai: %AI_NET_DIR%
 )
@@ -130,7 +131,7 @@ if exist "%AI_PY_DIR%\main.py" (
         set "PY_CMD="%AI_PY_DIR%\.venv\Scripts\python.exe" -m uvicorn main:app --port 8000 --reload"
     )
     start "V-Eval - AI Engine Python RAG [FastAPI:8000]" cmd /k "cd /d "%AI_PY_DIR%" && !PY_CMD!"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay Python rag-service tai: %AI_PY_DIR%
 )
@@ -143,7 +144,7 @@ set "GATEWAY_DIR=%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API"
 if exist "%GATEWAY_DIR%\V-Eval-Gateway.API.csproj" (
     echo [START] Dang khoi dong API Gateway YARP [Port 5212]...
     start "V-Eval - API Gateway YARP [HTTP:5212]" cmd /k "cd /d "%GATEWAY_DIR%" && dotnet run"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay API Gateway tai: %GATEWAY_DIR%
 )
@@ -156,7 +157,7 @@ set "WEB_DIR=%ALL_SERVICES_DIR%\V-Eval-Web_Client"
 if exist "%WEB_DIR%\package.json" (
     echo [START] Dang khoi dong V-Eval Web Client [Port 5173]...
     start "V-Eval - Web Client [React Vite:5173]" cmd /k "cd /d "%WEB_DIR%" && npm run dev"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay Web Client tai: %WEB_DIR%
 )
@@ -167,7 +168,7 @@ set "WEB_DIR=%ALL_SERVICES_DIR%\V-Eval-Web_Client"
 if exist "%WEB_DIR%\package.json" (
     echo [START] Dang khoi dong V-Eval Web Client [Port 5173]...
     start "V-Eval - Web Client [React Vite:5173]" cmd /k "cd /d "%WEB_DIR%" && npm run dev"
-    ping 127.0.0.1 -n 3 >nul
+    timeout /t 2 /nobreak >nul
 ) else (
     echo [WARNING] Khong tim thay Web Client tai: %WEB_DIR%
 )
