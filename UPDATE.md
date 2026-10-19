@@ -1,14 +1,14 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [18/10/2026] - Khởi Tạo Nhánh Core Flow 6, CSDL Chuẩn Hóa Schema V3 & Bản Đặc Tả ERD Mức Khái Niệm (46 Entities)
+## [19/10/2026] - Hoàn Tất Triển Khai Toàn Diện 9/9 APIs Core Flow 6 (Dự Báo Điểm SEM & Cảnh Báo Sớm BR-04)
 
-- **Khởi Tạo CSDL Hợp Nhất Schema V3 (`docs/SQL/V_EVAL_SCHEMA_V3.sql`)**:
-  - Tích hợp 100% các thực thể đã triển khai từ cả 3 service cốt lõi (`Identity_Service`, `Content_Service`, `Practice_Service`) cùng phân hệ `Ai_Engine` (RAG pgvector).
-  - Tinh gọn lược bỏ các thực thể Live trực tuyến (`LiveSessions`, `LiveSessionAttendance`) do chuyển dịch sang mô hình đào tạo trực tiếp tại lớp. Giữ nguyên trạng 100% file gốc `docs/SQL/SQL.sql`.
-  - Bổ sung các thực thể vận hành thực tế: `RefreshTokens`, `OtpVerifications`, `SkillPrerequisites` (Đồ thị DAG tiên quyết), `ClassGroups` & `ClassGroupMembers` (Nhóm vi mô 3–5 học sinh), `StageProgress` (P-L-A-R), `AdaptiveQuizAttempts` (BKT & IRT ZPD), `MistakeNotebooks` (SM-2 Spaced Repetition), `ProctoringSnapshots` (Webcam giám sát thi cử).
-  - Bổ sung đầy đủ thực thể Core Flow 6: `ScorePredictions` (dải điểm SEM, thâm hụt điểm, Toa thuốc bù điểm Knapsack ROI trong `prescription_items` JSONB) và `SystemAlerts` (cảnh báo sớm 3 cấp BR-04, phân quyền Mentor can thiệp sư phạm `handled_by`).
-- **Nâng Cấp Bản Đặc Tả ERD Mức Khái Niệm Toàn Diện (`docs/SQL/Mo_Ta_Thiet_Ke_ERD_Concept.md`)**:
-  - Hệ thống hóa toàn diện **10 Miền Nghiệp Vụ (Bounded Contexts)** chứa trọn vẹn **46 Thực thể**.
-  - Xây dựng sơ đồ **Mermaid Conceptual ERD chi tiết** với từng khối thực thể chứa đầy đủ thuộc tính định danh (PK), khóa ngoại (FK) và các trường thông tin ngữ nghĩa (không còn hộp rỗng).
-  - Biên soạn **Từ điển thực thể khái niệm (Concept Entity Dictionary)** phân tích sâu sắc vai trò sư phạm và dữ liệu cho toàn bộ 46 thực thể.
-  - Cung cấp **Ma trận bản số quan hệ (Cardinality Matrix)** và bộ Prompt chuẩn cho các công cụ AI và phần mềm trực quan hóa ERD.
+- **Hoàn Tất Triển Khai Phân Hệ Cảnh Báo Sớm Cá Nhân & Can Thiệp Sư Phạm Mentor (Core Flow 6)**:
+  - **API 5: `GET /api/practice/early-warnings/my-alerts`**: Học sinh tra cứu danh sách cảnh báo cá nhân theo 3 cấp độ (`YELLOW`, `RED`, `UNREALISTIC_GOAL`), hỗ trợ lọc `unreadOnly` và `alertType`, thống kê badge thông báo thời gian thực.
+  - **API 6: `PATCH /api/practice/early-warnings/{alertId}/read`**: Đánh dấu đã đọc thông báo cảnh báo với cơ chế xác thực đa người dùng an toàn (tránh can thiệp chéo giữa các học sinh).
+  - **API 7: `GET /api/practice/early-warnings/dashboard`**: Dashboard cảnh báo sớm học sinh dành cho Mentor, hỗ trợ lọc theo lớp `classId`, làm giàu dữ liệu tự động với điểm dự báo `PredictedScore`, mục tiêu `TargetScore` và thâm hụt điểm `DeficitScore`.
+  - **API 8: `POST /api/practice/early-warnings/{alertId}/resolve`**: Mentor ghi chú giải quyết can thiệp sư phạm (`resolution_notes`), lưu vết `handled_by` và đóng ca cảnh báo `is_resolved = true`.
+  - **API 9: `POST /api/practice/early-warnings/{alertId}/schedule-counseling`**: Mentor lên lịch hẹn tư vấn 3 bên (Phụ huynh - Học sinh - Mentor) đối với trường hợp cảnh báo mục tiêu không tưởng `UNREALISTIC_GOAL`, đề xuất mức điểm mục tiêu khả thi theo phân phối chuẩn ĐGNL và cập nhật giải quyết ca cảnh báo.
+- **Tổng Kết Core Flow 6 (100% Hoàn Thành)**:
+  - Cả 9 API thuộc Core Flow 6 đã hoàn tất 100%: Dải điểm SEM (API 1), Đề ôn tập biến thể vi mô (API 2), Nộp bài xóa nợ điểm thâm hụt (API 3), Thuật toán tối ưu Toa thuốc Knapsack ROI (API 4), Thông báo cá nhân (API 5), Đánh dấu đã đọc (API 6), Dashboard Mentor (API 7), Can thiệp sư phạm (API 8), và Lịch hẹn tư vấn 3 bên (API 9).
+  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
+  - Đã kiểm thử live đầy đủ các ca thành công (200 OK) và ca kiểm soát lỗi RFC 7807 (400, 401, 403, 404) trực tiếp lẫn thông qua API Gateway YARP.
