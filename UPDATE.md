@@ -1,15 +1,13 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [20/10/2026] - Khắc Phục Lỗi Icon Bài Toán Mẫu, Tone Trắng Panoramic Workspace, Xóa Dòng Bằng Backspace, Chống Cắt Công Thức & Mở Rộng Thư Viện Ký Hiệu GDPT 2018 Toàn Diện
+## [20/10/2026] - Hợp Nhất Động Cơ MathLab JSXGraph Nội Sinh, Tùy Chỉnh Tọa Độ (X,Y,Z) & Đổi Tên Đỉnh Không Gian 3D, Bộ Kẻ Đường Phụ Tự Do & Hệ Thống Đồ Thị VD/VDC GDPT 2018
 
-- **Web Client (`V-Eval-Web_Client`) - Tinh Chỉnh Sư Phạm Toàn Diện & Trải Nghiệm Soạn Thảo WYSIWYG**:
-  - *Khắc Phục Lỗi Icon Kim Cương ''*: Sử dụng Unicode regex `^[^\p{L}\p{N}\s]+` lọc sạch ký tự Unicode hỏng, thay bằng vector Lucide `FileText` amber-600 sắc nét trong thẻ 'Bài toán mẫu áp dụng phương pháp:'.
-  - *Đồng Bộ Tone Trắng Panoramic Workspace*: Chuyển đổi toàn bộ dải gradient tối `slate-900` của modal header và pattern header bar sang nền trắng sáng `bg-white border-b border-slate-200 text-slate-900`, triệt tiêu hoàn toàn độ lệch màu.
-  - *Xóa Dòng Bằng Phím Backspace*: Tích hợp logic xử lý sự kiện Backspace trên canvas soạn thảo, tự động xóa dòng rỗng hoặc gộp dòng tại vị trí đầu dòng liền mạch như Microsoft Word.
-  - *Loại Bỏ Đoạn Mẹo Dưới Chân Trang*: Đã xóa bỏ toàn bộ dòng chữ hướng dẫn không cần thiết ở footer canvas theo đúng yêu cầu người dùng.
-  - *Chống Cắt Cụt '...' Công Thức Dài*: Gỡ bỏ class `truncate`, mở rộng container KaTeX lên 280px kèm cuộn ngang và mở rộng popup inspector lên `max-w-[540px]`.
-  - *Khắc Phục Chữ Trắng Trên Nền Trắng*: Thêm class hiển thị `text-slate-900 placeholder:text-slate-400` cho tất cả các ô nhập liệu đề bài, đáp án A-D và form tạo câu hỏi mới trong Khối 4.
-  - *Mở Rộng Thư Viện Ký Hiệu Đồ Sộ GDPT 2018 (Lớp 10 - 12)*: Bổ sung toàn diện danh mục công thức cho Ngữ Văn (Tu từ, Lập luận, Cấu trúc đoạn văn, Thể thơ), Địa Lý (Dân số, Khí hậu, Cán cân XNK, Năng suất, Tọa độ), Sinh Học (Di truyền ADN/ARN, Nguyên phân/Giảm phân, Menđen & Hardy-Weinberg), và Toán Học (Hình học Oxyz, Xác suất có điều kiện, Công thức Bayes, Kỳ vọng, Phương sai).
+- **Web Client (`V-Eval-Web_Client`) - Nâng Cấp MathLab 2D/3D & Trải Nghiệm Soạn Thảo Toán Học Chuyên Sâu**:
+  - *Thống Nhất Động Cơ JSXGraph Nội Sinh*: Loại bỏ hoàn toàn GeoGebra web-applet nhằm triệt tiêu độ trễ mạng và phụ thuộc iframe bên ngoài; 100% chức năng MathLab chạy trên engine vector JSXGraph v1.14.0 nội sinh, offline, hiển thị mượt mà 60 FPS Canvas/SVG.
+  - *Tùy Chỉnh Tọa Độ (X, Y, Z) & Đổi Tên Các Đỉnh Không Gian 3D*: Bổ sung toggle cho phép giáo viên chỉnh sửa trực tiếp tọa độ thực và đổi tên hiển thị của mọi đỉnh trong hình học không gian (chóp, lăng trụ, chóp đều, hình hộp); tự động cập nhật liên tục các cạnh và đường phụ liên kết, kèm nút reset mặc định 1-click.
+  - *Bộ Kẻ Thêm Đường Phụ & Thêm Điểm Trên Cạnh*: Cho phép tạo điểm mới chia tỉ lệ trên cạnh (trung điểm `1/2`, trọng tâm `1/3`), kẻ đoạn thẳng phụ nối 2 điểm bất kỳ (nét đứt SGK hoặc nét liền, chọn màu nét) và dựng mô hình khoảng cách 2 bước `d(A, (SBC)) = AK`.
+  - *Hệ Thống Đồ Thị Vận Dụng & Vận Dụng Cao (VD/VDC) Toàn Diện*: Tích hợp 6 chuyên đề đồ thị thi THPT gồm hàm phân thức có tiệm cận xiên (GDPT 2018), biến đổi trị tuyệt đối phức hợp `|f(x)|`, `f(|x|)`, `|f(x) + m|`, đồ thị đạo hàm `f'(x)` và tương giao hàm hợp, biện luận nghiệm đường xiên `y = ax + m`, diện tích tích phân 2 đường cong, và nhận dạng bộ ba đồ thị `f(x)`, `f'(x)`, `F(x)`.
+  - *Chuẩn Hóa Ribbon & Nút Kích Hoạt*: Đồng bộ hóa nhãn `⚡ MathLab 2D/3D (JSXGraph)` trên thanh công cụ Ribbon và toàn bộ các khối sư phạm của Studio.
 
 - **Kiểm Thử Toàn Diện Hệ Thống**:
-  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn tất trong 788ms trên Vite 8 và React 19).
+  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn tất trong 965ms trên Vite 8 và React 19).
