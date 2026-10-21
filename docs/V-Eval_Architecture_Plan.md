@@ -1,5 +1,9 @@
 # Kế hoạch Thiết kế Kiến trúc Microservices & Clean Architecture cho V-Eval (Bản hoàn chỉnh: Multi-repo, gRPC, Redis, RabbitMQ, Audit Logging & CI/CD)
 
+> [!NOTE]
+> Tài liệu này là bản kế hoạch khởi đầu dự án. Bản đặc tả kiến trúc tổng thể chính thức, cập nhật đầy đủ và chuẩn xác nhất theo thực tế triển khai Capstone 2026 hiện được lưu trữ tại:
+> **[Tài Liệu Đặc Tả Kiến Trúc Tổng Thể Hệ Thống V-Eval](./kien_truc_chuan_tong_the_he_thong_v_eval.md)**.
+
 Tài liệu này đặc tả phương án phân chia dịch vụ, thiết kế giao tiếp gRPC, caching bằng Redis, RabbitMQ Event Bus và cấu trúc quản lý mã nguồn dạng **Multi-repo (GitHub Organization)** cùng các thành phần bổ trợ thiết yếu.
 
 ---
