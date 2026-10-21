@@ -2,6 +2,9 @@
 
 ## [21/10/2026] - Khắc Phục Lỗi Nạp Tri Thức CSDL & Chuẩn Hóa Universal Ingestion (0% Hardcode), Động Cơ Bảng Biến Thiên Vector (Vạch Kép ||), Đồ Thị Vi Tích Phân 2D & Triệt Tiêu Vách Lưới Trắng 3D
 
+- **Tài Liệu Đặc Tả Kiến Trúc Chuẩn Tổng Thể Hệ Thống V-Eval (`docs/kien_truc_chuan_tong_the_he_thong_v_eval.md`)**:
+  - Biên soạn tài liệu chuẩn kiến trúc toàn diện 10 chương: Tầm nhìn & phạm vi 6 Core Flows, bản đồ phân bổ 6 Microservices, ranh giới CSDL Supabase PostgreSQL 3 schema, giao tiếp gRPC HTTP/2 Protobuf, cây tri thức 3 tầng & 4 khối sư phạm, cơ chế Universal Ingestion 0% hardcode, MathLab Native Engine (2D/3D/Bảng biến thiên vector), mô hình toán học khảo thí (IRT 2PL, BKT, Constrained K-Means, Topological Sort), và quy trình DevOps Multi-Repo.
+
 - **Content Service (`V-Eval-Content_Service`) - Bộ Chuyển Đổi Dữ Liệu Universal Ingestion (0% Hardcode)**:
   - *Khắc Phục Triệt Để Lỗi 400 Validation Error (`The JSON value could not be converted to System.Char`)*: Trường `CorrectOption` trong DTOs (`ImportQuestionDto`, `CreateQuestionRequestDto`, `UpdateQuestionRequestDto`, `QuestionDto`) được chuyển đổi an toàn thông qua `FlexibleCharJsonConverter` và `FlexibleNullableCharJsonConverter`.
   - Hỗ trợ linh hoạt mọi định dạng từ AI OCR và trích xuất tài liệu: ký tự kèm dấu (`"A."`, `"(B)"`, `"[C]"`, `"D:"`), từ khóa (`"Đáp án C"`, `"Phương án B"`, `"Option A"`), số nguyên (`0..3`), chuỗi rỗng và `null` mà không bao giờ ném ngoại lệ.
