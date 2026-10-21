@@ -228,26 +228,41 @@ erDiagram
     LEARNING_PROFILES ||--o{ SKILL_MASTERY_HISTORIES : "tracks BKT"
 ```
 
-### 3.1 Bảng Phân Bổ Schema & Danh Mục Bảng Vật Lý
+### 3.1 Bảng Phân Bổ Schema & Danh Mục Bảng Vật Lý (Đặc tả chi tiết tại [SQL.sql](./SQL/SQL.sql))
 
 | Schema PostgreSQL | Bảng Dữ Liệu | Mục Đích Lưu Trữ & Ranh Giới Nghiệp Vụ |
 | :--- | :--- | :--- |
-| **`v_eval_identity`** | `users` | Thông tin tài khoản định danh, email băm, mật khẩu băm BCrypt, trạng thái kích hoạt OTP. |
-| | `roles` & `user_roles` | Danh mục 4 quyền hạn hệ thống và bảng liên kết đa-đa tài khoản - vai trò. |
-| | `parent_student_mappings`| Quan hệ ghép nối tài khoản Phụ huynh - Học sinh, trạng thái chấp thuận liên kết. |
-| | `audit_logs` | Nhật ký kiểm toán bảo mật, lưu vết thao tác đăng nhập, cấp quyền và đổi trạng thái. |
-| **`v_eval_content`** | `competency_domains` | 4 Miền năng lực chuẩn V-ACT: Toán học, Ngữ văn, KHTN, KHXH kèm mã miền `domain_code`. |
-| | `skills` | Cây tri thức phân cấp 3 tầng với khóa ngoại tự tham chiếu `parent_id`: Chương -> Bài -> Dạng. |
-| | `skill_prerequisites` | Đồ thị có hướng không chu trình (DAG) lưu trữ các quan hệ tiên quyết giữa các kỹ năng/dạng bài. |
-| | `materials` | 4 Khối sư phạm: Nội dung lý thuyết SGK KaTeX (Khối 1), Phương pháp giải (Khối 2), Video bài giảng (Khối 3). |
-| | `questions` | Ngân hàng câu hỏi gốc: Đề bài LaTeX, 4 đáp án A-D, đáp án đúng `correct_option`, độ khó Bloom 1-6, lời giải chi tiết. |
-| | `mock_exams` & `exam_questions` | Đề thi chẩn đoán 30 câu, đề thi thử và bộ đề Quiz củng cố thích ứng (API 19) kèm thứ tự câu hỏi. |
-| **`v_eval_practice`** | `classes` | Lớp học offline (tối đa 20 học sinh) do Giảng viên/Mentor phụ trách quản lý. |
-| | `micro_groups` & `group_members` | Các nhóm bàn học vi mô (3–5 học sinh) được gom cụm bởi thuật toán K-Means dựa trên `CommonWeakSkillIds`. |
-| | `attempts` & `attempt_answers` | Phiên làm bài kiểm tra/chẩn đoán/quiz của học sinh, thời gian làm từng câu, điểm số và trạng thái nộp bài. |
-| | `learning_profiles` | Hồ sơ năng lực học tập của học sinh: Năng lực tiềm ẩn IRT `\theta_0`, sai số đo chuẩn SEM, điểm dự phóng V-ACT. |
-| | `skill_mastery_histories` | Lịch sử cập nhật xác suất nắm vững tri thức BKT `P(L_t)` của từng kỹ năng/dạng bài sau mỗi câu hỏi. |
-| | `recommendation_nodes` | Các nút lộ trình học tập được Topological Sort đề xuất cho học sinh theo thứ tự ưu tiên. |
+| **`v_eval_identity`** | `Campuses` | Cơ sở đào tạo liên kết, trung tâm học tập và địa chỉ thực thi. |
+| | `Roles` & `UserRoles` | Danh mục 6 vai trò hệ thống (`STUDENT`, `TEACHER`, `ACADEMIC_MANAGER`, `ACADEMIC_DIRECTOR`, `ADMINISTRATOR`, `PARENT`) và bảng nối đa-đa. |
+| | `Users` | Định danh tài khoản tập trung, email duy nhất, mật khẩu băm BCrypt, trạng thái kích hoạt. |
+| | `Students`, `Parents`, `Teachers` | Hồ sơ chi tiết từng đối tượng người dùng (1-1 với Users qua PK = FK user_id). |
+| | `ParentStudentRelations` | Quan hệ ghép nối bảo trợ giữa Phụ huynh và Học sinh. |
+| | `AcademicManagers`, `AcademicDirectors`, `Administrators` | Hồ sơ cán bộ quản lý học vụ, giám đốc chuyên môn và quản trị viên kỹ thuật. |
+| **`v_eval_content`** | `CompetencyDomains` | 4 Miền năng lực chuẩn V-ACT: Toán học, Ngữ văn, KHTN, KHXH. |
+| | `Skills` | Cây tri thức phân cấp sâu 3 tầng với khóa ngoại tự tham chiếu `parent_id`: Chương -> Bài học -> Dạng bài. |
+| | `SkillPrerequisites` | Đồ thị có hướng không chu trình (DAG) lưu trữ quan hệ tiên quyết giữa các dạng bài / kỹ năng. |
+| | `Materials` | 4 Khối sư phạm: Nền tảng SGK KaTeX (Khối 1), Phương pháp giải (Khối 2), Video bài giảng (Khối 3). |
+| | `Passages` | Đoạn văn, bài đọc hiểu chung dùng cho nhóm câu hỏi ĐGNL. |
+| | `Questions` | Ngân hàng câu hỏi trắc nghiệm chuẩn hóa: Đề bài LaTeX, 4 phương án A-D, đáp án đúng `correct_option` ('A'..'D'), độ khó 1-4, giải thích. |
+| | `MockExams` & `ExamQuestions` | Bộ đề thi chẩn đoán (30 câu), đề thi thử định kỳ (120 câu) và đề Quiz củng cố thích ứng kèm thứ tự câu hỏi. |
+| **`v_eval_practice`** | `LearningProfiles` | Hồ sơ điểm năng lực học tập theo từng kỹ năng: Điểm làm chủ `mastery_score` (IRT / BKT: 0.0 -> 1.0, ngưỡng đạt 0.85). |
+| | `LearningRoadmaps` & `RoadmapNodes` | Lộ trình học tập cá nhân hóa và các nút kỹ năng đã được sắp xếp thứ tự bởi thuật toán Topological Sort. |
+| | `StageProgress` | Theo dõi tiến độ hoàn thành 4 giai đoạn sư phạm trên từng node lộ trình (1: SGK, 2: Phương pháp, 3: Video, 4: Adaptive Quiz). |
+| | `AdaptiveQuizAttempts` | Lịch sử làm bài trắc nghiệm thích ứng theo từng câu bám sát dạng bài (ZPD State Machine). |
+| | `AttemptLogs` | Nhật ký làm bài tự do và luyện tập bổ trợ của học sinh. |
+| | `ExamSubmissions` & `SubmissionAnswers` | Bài nộp thi chẩn đoán / thi thử, bảng điểm chi tiết từng câu và thời gian làm bài. |
+| | `MistakeNotebooks` | Sổ tay lỗi sai & cơ chế lặp lại ngắt quãng Leitner Spaced Repetition (Hộp 1->5, tự động lên lịch `next_review_date`). |
+| | `Classes` & `ClassEnrollments` | Lớp học offline (tối đa 20 học sinh) và danh sách học viên theo từng cơ sở. |
+| | `ClassGroups` & `ClassGroupMembers` | Nhóm phân hóa năng lực trong lớp (Thematic Cohorts) được chia theo mức độ tiếp thu (`REMEDIAL`, `STANDARD`, `ADVANCED`). |
+| | `LiveSessions` & `LiveSessionAttendance`| Phiên học Live trực tuyến với Giáo viên, lịch phát sóng và điểm danh vào/ra. |
+| | `TeacherFeedback` | Phản hồi sư phạm định hướng của giáo viên dành riêng cho từng học sinh. |
+| | `AbilityGroups` & `StudentGroupMemberships`| Phân cụm năng lực học sinh vĩ mô bởi thuật toán Constrained K-Means và lưu trữ trạng thái hiện tại. |
+| | `SystemAlerts` & `SystemConfigs` | Cảnh báo nguy cơ học tập sa sút (`FALL_BEHIND`, `INACTIVE`) và cấu hình hệ thống tập trung. |
+| **`v_eval_ai`** | `KnowledgeSources` | Nguồn tài liệu số hóa SGK, sách chuyên đề và sách giáo viên. |
+| | `KnowledgeVectorChunks` | Vector Embeddings 768 chiều (Gemini text-embedding-004) kèm chỉ mục HNSW Cosine Similarity phục vụ RAG siêu tốc (<5ms). |
+| | `AITutorSessions` & `AITutorMessages` | Phiên trò chuyện và lịch sử tin nhắn trợ lý ảo Socratic AI Tutor hướng dẫn gợi mở. |
+| | `ScorePredictions` | Dự báo điểm thi ĐGNL tiềm năng và khoảng tin cậy dựa trên mô hình hồi quy. |
+| | `TokenUsageLogs` | Giám sát chi phí API LLM và lượng token tiêu thụ theo thời gian thực. |
 
 ---
 

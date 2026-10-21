@@ -1,7 +1,7 @@
 # Hướng Dẫn Chi Tiết: Step-by-Step Cách Hoạt Động Logic Core Flow 1 Qua Từng Service
 
 > **Dự án**: Hệ thống Đánh giá & Cá nhân hóa Lộ trình Học tập V-Eval (V-ACT ĐHQG-HCM)  
-> **Tài liệu liên quan**: [Báo Cáo Kỹ Thuật Core Flow 1](./core_flow_1_chan_doan_nang_luc.md) | [Định Tuyến API Gateway YARP](./api_gateway_yarp_dinh_tuyen.md)  
+> **Tài liệu liên quan**: [Báo Cáo Kỹ Thuật Core Flow 1](./core_flow_1_chan_doan_nang_luc.md) | [Định Tuyến API Gateway YARP](../api_gateway_yarp_dinh_tuyen.md)  
 > **Trạng thái**: Hoàn thiện 100% qua 4 Microservices & Kiểm thử E2E  
 
 ---

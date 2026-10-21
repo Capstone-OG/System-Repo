@@ -6,7 +6,7 @@
 > **Phiên bản:** 1.0 (Chính thức)  
 > **Ngày ban hành:** 30/09/2026  
 > **Chuẩn tương thích:** MD Editor Plus / Mermaid 11.15.0+  
-> **Tài liệu liên kết:** [Báo cáo BRS/SRS](./FA26SE090_AI_POWERED_PERSONALIZED_LEARNING_PATH_PL_taint.docx) | [Core Flow 1](./core_flow_1_chan_doan_nang_luc.md) | [Core Flow 2](./core_flow_2_quy_hoach_lo_trinh_hoc_tap.md) | [Phân tích AbilityGroups](./SQL/Phan_Tich_Gom_Nhom_AbilityGroups.md)
+> **Tài liệu liên kết:** [Báo cáo BRS/SRS](./FA26SE090_AI_POWERED_PERSONALIZED_LEARNING_PATH_PL_taint.docx) | [Core Flow 1](./core_flow/core_flow_1_chan_doan_nang_luc.md) | [Core Flow 2](./core_flow/core_flow_2_quy_hoach_lo_trinh_hoc_tap.md) | [Phân tích AbilityGroups](./SQL/Phan_Tich_Gom_Nhom_AbilityGroups.md)
 
 ---
 

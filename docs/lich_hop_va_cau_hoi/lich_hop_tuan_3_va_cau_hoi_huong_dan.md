@@ -3,7 +3,7 @@
 > **Dự án**: Hệ thống Đánh giá & Cá nhân hóa Lộ trình Học tập V-Eval (V-ACT ĐHQG-HCM)\
 ****Thời gian dự kiến**: Tuần 3 (Ngày 24/09/2026)\
 ****Người thực hiện**: Nhóm phát triển V-Eval\
-****Tài liệu tham chiếu**: [Báo Cáo Kỹ Thuật Core Flow 1](./core_flow_1_chan_doan_nang_luc.md) | [Step-by-Step Logic](./core_flow_1_step_by_step_logic.md)
+****Tài liệu tham chiếu**: [Báo Cáo Kỹ Thuật Core Flow 1](../core_flow/core_flow_1_chan_doan_nang_luc.md) | [Step-by-Step Logic](../core_flow/core_flow_1_step_by_step_logic.md)
 
 ---
 
