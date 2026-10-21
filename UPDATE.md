@@ -1,17 +1,14 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [13/10/2026] - Thiết Kế GraphRAG Tri Thức Liên Môn & Triển Khai Hoàn Tất Bộ APIs 16 - 19 Content Service
+## [19/10/2026] - Hoàn Tất Triển Khai Toàn Diện 9/9 APIs Core Flow 6 (Dự Báo Điểm SEM & Cảnh Báo Sớm BR-04)
 
-- **Thiết Kế Kiến Trúc GraphRAG Tri Thức Liên Môn (Cross-Disciplinary Knowledge Graph)**:
-  - Hoàn thiện tài liệu kiến trúc chuyên sâu `docs/ai_architecture/thiet_ke_graph_rag_tri_thuc_lien_mon.md` giải quyết bản chất liên môn kỳ thi ĐGNL ĐHQG-HCM (V-ACT).
-  - Phân tích ưu thế vượt trội của GraphRAG so với Vector RAG: Vượt qua bẫy cô lập từ vựng đơn môn, liên kết các cạnh `[APPLIES_MODEL]` giữa Toán, Lý, Hóa, Sinh, Logic với cùng một mô hình toán học lõi (ví dụ Hệ PT 2 ẩn).
-  - Thiết kế lược đồ CSDL PostgreSQL `v_eval_ai.cross_disciplinary_models` & `v_eval_ai.skill_model_cross_links`, thuật toán Graph Traversal và Prompt Socratic AI chẩn đoán lỗi gốc rễ.
-- **Hoàn Tất Triển Khai Bộ APIs 16 - 19 Quản Trị Ngân Hàng Câu Hỏi & Sinh Đề Quiz (Content Service)**:
-  - **API 16: `POST /api/content/questions`**: Thêm mới câu hỏi gốc với công thức LaTeX stem, 4 đáp án A-D, phương án đúng `CorrectOption`, độ khó Bloom 1-6 và lời giải chi tiết `Explanation`.
-  - **API 17: `PUT /api/content/questions/{id}`**: Hiệu đính nội dung, đáp án, độ khó Bloom và giải thích chi tiết.
-  - **API 18: `DELETE /api/content/questions/{id}`**: Xóa câu hỏi khỏi ngân hàng đề và giải phóng liên kết đề thi `exam_questions`.
-  - **APIs Tra Cứu**: `GET /api/content/questions/{id}` và `GET /api/content/questions/by-skill/{skillId}` (lọc theo Bloom).
-  - **API 19: `POST /api/content/exams/quiz`**: Đóng gói đề Quiz củng cố thích ứng 5-10 câu hỏi chuẩn Bloom từ `SkillIds` / `CommonWeakSkillIds` kết nối trực tiếp với bàn học của Practice Service.
-- **Trạng Thái Kiểm Thử Toàn Hệ Thống**:
-  - `V-Eval-Content_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
-  - Toàn bộ thay đổi nằm trên nhánh `ThinhTT/feature-content-questions-quiz-apis`.
+- **Hoàn Tất Triển Khai Phân Hệ Cảnh Báo Sớm Cá Nhân & Can Thiệp Sư Phạm Mentor (Core Flow 6)**:
+  - **API 5: `GET /api/practice/early-warnings/my-alerts`**: Học sinh tra cứu danh sách cảnh báo cá nhân theo 3 cấp độ (`YELLOW`, `RED`, `UNREALISTIC_GOAL`), hỗ trợ lọc `unreadOnly` và `alertType`, thống kê badge thông báo thời gian thực.
+  - **API 6: `PATCH /api/practice/early-warnings/{alertId}/read`**: Đánh dấu đã đọc thông báo cảnh báo với cơ chế xác thực đa người dùng an toàn (tránh can thiệp chéo giữa các học sinh).
+  - **API 7: `GET /api/practice/early-warnings/dashboard`**: Dashboard cảnh báo sớm học sinh dành cho Mentor, hỗ trợ lọc theo lớp `classId`, làm giàu dữ liệu tự động với điểm dự báo `PredictedScore`, mục tiêu `TargetScore` và thâm hụt điểm `DeficitScore`.
+  - **API 8: `POST /api/practice/early-warnings/{alertId}/resolve`**: Mentor ghi chú giải quyết can thiệp sư phạm (`resolution_notes`), lưu vết `handled_by` và đóng ca cảnh báo `is_resolved = true`.
+  - **API 9: `POST /api/practice/early-warnings/{alertId}/schedule-counseling`**: Mentor lên lịch hẹn tư vấn 3 bên (Phụ huynh - Học sinh - Mentor) đối với trường hợp cảnh báo mục tiêu không tưởng `UNREALISTIC_GOAL`, đề xuất mức điểm mục tiêu khả thi theo phân phối chuẩn ĐGNL và cập nhật giải quyết ca cảnh báo.
+- **Tổng Kết Core Flow 6 (100% Hoàn Thành)**:
+  - Cả 9 API thuộc Core Flow 6 đã hoàn tất 100%: Dải điểm SEM (API 1), Đề ôn tập biến thể vi mô (API 2), Nộp bài xóa nợ điểm thâm hụt (API 3), Thuật toán tối ưu Toa thuốc Knapsack ROI (API 4), Thông báo cá nhân (API 5), Đánh dấu đã đọc (API 6), Dashboard Mentor (API 7), Can thiệp sư phạm (API 8), và Lịch hẹn tư vấn 3 bên (API 9).
+  - Solution `V-Eval-Practice_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error**).
+  - Đã kiểm thử live đầy đủ các ca thành công (200 OK) và ca kiểm soát lỗi RFC 7807 (400, 401, 403, 404) trực tiếp lẫn thông qua API Gateway YARP.
