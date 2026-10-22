@@ -26,6 +26,12 @@
   - Triển khai `ToastContext.jsx` & `GlobalToastContainer.jsx` thay thế triệt để `window.alert()`.
   - Hỗ trợ 4 nhóm trạng thái (Success, Error, Warning, Info), thanh đếm ngược tự động dừng khi rê chuột, và cơ chế bọc tự động chặn `window.alert()` toàn hệ thống.
 
+- **Tài Liệu Hệ Thống - Bảng Theo Dõi Hotfix Kiến Trúc Dạng Thẻ (`docs/hotfix/AI_Engine_Hotfix.md`)**:
+  - Ghi nhận 3 thẻ sự cố kiến trúc (Hotfix Issue Cards) do **`ThinhTran2412`** phát hiện và đề xuất giải pháp:
+    1. `HF-AI-01` (`CRITICAL - OPEN`): Phân hệ Python (`diagnostic.py`) thiếu schema đặc tả thẻ 3D/đồ thị, thiếu failover và bộ hồi phục JSON.
+    2. `HF-AI-02` (`HIGH - OPEN`): Phân hệ C# (`CurriculumEndpoints.cs`) gán cứng mặc định môn Toán khi thiếu input, gây nguy cơ ép sai Prompt cho môn Xã hội.
+    3. `HF-AI-03` (`MEDIUM - OPEN`): Phân hệ C# (`CurriculumAiService.cs`) nhồi prompt dài dằng dặc trong code C# (Prompt-in-Code Smell), đề xuất tách sang File-based Templates (`Templates/Prompts/*.prompt.md`).
+
 - **Kiểm Thử Toàn Diện Hệ Thống**:
   - `V-Eval-Content_Service`: `dotnet build` đạt **0 Warning, 0 Error**.
   - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn tất trong 940ms trên Vite 8 và React 19).
