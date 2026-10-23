@@ -2,7 +2,7 @@
 # HỆ THỐNG ĐÁNH GIÁ & HỌC TẬP THÍCH ỨNG V-EVAL (V-ACT ĐHQG-HCM)
 
 > **Tài liệu**: Bản đặc tả kiến trúc dữ liệu mức khái niệm (Conceptual Data Model / Conceptual ERD)  
-> **Phiên bản Schema**: Đồng bộ 100% với mã nguồn triển khai và [V_EVAL_SCHEMA_V3.sql](./V_EVAL_SCHEMA_V3.sql)  
+> **Phiên bản Schema**: Đồng bộ 100% với mã nguồn triển khai và [SQL.sql](./SQL.sql)  
 > **Ngày ban hành**: 16/10/2026 — Phiên bản 3.0 Hoàn Thiện  
 > **Mục tiêu tài liệu**: Cung cấp ngữ cảnh đầy đủ, chi tiết từng thuộc tính và mối quan hệ để bất kỳ AI Modeling Assistant nào cũng có thể đọc hiểu và dựng lại sơ đồ ERD hoàn chỉnh không sai sót.  
 > **Tương thích Markdown**: Chuẩn hóa 100% cho MD Editor Plus (Relative links, Backtick LaTeX, Mermaid 11.15.0+).
@@ -32,7 +32,7 @@ Hệ thống được cấu trúc thành 10 miền dữ liệu gắn kết cao (
 
 ## 📊 PHẦN 2: SƠ ĐỒ THỰC THỂ QUAN HỆ KHÁI NIỆM MERMAID (FULL ATTRIBUTES)
 
-Sơ đồ Mermaid dưới đây biểu diễn toàn bộ **46 thực thể** kèm các thuộc tính định danh, thuộc tính trạng thái cốt lõi và các đường liên kết quan hệ bản số:
+Sơ đồ Mermaid dưới đây biểu diễn toàn bộ **49 thực thể** kèm các thuộc tính định danh, thuộc tính trạng thái cốt lõi và các đường liên kết quan hệ bản số (đồng bộ 100% với [SQL.sql](./SQL.sql) và sơ đồ 2 trang tại [Capstone.drawio](./Capstone.drawio)):
 
 ```mermaid
 erDiagram
@@ -735,10 +735,9 @@ Dưới đây là đặc tả chi tiết 100% tất cả các thuộc tính khá
 Khi cần gửi yêu cầu cho AI (ChatGPT, Claude, Gemini, DeepSeek) hoặc các công cụ trực quan hóa (PlantUML, DrawDB, dbdiagram.io, Eraser.io), hãy sử dụng đoạn Prompt mẫu chuẩn hóa sau:
 
 ```text
-Bạn là chuyên gia kiến trúc dữ liệu (Data Architect). Hãy dựa vào file đặc tả [Mo_Ta_Thiet_Ke_ERD_Concept.md](./Mo_Ta_Thiet_Ke_ERD_Concept.md) và file DDL [V_EVAL_SCHEMA_V3.sql](./V_EVAL_SCHEMA_V3.sql) của nền tảng V-Eval để vẽ sơ đồ Conceptual ERD hoàn chỉnh:
+Bạn là chuyên gia kiến trúc dữ liệu (Data Architect). Hãy dựa vào file đặc tả [Mo_Ta_Thiet_Ke_ERD_Concept.md](./Mo_Ta_Thiet_Ke_ERD_Concept.md) và file DDL [SQL.sql](./SQL.sql) của nền tảng V-Eval để vẽ sơ đồ Conceptual ERD hoàn chỉnh:
 
-1. Thể hiện đầy đủ 46 thực thể thuộc 10 phân vùng nghiệp vụ (IAM, Actors 1:1, Competency DAG, Assessment Items, Classroom & Micro-groups, Adaptive Roadmap P-L-A-R, BKT/SM-2, Exam Integrity Proctoring, Score Prediction Knapsack & Early Warning BR-04, AI Tutor Socratic & Vector RAG, Ability Groups).
+1. Thể hiện đầy đủ 49 thực thể thuộc 9 Bounded Contexts (IAM, Actors 1:1, Khung năng lực DAG, Ngân hàng đề thi, Lớp học & Nhóm vi mô, Lộ trình thích ứng P-L-A-R, AI Tutor Knowledge Graph RAG & Archetype Patterns, Phân tích học tập Analytics, Dự báo điểm & Cảnh báo BR-04) tương ứng với sơ đồ [Capstone.drawio](./Capstone.drawio).
 2. Liệt kê rõ các thuộc tính định danh (PK), thuộc tính tham chiếu (FK) và các trường nghiệp vụ quan trọng trong từng khối thực thể (không vẽ hộp rỗng).
 3. Biểu diễn chính xác bản số quan hệ (1:1, 1:N, N:N) bằng ký hiệu chuẩn Crow's Foot.
-4. Tuyệt đối không bao gồm 2 bảng Live trực tuyến (LiveSessions, LiveSessionAttendance) đã được lược bỏ do hệ thống chuyển đổi mô hình học tập tập trung tại cơ sở offline.
 ```

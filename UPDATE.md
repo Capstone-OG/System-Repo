@@ -1,37 +1,28 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [22/10/2026] - Khắc Phục Lỗi 404 Xóa Chương Tổng Hợp, Hộp Thoại Xác Nhận Xóa In-App, Tinh Gọn Modal Sửa Nhanh (Icon Cây Bút) & Hệ Thống Toast Toàn Cục
+## [23/10/2026] - Hợp Nhất Master SQL.sql, Xử Lý Dây Đè Bảng Trang 1, Tinh Gọn Trang 2 & Thiết Kế Bản Vẽ Kiến Trúc Chuẩn (System_Architecture_Diagram.md)
 
-- **Content Service - Khắc Phục Lỗi HTTP 404 Khi Xóa Chương Tổng Hợp (`DELETE /api/content/curriculum/nodes/{id}`)**:
-  - Chuyển đổi route constraint tại `CurriculumController.cs` từ `[HttpDelete("nodes/{id:guid}")]` sang `[HttpDelete("nodes/{id}")]` với tham số `[FromRoute] string id`, cho phép tiếp nhận cả Guid thực tế lẫn synthetic container ID (`chap-general-...`).
-  - Mở rộng `DeleteNodeCommand.cs`: Tự động nhận diện prefix `chap-general-`, bóc tách `domainId` và cascade delete toàn bộ các kỹ năng phẳng (flat skills) thuộc miền tri thức (`s.DomainId == domainId && s.ParentId == null`), đồng thời dọn dẹp sạch tài liệu (`Materials`), ngân hàng câu hỏi (`Questions`) và quan hệ đồ thị (`SkillPrerequisites`) trong CSDL PostgreSQL.
-  - Solution `V-Eval-Content_Service.sln` biên dịch sạch 100% (**0 Warning, 0 Error** trên .NET 9 SDK), dịch vụ đang chạy ổn định trên cổng 5249/5250.
+- **Hợp Nhất Tập Trung CSDL 4 Schema Vào 1 File Duy Nhất (`docs/SQL/SQL.sql`)**:
+  - Hợp nhất toàn bộ 49 bảng thực thể chuẩn hóa PostgreSQL 15+ / Supabase Cloud, xóa bỏ triệt để các file SQL phân mảnh cũ (`SQL_Migration_Flow5_Analytics.sql`, `V_EVAL_AI_SCHEMA.sql`, `V_EVAL_SCHEMA_V3.sql`).
+  - Phân bổ tường minh theo 4 namespace schema:
+    1. `v_eval_identity` (13 bảng): `Campuses`, `Roles`, `Users`, `UserRoles`, `RefreshTokens`, `OtpVerifications`, `Students`, `Parents`, `ParentStudentRelations`, `Teachers`, `AcademicManagers`, `AcademicDirectors`, `Administrators`.
+    2. `v_eval_content` (8 bảng): `CompetencyDomains`, `Skills`, `SkillPrerequisites` (DAG), `Materials`, `Passages`, `Questions`, `MockExams`, `ExamQuestions`.
+    3. `v_eval_practice` (21 bảng): `Classes`, `ExamSubmissions`, `SubmissionAnswers`, `ProctoringSnapshots`, `ClassEnrollments`, `ClassGroups`, `ClassGroupMembers`, `LiveSessions`, `LiveSessionAttendance`, `LearningProfiles`, `LearningRoadmaps`, `RoadmapNodes`, `StageProgress` (P-L-A-R), `AdaptiveQuizAttempts` (BKT/IRT), `MistakeNotebooks` (SM-2), `ScorePredictions` (SEM Knapsack), `SystemAlerts` (BR-04), `ClassSkillHeatmaps`, `ClassHeatmapSummaries`, `StudentDailyActivities`, `StudentReadinessMetrics`.
+    4. `v_eval_ai` (7 bảng): `KnowledgeSources`, `KnowledgeVectorChunks` (768 chiều), `archetype_patterns` (Taxonomy Level 4 Knowledge Graph), `pattern_exemplars`, `pattern_traps`, `novel_pattern_proposals`, `ai_tutor_interaction_logs`.
+  - Thiết lập đầy đủ ràng buộc khóa chính (PK), khóa ngoại (FK với Cascade/Restrict/SetNull chuẩn xác), chỉ mục hiệu năng cao (HNSW Vector Cosine index, Composite B-Tree indexes).
 
-- **Web Client - Hộp Thoại Xác Nhận Xóa In-App Hiện Đại (Zero Native Browser Confirm / Alert)**:
-  - Loại bỏ hoàn toàn hộp thoại chặn luồng `window.confirm()` của trình duyệt khi xóa Chương, Bài học hoặc Dạng bài trong `CurriculumExplorerView.jsx`.
-  - Triển khai modal xác nhận in-app `confirmDeleteDialog` đồng bộ ngôn ngữ thiết kế Glassmorphism, hiển thị cảnh báo đỏ (`rose-500`), icon `<AlertTriangle />`, chi tiết các nội dung con bị xóa cascade và nút "Xác Nhận Xóa" chuyên nghiệp.
-  - Trong `CurriculumStudioEditor.jsx`, cơ chế xóa câu hỏi được thay thế bằng xác nhận 2 chạm (Two-Tap Confirmation) đếm ngược 3 giây an toàn.
+- **Xử Lý Triệt Để Hiện Tượng Dây Đè Lên Bảng Ở Trang 1 (`Trang-1` Physical ERD)**:
+  - Khắc phục hoàn toàn lỗi đường nối đè qua nội dung văn bản các bảng bằng cơ chế **Highway Corridor Routing**: Các đường liên kết giữa các package được định tuyến ra các hành lang ngoại vi (`x = 1120..1160`, `x = 2220..2260`, `y = 25..35`, `y = 3200..3220`) trước khi cắm vào bảng đích.
+  - Thiết lập tiếp điểm vào/ra tường minh (`exitX, exitY, entryX, entryY`) trên từng cạnh bảng và kích hoạt tính năng cầu nối nhảy dây `jumpStyle=arc;jumpSize=6;` giúp sơ đồ mạch lạc, chuyên nghiệp 100%. Bảo toàn nguyên vẹn 635 phần tử (556 UserObjects + 79 mxCells).
 
-- **Web Client - Tinh Gọn Modal Sửa Nhanh (Metadata-Only) & Chuyển Nút Sửa Nhanh Sang Icon Cây Bút**:
-  - Chuyển đổi nút bấm văn bản "Sửa nhanh" trên thanh công cụ thành icon button `<Pencil className="w-4 h-4" />` tinh gọn kèm tooltip "Sửa thông tin nhanh".
-  - Tái cấu trúc modal `isEditModalOpen`: Chỉ cho phép chỉnh sửa siêu dữ liệu (Tên Dạng bài / Tiêu đề, Chương học trực thuộc, Khối lớp 10-12, Mức độ nhận thức chuẩn Bloom, và Trọng số năng lực %), loại bỏ 4 tab biên soạn nội dung bên trong và bổ sung banner điều hướng sang Studio Sư Phạm.
+- **Tinh Gọn Bố Cục & Tối Ưu Đồ Thị Phẳng Tuyệt Đối Cho Trang 2 (`Trang-2` Zero-Crossings Planar ERD)**:
+  - **Thu gọn kích thước tổng thể vừa vặn, mạch lạc (~3130px × ~1560px)**:
+    - Thu hẹp lưới tọa độ ma trận 8 cột × 8 hàng từ bước 580px xuống bước 400px (`COLS = [80, 480, 880, 1280, 1680, 2080, 2480, 2880]`) và bước hàng từ 350px xuống 200px (`ROWS = [80, 280, 480, 680, 880, 1080, 1280, 1480]`).
+    - Giảm ~30% chiều rộng canvas và ~41% chiều cao canvas so với phiên bản cũ, giúp sơ đồ nằm gọn trong tầm mắt.
+  - **Duy trì tuyệt đối các chỉ số vàng đồ thị phẳng**: 0 giao cắt dây, 0 dây cắt đè bảng, 0 đường chéo, căn thẳng trực diện 23 quan hệ liền kề.
 
-- **Web Client - Tự Động Nạp & Mở Dạng Bài Đầu Tiên Khi Chọn Chương / Bài Học**:
-  - Cập nhật `toggleChapter` và `toggleLesson` trong `CurriculumExplorerView.jsx`: Khi người dùng nhấp vào tiêu đề Chương hoặc Bài học, hệ thống tự động tìm và chọn dạng bài đầu tiên (`selectedPattern`), giải quyết dứt điểm tình trạng khung bài học bên phải bị trống khi mới chọn chương.
-
-- **Web Client - Khắc Phục Cảnh Báo KaTeX Strict Mode Đối Với Ký Tự Tiếng Việt (`MathText.jsx`)**:
-  - Bổ sung cấu hình `strict: 'ignore'` trong trình dựng `renderKatexHtml` của `MathText.jsx`, triệt tiêu hoàn toàn cảnh báo `LaTeX-incompatible input Unicode text character "Đ" used in math mode`.
-
-- **Web Client - Hệ Thống Thông Báo Toàn Cục (Global Toast Notification System)**:
-  - Triển khai `ToastContext.jsx` & `GlobalToastContainer.jsx` thay thế triệt để `window.alert()`.
-  - Hỗ trợ 4 nhóm trạng thái (Success, Error, Warning, Info), thanh đếm ngược tự động dừng khi rê chuột, và cơ chế bọc tự động chặn `window.alert()` toàn hệ thống.
-
-- **Tài Liệu Hệ Thống - Bảng Theo Dõi Hotfix Kiến Trúc Dạng Thẻ (`docs/hotfix/AI_Engine_Hotfix.md`)**:
-  - Ghi nhận 3 thẻ sự cố kiến trúc (Hotfix Issue Cards) do **`ThinhTran2412`** phát hiện và đề xuất giải pháp:
-    1. `HF-AI-01` (`CRITICAL - OPEN`): Phân hệ Python (`diagnostic.py`) thiếu schema đặc tả thẻ 3D/đồ thị, thiếu failover và bộ hồi phục JSON.
-    2. `HF-AI-02` (`HIGH - OPEN`): Phân hệ C# (`CurriculumEndpoints.cs`) gán cứng mặc định môn Toán khi thiếu input, gây nguy cơ ép sai Prompt cho môn Xã hội.
-    3. `HF-AI-03` (`MEDIUM - OPEN`): Phân hệ C# (`CurriculumAiService.cs`) nhồi prompt dài dằng dặc trong code C# (Prompt-in-Code Smell), đề xuất tách sang File-based Templates (`Templates/Prompts/*.prompt.md`).
-
-- **Kiểm Thử Toàn Diện Hệ Thống**:
-  - `V-Eval-Content_Service`: `dotnet build` đạt **0 Warning, 0 Error**.
-  - `V-Eval-Web_Client`: `npm run build` hoàn thành 100% (**0 Error, 0 Warning**, hoàn tất trong 940ms trên Vite 8 và React 19).
+- **Thiết Kế Bản Vẽ Kiến Trúc Hệ Thống Chuẩn Phục Vụ Vẽ Tay (`docs/System_Architecture_Diagram.md`)**:
+  - Chuẩn hóa vị trí thư viện: Đưa MathLab (`JSXGraph` 2D/3D & `KaTeX` Live Math) về đúng bản chất là các **thư viện tích hợp nội bộ** nằm trực tiếp bên trong `V-Eval Web Client (React 19 + Vite)`, không tách thành khối Client độc lập.
+  - Xây dựng 2 định dạng bản vẽ thuần túy (Chỉ sơ đồ trực quan):
+    1. **Sơ đồ tương tác Mermaid 11.15.0+**: Phân tầng 5 lớp (Client -> YARP Gateway -> Core Microservices .NET 9 -> AI Subsystem -> Supabase Data Persistence).
+    2. **Bản vẽ hình hộp ASCII Blueprint**: Đo đạc tỷ lệ chuẩn xác từng khối hộp, cổng port và giao thức (`gRPC HTTP/2`, `HTTPS/REST`, `Npgsql EF Core`) để người dùng nhìn và tự vẽ tay bằng bút lên giấy A4/A3.
