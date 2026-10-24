@@ -245,24 +245,22 @@ erDiagram
 | | `Passages` | Đoạn văn, bài đọc hiểu chung dùng cho nhóm câu hỏi ĐGNL. |
 | | `Questions` | Ngân hàng câu hỏi trắc nghiệm chuẩn hóa: Đề bài LaTeX, 4 phương án A-D, đáp án đúng `correct_option` ('A'..'D'), độ khó 1-4, giải thích. |
 | | `MockExams` & `ExamQuestions` | Bộ đề thi chẩn đoán (30 câu), đề thi thử định kỳ (120 câu) và đề Quiz củng cố thích ứng kèm thứ tự câu hỏi. |
-| **`v_eval_practice`** | `LearningProfiles` | Hồ sơ điểm năng lực học tập theo từng kỹ năng: Điểm làm chủ `mastery_score` (IRT / BKT: 0.0 -> 1.0, ngưỡng đạt 0.85). |
-| | `LearningRoadmaps` & `RoadmapNodes` | Lộ trình học tập cá nhân hóa và các nút kỹ năng đã được sắp xếp thứ tự bởi thuật toán Topological Sort. |
-| | `StageProgress` | Theo dõi tiến độ hoàn thành 4 giai đoạn sư phạm trên từng node lộ trình (1: SGK, 2: Phương pháp, 3: Video, 4: Adaptive Quiz). |
-| | `AdaptiveQuizAttempts` | Lịch sử làm bài trắc nghiệm thích ứng theo từng câu bám sát dạng bài (ZPD State Machine). |
-| | `AttemptLogs` | Nhật ký làm bài tự do và luyện tập bổ trợ của học sinh. |
-| | `ExamSubmissions` & `SubmissionAnswers` | Bài nộp thi chẩn đoán / thi thử, bảng điểm chi tiết từng câu và thời gian làm bài. |
-| | `MistakeNotebooks` | Sổ tay lỗi sai & cơ chế lặp lại ngắt quãng Leitner Spaced Repetition (Hộp 1->5, tự động lên lịch `next_review_date`). |
-| | `Classes` & `ClassEnrollments` | Lớp học offline (tối đa 20 học sinh) và danh sách học viên theo từng cơ sở. |
-| | `ClassGroups` & `ClassGroupMembers` | Nhóm phân hóa năng lực trong lớp (Thematic Cohorts) được chia theo mức độ tiếp thu (`REMEDIAL`, `STANDARD`, `ADVANCED`). |
-| | `LiveSessions` & `LiveSessionAttendance`| Phiên học Live trực tuyến với Giáo viên, lịch phát sóng và điểm danh vào/ra. |
-| | `TeacherFeedback` | Phản hồi sư phạm định hướng của giáo viên dành riêng cho từng học sinh. |
-| | `AbilityGroups` & `StudentGroupMemberships`| Phân cụm năng lực học sinh vĩ mô bởi thuật toán Constrained K-Means và lưu trữ trạng thái hiện tại. |
-| | `SystemAlerts` & `SystemConfigs` | Cảnh báo nguy cơ học tập sa sút (`FALL_BEHIND`, `INACTIVE`) và cấu hình hệ thống tập trung. |
-| **`v_eval_ai`** | `KnowledgeSources` | Nguồn tài liệu số hóa SGK, sách chuyên đề và sách giáo viên. |
-| | `KnowledgeVectorChunks` | Vector Embeddings 768 chiều (Gemini text-embedding-004) kèm chỉ mục HNSW Cosine Similarity phục vụ RAG siêu tốc (<5ms). |
-| | `AITutorSessions` & `AITutorMessages` | Phiên trò chuyện và lịch sử tin nhắn trợ lý ảo Socratic AI Tutor hướng dẫn gợi mở. |
-| | `ScorePredictions` | Dự báo điểm thi ĐGNL tiềm năng và khoảng tin cậy dựa trên mô hình hồi quy. |
-| | `TokenUsageLogs` | Giám sát chi phí API LLM và lượng token tiêu thụ theo thời gian thực. |
+| **`v_eval_practice`** | `Classes` & `ClassEnrollments` | Lớp học offline (sĩ số tối đa 20 học sinh) và danh sách học viên theo từng cơ sở đào tạo. |
+| | `ClassGroups` & `ClassGroupMembers` | Nhóm học tập vi mô (Micro-groups 3–5 học sinh) phân hóa theo vùng trũng kiến thức để gán phiếu bài tập thích ứng. |
+| | `ExamSubmissions`, `SubmissionAnswers` & `ProctoringSnapshots` | Bài nộp thi chẩn đoán / thi thử, bảng điểm chi tiết từng câu và ảnh chụp webcam giám sát liêm chính proctoring. |
+| | `LearningProfiles` | Hồ sơ năng lực BKT theo từng kỹ năng: Điểm làm chủ xác suất `P(L_t)` và `P(L_0)`. |
+| | `LearningRoadmaps` & `RoadmapNodes` | Lộ trình học tập cá nhân hóa tự động cắt tỉa và các chặng học tích hợp 2 thành phần (Video lý thuyết + Quiz củng cố). |
+| | `StageProgress` | Tiến trình chặng học chu trình 4 bước P-L-A-R (Preview, Learn, Apply, Reflect) tích hợp FSM. |
+| | `AdaptiveQuizAttempts` | Log trả lời trắc nghiệm thích ứng theo từng câu bám sát dạng bài (BKT & IRT ZPD State Machine). |
+| | `MistakeNotebooks` | Sổ tay lỗi sai & thuật toán lặp lại ngắt quãng SuperMemo-2 (SM-2: `interval_days`, `ease_factor`, `next_review_date`). |
+| | `ScorePredictions` | Dự báo khoảng điểm thi ĐGNL tiềm năng SEM 95% và toa thuốc bù điểm Knapsack ROI. |
+| | `SystemAlerts` | Hệ thống cảnh báo sớm 3 cấp độ BR-04 (`SAFE_GREEN`, `WARNING_AMBER`, `CRITICAL_RED`, `UNREALISTIC_GOAL`). |
+| | `ClassSkillHeatmaps` & `ClassHeatmapSummaries` | Ma trận nhiệt kỹ năng học sinh và bảng tổng hợp cảnh báo sư phạm cấp lớp học. |
+| | `StudentDailyActivities` & `StudentReadinessMetrics` | Nhật ký chuyên cần, chuỗi ngày streak học tập và chỉ số sẵn sàng thi ĐGNL tổng hợp. |
+| **`v_eval_ai`** | `KnowledgeSources` & `KnowledgeVectorChunks` | Nguồn tri thức SGK số hóa và Vector Chunks 768 chiều (`pgvector`, Gemini embedding) kèm chỉ mục HNSW Cosine Similarity. |
+| | `archetype_patterns`, `pattern_exemplars` & `pattern_traps` | Đồ thị tri thức dạng bài (Archetype Knowledge Graph), câu hỏi mẫu điển hình và các bẫy nhận thức / ngộ nhận thường gặp. |
+| | `novel_pattern_proposals` | Đề xuất dạng bài mới trích xuất từ đề thi thực tế chờ Academic Curators phê duyệt. |
+| | `ai_tutor_interaction_logs` | Nhật ký tương tác Trợ giảng AI Socratic giải đáp theo phương pháp gợi mở tư duy và lưu vết hậu kiểm. |
 
 ---
 
