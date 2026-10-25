@@ -33,10 +33,11 @@
     - **Trang 2 (`Trang-2`)**: Sơ đồ khái niệm tinh gọn (Conceptual Entity ERD), neo mép viền chuẩn xác (`0.0, 1.0`), loại bỏ triệt để lỗi dây xuyên tâm bảng, đi dây hành lang thông thoáng (0 va chạm).
     - **Trang 3 (`Trang-3`)**: Mô hình trải phẳng toàn diện (Flat Full-Detail Physical & Logical ERD) gồm 47 bảng đầy đủ thuộc tính chi tiết, bố trí 12 cột rãnh thông thoáng, hệ thống xa lộ đỉnh (North Skyway) và xa lộ đáy (South Highway) tối ưu (0 va chạm).
 
-- **Chuẩn Hóa Ràng Buộc Cơ Sở & Hoàn Thiện Báo Cáo Kiểm Duyệt 75 Mối Quan Hệ**:
-  - Cập nhật [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql) & Codebase C# `V-Eval-Identity_Service`: Chuyển `Students.campus_id` thành `NOT NULL REFERENCES Campuses(campus_id) ON DELETE RESTRICT`; bổ sung `AcademicDirectors.campus_id` (`NOT NULL REFERENCES Campuses(campus_id) ON DELETE RESTRICT`) gắn Giám đốc đào tạo trực tiếp phụ trách cơ sở.
+- **Chuẩn Hóa Ràng Buộc Cơ Sở & Hoàn Thiện Báo Cáo Kiểm Duyệt 74 Mối Quan Hệ**:
+  - Cập nhật [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql) & Codebase C# `V-Eval-Identity_Service`: Chuyển `Students.campus_id` thành `NOT NULL REFERENCES Campuses(campus_id) ON DELETE RESTRICT`; xác nhận vai trò cấp cao toàn hệ thống của `AcademicDirectors` (không gắn với Campus đơn lẻ).
   - Biên dịch thành công 100% cả `V-Eval-Identity_Service.sln` và `V-Eval-Practice_Service.sln` (**0 Error, 0 Warning**).
-  - Biên soạn và nâng cấp tài liệu kiểm duyệt chuyên sâu [`docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md`](./docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md): Tổng hợp toàn diện **75 mối quan hệ** (43 Physical FKs + 32 Logical Refs), chuẩn hóa bản số bắt buộc `1..N` cho phụ huynh liên kết con em trong `ParentStudentRelations`, phân tích sâu tương quan hai chiều và ý nghĩa nghiệp vụ sư phạm kèm Ma trận Kiểm duyệt (Audit Checklist STT 1–75).
+  - Biên soạn và nâng cấp tài liệu kiểm duyệt chuyên sâu [`docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md`](./docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md): Tổng hợp toàn diện **74 mối quan hệ** (42 Physical FKs + 32 Logical Refs), chuẩn hóa bản số bắt buộc `1..N` cho phụ huynh liên kết con em trong `ParentStudentRelations`, phân tích sâu tương quan hai chiều và ý nghĩa nghiệp vụ sư phạm kèm Ma trận Kiểm duyệt (Audit Checklist STT 1–74).
   - Cập nhật [`docs/SQL/Mo_Ta_Thiet_Ke_ERD_Concept.md`](./docs/SQL/Mo_Ta_Thiet_Ke_ERD_Concept.md) phản ánh chuẩn Schema V4.1 và cấu trúc đầy đủ 3 trang.
+
 
 

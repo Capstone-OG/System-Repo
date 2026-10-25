@@ -130,7 +130,6 @@ CREATE TABLE IF NOT EXISTS v_eval_identity."AcademicManagers" (
 -- 1.12 Hồ sơ Giám đốc Đào tạo (AcademicDirectors - 1:1 Users)
 CREATE TABLE IF NOT EXISTS v_eval_identity."AcademicDirectors" (
     "director_id" uuid PRIMARY KEY REFERENCES v_eval_identity."Users"("user_id") ON DELETE CASCADE,
-    "campus_id" uuid NOT NULL REFERENCES v_eval_identity."Campuses"("campus_id") ON DELETE RESTRICT,
     "created_at" timestamp with time zone NOT NULL DEFAULT now()
 );
 
@@ -625,7 +624,6 @@ CREATE TABLE IF NOT EXISTS v_eval_ai.ai_tutor_interaction_logs (
 CREATE INDEX IF NOT EXISTS "idx_users_email" ON v_eval_identity."Users"("email");
 CREATE INDEX IF NOT EXISTS "idx_userroles_user_role" ON v_eval_identity."UserRoles"("user_id", "role_id");
 CREATE INDEX IF NOT EXISTS "idx_students_campus" ON v_eval_identity."Students"("campus_id");
-CREATE INDEX IF NOT EXISTS "idx_directors_campus" ON v_eval_identity."AcademicDirectors"("campus_id");
 CREATE INDEX IF NOT EXISTS "idx_refreshtokens_user" ON v_eval_identity."RefreshTokens"("user_id");
 CREATE INDEX IF NOT EXISTS "idx_otp_email_type" ON v_eval_identity."OtpVerifications"("email", "type");
 
