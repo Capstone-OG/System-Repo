@@ -1,13 +1,14 @@
 -- =====================================================================
 -- V-EVAL ADAPTIVE LEARNING PLATFORM — UNIFIED MASTER DATABASE SCHEMA
 -- =====================================================================
--- Phiên bản: Schema V4.0 (Đồng bộ 100% Microservices, Graph RAG, BKT/IRT & Supabase Cloud)
--- Ngày ban hành: 23/10/2026
+-- Phiên bản: Schema V4.1 (Đồng bộ 100% Microservices, Mô hình Offline Cohort 20 học sinh & Nhóm vi mô thích ứng)
+-- Ngày ban hành: 24/10/2026
+-- Tổng số thực thể: 47 bảng (Identity: 13, Content: 8, Practice: 19, AI: 7)
 -- Phân vùng 4 Bounded Context Schemas:
---   1. v_eval_identity : Quản trị định danh, RBAC, 6 Actor Profiles, Cơ sở & Bảo mật OTP/Token
---   2. v_eval_content  : Khung năng lực 3 cấp, DAG tiên quyết, Đề thi chuẩn hóa & Ngân hàng câu hỏi
---   3. v_eval_practice : Lộ trình thích ứng P-L-A-R, Lớp học, Nhóm vi mô, BKT/SM-2, Proctoring, Dự báo SEM & Heatmap Analytics
---   4. v_eval_ai       : Nguồn tri thức RAG, Vector Chunks 768d, Archetype Knowledge Graph & AI Tutor Socratic Logs
+--   1. v_eval_identity : Quản trị định danh, RBAC, 6 Actor Profiles, Cơ sở & Bảo mật OTP/Token (13 bảng)
+--   2. v_eval_content  : Khung năng lực 3 cấp, DAG tiên quyết, Đề thi chuẩn hóa & Ngân hàng câu hỏi (8 bảng)
+--   3. v_eval_practice : Lộ trình thích ứng P-L-A-R, Lớp học offline, Nhóm vi mô 3-5 HS, BKT/SM-2, Proctoring, Dự báo SEM & Heatmap Analytics (19 bảng)
+--   4. v_eval_ai       : Nguồn tri thức RAG, Vector Chunks 768d, Archetype Knowledge Graph & AI Tutor Socratic Logs (7 bảng)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS v_eval_identity."OtpVerifications" (
 -- 1.7 Hồ sơ Học sinh (Students - 1:1 Users)
 CREATE TABLE IF NOT EXISTS v_eval_identity."Students" (
     "student_id" uuid PRIMARY KEY REFERENCES v_eval_identity."Users"("user_id") ON DELETE CASCADE,
-    "campus_id" uuid REFERENCES v_eval_identity."Campuses"("campus_id") ON DELETE SET NULL,
+    "campus_id" uuid NOT NULL REFERENCES v_eval_identity."Campuses"("campus_id") ON DELETE RESTRICT,
     "target_score" integer DEFAULT 800,
     "exam_date" date,
     "study_hours_day" double precision DEFAULT 2.0,
@@ -129,6 +130,7 @@ CREATE TABLE IF NOT EXISTS v_eval_identity."AcademicManagers" (
 -- 1.12 Hồ sơ Giám đốc Đào tạo (AcademicDirectors - 1:1 Users)
 CREATE TABLE IF NOT EXISTS v_eval_identity."AcademicDirectors" (
     "director_id" uuid PRIMARY KEY REFERENCES v_eval_identity."Users"("user_id") ON DELETE CASCADE,
+    "campus_id" uuid NOT NULL REFERENCES v_eval_identity."Campuses"("campus_id") ON DELETE RESTRICT,
     "created_at" timestamp with time zone NOT NULL DEFAULT now()
 );
 
@@ -320,36 +322,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."ClassGroupMembers" (
     CONSTRAINT "uq_group_student_member" UNIQUE ("group_id", "student_id")
 );
 
--- 3.8 Buổi Học Live Q&A Định kỳ (LiveSessions)
-CREATE TABLE IF NOT EXISTS v_eval_practice."LiveSessions" (
-    "session_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "class_id" uuid NOT NULL REFERENCES v_eval_practice."Classes"("class_id") ON DELETE CASCADE,
-    "teacher_id" uuid,
-    "title" varchar(255) NOT NULL,
-    "description" text,
-    "scheduled_at" timestamp with time zone NOT NULL,
-    "duration_minutes" integer NOT NULL DEFAULT 60,
-    "meeting_url" varchar(500),
-    "recording_url" varchar(500),
-    "is_recorded" boolean NOT NULL DEFAULT false,
-    "status" varchar(50) NOT NULL DEFAULT 'SCHEDULED',
-    "created_at" timestamp with time zone NOT NULL DEFAULT now()
-);
-
--- 3.9 Điểm danh Buổi Live & Quiz Bù Chuyên cần (LiveSessionAttendance)
-CREATE TABLE IF NOT EXISTS v_eval_practice."LiveSessionAttendance" (
-    "attendance_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    "session_id" uuid NOT NULL REFERENCES v_eval_practice."LiveSessions"("session_id") ON DELETE CASCADE,
-    "student_id" uuid NOT NULL,
-    "attendance_status" varchar(50) NOT NULL DEFAULT 'ATTENDED',
-    "joined_at" timestamp with time zone,
-    "left_at" timestamp with time zone,
-    "makeup_quiz_id" uuid,
-    "is_makeup_quiz_passed" boolean NOT NULL DEFAULT false,
-    CONSTRAINT "uq_session_student_attendance" UNIQUE ("session_id", "student_id")
-);
-
--- 3.10 Hồ sơ Năng lực BKT P(L0) & Xác suất Thành thạo (LearningProfiles)
+-- 3.8 Hồ sơ Năng lực BKT P(L0) & Xác suất Thành thạo (LearningProfiles)
 CREATE TABLE IF NOT EXISTS v_eval_practice."LearningProfiles" (
     "profile_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -359,7 +332,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."LearningProfiles" (
     CONSTRAINT "uq_student_skill_profile" UNIQUE ("student_id", "skill_id")
 );
 
--- 3.11 Lộ trình Học tập Cá nhân hóa Tự động Cắt tỉa (LearningRoadmaps)
+-- 3.9 Lộ trình Học tập Cá nhân hóa Tự động Cắt tỉa (LearningRoadmaps)
 CREATE TABLE IF NOT EXISTS v_eval_practice."LearningRoadmaps" (
     "roadmap_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -374,7 +347,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."LearningRoadmaps" (
     "updated_at" timestamp with time zone NOT NULL DEFAULT now()
 );
 
--- 3.12 Từng Chặng học Tích hợp 2 Thành phần (RoadmapNodes)
+-- 3.10 Từng Chặng học Tích hợp 2 Thành phần (RoadmapNodes)
 CREATE TABLE IF NOT EXISTS v_eval_practice."RoadmapNodes" (
     "node_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "roadmap_id" uuid NOT NULL REFERENCES v_eval_practice."LearningRoadmaps"("roadmap_id") ON DELETE CASCADE,
@@ -382,7 +355,6 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."RoadmapNodes" (
     "step_order" integer NOT NULL,
     "material_id" uuid,
     "quiz_exam_id" uuid,
-    "live_session_id" uuid REFERENCES v_eval_practice."LiveSessions"("session_id") ON DELETE SET NULL,
     "status" varchar(50) NOT NULL DEFAULT 'LOCKED', -- 'LOCKED', 'UNLOCKED', 'COMPLETED'
     "is_pruned" boolean NOT NULL DEFAULT false,
     "unlocked_at" timestamp with time zone,
@@ -394,7 +366,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."RoadmapNodes" (
     "is_quiz_passed" boolean DEFAULT false
 );
 
--- 3.13 Tiến trình Chặng học Chu trình 4 bước P-L-A-R (StageProgress)
+-- 3.11 Tiến trình Chặng học Chu trình 4 bước P-L-A-R (StageProgress)
 CREATE TABLE IF NOT EXISTS v_eval_practice."StageProgress" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -409,7 +381,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."StageProgress" (
     "updated_at" timestamp with time zone DEFAULT now()
 );
 
--- 3.14 Log Trả lời Thích ứng BKT & IRT ZPD (AdaptiveQuizAttempts)
+-- 3.12 Log Trả lời Thích ứng BKT & IRT ZPD (AdaptiveQuizAttempts)
 CREATE TABLE IF NOT EXISTS v_eval_practice."AdaptiveQuizAttempts" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "stage_progress_id" uuid NOT NULL REFERENCES v_eval_practice."StageProgress"("id") ON DELETE CASCADE,
@@ -427,7 +399,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."AdaptiveQuizAttempts" (
     "created_at" timestamp with time zone DEFAULT now()
 );
 
--- 3.15 Sổ tay Lỗi sai & Lặp lại Ngắt quãng SuperMemo-2 (MistakeNotebooks)
+-- 3.13 Sổ tay Lỗi sai & Lặp lại Ngắt quãng SuperMemo-2 (MistakeNotebooks)
 CREATE TABLE IF NOT EXISTS v_eval_practice."MistakeNotebooks" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -448,7 +420,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."MistakeNotebooks" (
     CONSTRAINT "uq_student_mistake_question" UNIQUE ("student_id", "question_id")
 );
 
--- 3.16 Dự báo Khoảng điểm SEM & Toa thuốc Knapsack ROI (ScorePredictions)
+-- 3.14 Dự báo Khoảng điểm SEM & Toa thuốc Knapsack ROI (ScorePredictions)
 CREATE TABLE IF NOT EXISTS v_eval_practice."ScorePredictions" (
     "prediction_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -464,7 +436,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."ScorePredictions" (
     "created_at" timestamp with time zone DEFAULT now()
 );
 
--- 3.17 Hệ thống Cảnh báo Sớm 3 Cấp BR-04 (SystemAlerts)
+-- 3.15 Hệ thống Cảnh báo Sớm 3 Cấp BR-04 (SystemAlerts)
 CREATE TABLE IF NOT EXISTS v_eval_practice."SystemAlerts" (
     "alert_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -477,7 +449,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."SystemAlerts" (
     "created_at" timestamp with time zone DEFAULT now()
 );
 
--- 3.18 Ma trận Nhiệt Năng lực Kỹ năng Từng Học sinh (ClassSkillHeatmaps)
+-- 3.16 Ma trận Nhiệt Năng lực Kỹ năng Từng Học sinh (ClassSkillHeatmaps)
 CREATE TABLE IF NOT EXISTS v_eval_practice."ClassSkillHeatmaps" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "class_id" uuid NOT NULL REFERENCES v_eval_practice."Classes"("class_id") ON DELETE CASCADE,
@@ -492,7 +464,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."ClassSkillHeatmaps" (
     CONSTRAINT "uq_class_student_skill" UNIQUE ("class_id", "student_id", "skill_id")
 );
 
--- 3.19 Tổng hợp Cột Kỹ năng Lớp học & Cảnh báo Sư phạm (ClassHeatmapSummaries)
+-- 3.17 Tổng hợp Cột Kỹ năng Lớp học & Cảnh báo Sư phạm (ClassHeatmapSummaries)
 CREATE TABLE IF NOT EXISTS v_eval_practice."ClassHeatmapSummaries" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "class_id" uuid NOT NULL REFERENCES v_eval_practice."Classes"("class_id") ON DELETE CASCADE,
@@ -510,7 +482,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."ClassHeatmapSummaries" (
     CONSTRAINT "uq_class_skill_summary" UNIQUE ("class_id", "skill_id")
 );
 
--- 3.20 Nhật ký Chuyên cần & Streak Học tập (StudentDailyActivities)
+-- 3.18 Nhật ký Chuyên cần & Streak Học tập (StudentDailyActivities)
 CREATE TABLE IF NOT EXISTS v_eval_practice."StudentDailyActivities" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,
@@ -526,7 +498,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."StudentDailyActivities" (
     CONSTRAINT "uq_student_activity_date" UNIQUE ("student_id", "activity_date")
 );
 
--- 3.21 Chỉ số Sẵn sàng Thi ĐGNL & Xu hướng (StudentReadinessMetrics)
+-- 3.19 Chỉ số Sẵn sàng Thi ĐGNL & Xu hướng (StudentReadinessMetrics)
 CREATE TABLE IF NOT EXISTS v_eval_practice."StudentReadinessMetrics" (
     "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL UNIQUE,
@@ -653,6 +625,7 @@ CREATE TABLE IF NOT EXISTS v_eval_ai.ai_tutor_interaction_logs (
 CREATE INDEX IF NOT EXISTS "idx_users_email" ON v_eval_identity."Users"("email");
 CREATE INDEX IF NOT EXISTS "idx_userroles_user_role" ON v_eval_identity."UserRoles"("user_id", "role_id");
 CREATE INDEX IF NOT EXISTS "idx_students_campus" ON v_eval_identity."Students"("campus_id");
+CREATE INDEX IF NOT EXISTS "idx_directors_campus" ON v_eval_identity."AcademicDirectors"("campus_id");
 CREATE INDEX IF NOT EXISTS "idx_refreshtokens_user" ON v_eval_identity."RefreshTokens"("user_id");
 CREATE INDEX IF NOT EXISTS "idx_otp_email_type" ON v_eval_identity."OtpVerifications"("email", "type");
 
@@ -664,6 +637,9 @@ CREATE INDEX IF NOT EXISTS "idx_examquestions_order" ON v_eval_content."ExamQues
 
 -- 3. Practice, Roadmaps & Stages
 CREATE INDEX IF NOT EXISTS "idx_classes_campus_status" ON v_eval_practice."Classes"("campus_id", "status");
+CREATE INDEX IF NOT EXISTS "idx_class_groups_class" ON v_eval_practice."ClassGroups"("class_id");
+CREATE INDEX IF NOT EXISTS "idx_class_group_members_group" ON v_eval_practice."ClassGroupMembers"("group_id");
+CREATE INDEX IF NOT EXISTS "idx_class_group_members_student" ON v_eval_practice."ClassGroupMembers"("student_id");
 CREATE INDEX IF NOT EXISTS "idx_submissions_student_exam" ON v_eval_practice."ExamSubmissions"("student_id", "exam_id");
 CREATE INDEX IF NOT EXISTS "idx_subanswers_submission" ON v_eval_practice."SubmissionAnswers"("submission_id");
 CREATE INDEX IF NOT EXISTS "idx_proctoring_submission" ON v_eval_practice."ProctoringSnapshots"("submission_id");
