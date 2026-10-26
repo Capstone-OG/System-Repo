@@ -18,7 +18,7 @@
   - Tại gốc `docs/` chỉ duy trì đúng 2 thư mục tài nguyên chính quy:
     1. [`docs/diagrams/`](./docs/diagrams/): Chứa các sơ đồ kiến trúc và activity diagrams chuẩn 6 Core Flows.
     2. [`docs/SQL/`](./docs/SQL/): Chứa file kịch bản CSDL chính thức `SQL.sql` và tài liệu nghiệm thu 74 quan hệ thực thể.
-  - Di chuyển toàn bộ các tài liệu đặc tả, kế hoạch triển khai chi tiết, báo cáo nội bộ và biên bản họp sang thư mục tập trung mới: [`docs/docs_noi_bo/`](./docs/docs_noi_bo/).
+  - Toàn bộ các tài liệu đặc tả, kế hoạch triển khai chi tiết, báo cáo nội bộ và biên bản họp được dời độc lập sang thư mục nội bộ tại gốc repo: [`docs_noi_bo/`](./docs_noi_bo/).
   - Cập nhật mục lục điều hướng và cây thư mục dự án trong [`README.md`](./README.md) đồng bộ hoàn toàn với cấu trúc mới.
 
 - **Khắc Phục Toàn Diện 7 Điểm Lệch Kiến Trúc Review 2**:
