@@ -1,20 +1,23 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [26/10/2026] - Nghiệm Thu STT 1–50 Mối Quan Hệ CSDL, Phân Tích Chuyên Sâu Many-To-One (N - 1), JSONB Hybrid Patterns & Đối Chiếu Barem Review 2 SWP490
+## [26/10/2026] - Hoàn Tất Nghiệm Thu Toàn Diện 74/74 Mối Quan Hệ CSDL V-Eval (Schema V4.1), Đồng Bộ Báo Cáo Kiến Trúc & Chuẩn Hóa MD Editor Plus
 
-- **Nghiệm Thu Toàn Diện STT 1 Đến STT 50 Trong Báo Cáo Kiểm Định CSDL**:
-  - Cập nhật [`docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md`](./docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md): Đánh dấu `[x] Nghiệm thu` chính thức cho 50 mối quan hệ đầu tiên (toàn bộ 42 Khóa ngoại vật lý nội bộ + 8 Tham chiếu logic liên Service đầu tiên).
-  - Phân tích chi tiết từng cặp bản số (`1-0`, `1-1`, `1-N`, `0-0`, `0-1`) trực tiếp vào từng dòng của Bảng Master Checklist và các mục giải trình chuyên sâu.
+- **Nghiệm Thu Toàn Diện 100% (74/74) Mối Quan Hệ Thực Thể trong Báo Cáo Kiểm Định CSDL**:
+  - Hoàn tất rà soát, đánh dấu `[x] Nghiệm thu` cho toàn bộ 74 mối quan hệ (42 Khóa ngoại vật lý nội bộ + 32 Tham chiếu logic liên Service) trong [`docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md`](./docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md).
+  - Phân tích chi tiết từng cặp bản số (`1-0`, `1-1`, `1-N`, `0-0`, `0-1`) trực tiếp tại bảng Master Matrix và 11 phân mục giải trình kiến trúc chuyên sâu.
 
-- **Làm Rõ Bản Số Many-to-One (N - 1) & Kiến Trúc AI Đa Dạng Bài / Đa Bẫy Tư Duy (STT 41–43)**:
-  - **Chiều `N — 1` (Many-to-One)**: Nhiều bản ghi con (đề xuất câu hỏi mới, phiên chat AI Tutor) cùng trỏ về 1 bản ghi cha (dạng bài chủ đạo, bẫy tư duy kinh điển).
-  - **Cơ chế Hybrid Pattern & Multi-traps qua JSONB**: Khóa ngoại cứng chỉ lưu Top-1 dạng gần nhất hoặc bẫy kích hoạt ban đầu để bảo đảm chuẩn hóa 3NF; toàn bộ $N$ dạng bài lai ghép được lưu trong `extracted_metadata jsonb`, và diễn biến $N$ bẫy liên tiếp trong phiên chat Socratic được lưu trong `ai_guidance_transcript jsonb`.
+- **Nghiệm Thu Đợt Cuối (STT 51 Đến STT 74) - Lõi Nghiệp Vụ Khảo Thí & Thích Ứng Cá Nhân Hóa**:
+  - **STT 51–55 (Khảo thí & Lộ trình học thích ứng P-L-A-R)**: Câu trả lời bài thi (`SubmissionAnswers`), lộ trình cá nhân hóa (`LearningRoadmaps`), chặng học kỹ năng (`RoadmapNodes`), cơ chế Dual-Video tiên quyết/bài giảng song song (`Materials`), và đề thi container vượt chặng (`MockExams`).
+  - **STT 56–58 (Tiến trình chặng học & Vector Năng lực BKT)**: `StageProgress` theo chu trình 4 bước P-L-A-R; `LearningProfiles` lưu trữ theo từng kỹ năng `UNIQUE(student_id, skill_id)` phục vụ phân nhóm vi mô `ClassMicroClusterer`.
+  - **STT 59–60 (Vòng lặp Luyện tập thích ứng ZPD & BKT)**: `AdaptiveQuizAttempts` ghi nhận từng lượt nộp đáp án thích ứng cho 1 câu hỏi, tính toán xác suất đoán mò và cập nhật P(Lt).
+  - **STT 61–63 (Sổ tay lỗi sai & Thuật toán SM-2)**: `MistakeNotebooks` lưu trữ chính xác cho từng câu hỏi làm sai `UNIQUE(student_id, question_id)`, điều khiển bởi thuật toán lặp lại ngắt quãng SuperMemo-2 (`ease_factor`, `interval_days`), gán `skill_id` để lọc sổ tay và tính mật độ lỗi sai.
+  - **STT 64 (Dự báo điểm số chuỗi thời gian SEM & Toa thuốc Knapsack ROI)**: `ScorePredictions` là bảng chuỗi thời gian Append-Only (không ghi đè); mỗi lần thi thử 120/150 câu hoặc hoàn thành bài tập bù điểm, hệ thống INSERT 1 dòng mới để vẽ Biểu đồ xu hướng tiến bộ điểm số (Trendline) và lưu vết sự thu hẹp sai số đo lường SEM.
+  - **STT 65–66 (Hệ thống Cảnh báo Sớm 3 Cấp BR-04 & Phân quyền xử lý)**: `SystemAlerts` phân loại 3 mức (Xanh, Vàng, Đỏ / Mục tiêu ảo); trường `handled_by` trỏ về `Users.user_id` để cả Giáo viên (`Teachers`) và Quản lý học vụ (`AcademicManagers`) đều có thể tiếp nhận can thiệp sư phạm.
+  - **STT 67–69 (Ma trận Nhiệt Lớp học & Cảnh báo Sư phạm Bimodal)**: `ClassSkillHeatmaps` lưu từng ô lưới `UNIQUE(class_id, student_id, skill_id)`; `ClassHeatmapSummaries` tổng kết chân cột kỹ năng `UNIQUE(class_id, skill_id)` và phát hiện phân hóa 2 cực `is_bimodal` để gợi ý chia nhóm vi mô.
+  - **STT 70–71 (Hoạt động học tập & Chỉ số Sẵn sàng thi)**: `StudentDailyActivities` lưu nhật ký và chuỗi Streak; `StudentReadinessMetrics` ràng buộc `UNIQUE(student_id)` lưu duy nhất 1 bản ghi tổng hợp 4 trụ cột (Tri thức, Tâm lý, Thời gian, Sức bền) để hiển thị Radar Chart.
+  - **STT 72–74 (Tích hợp AI Engine & Trợ giảng AI Socratic)**: `archetype_patterns` là mức đào sâu chi tiết của kỹ năng; `ai_tutor_interaction_logs` lưu nhật ký hội thoại Socratic neo vào đúng câu hỏi làm sai (`question_id`), kiên quyết không giải hộ mà gợi mở tư duy (Scaffolding).
 
-- **Nghiệm Thu Nhóm Tham Chiếu Logic Liên Service (STT 44–50)**:
-  - **STT 44–46 (`Classes`)**: Cơ sở offline tổ chức lớp học (`campus_id NOT NULL`), giáo viên Lead Mentor điều hành lớp (`teacher_id` Nullable), lớp học được tạo tự động bởi thuật toán Batch K-Means Placement (`assigned_by = NULL`).
-  - **STT 47–48 (`ClassEnrollments`, `ClassGroupMembers`)**: Phân định rõ học sinh tự học online tại nhà (`0` lớp, `0` nhóm) vs học sinh theo học offline tại cơ sở (`1..N` lớp, `1..N` nhóm vi mô 3–5 bạn).
-  - **STT 49–50 (`ExamSubmissions`)**: Học sinh mới đăng ký chưa làm bài test nào (`0` bài thi); Đề thi mới tạo bản nháp `is_published = false` chưa lên kệ (`0` lượt nộp).
-
-- **Đối Chiếu & Xác Nhận Chuẩn Quy Cách Review 2 SWP490 (v1.0 - 10/2026)**:
-  - Rà soát toàn bộ hướng dẫn môn học: Xác nhận hệ thống yêu cầu **`Logical ERD`** và **`database script khớp với ERD`**, hoàn toàn không yêu cầu Conceptual ERD riêng lẻ.
-  - Mô hình 47 bảng và 74 mối quan hệ liên kết qua các bảng trung gian (Junction Tables) bảo đảm 100% chuẩn hóa 3NF và vượt qua kiểm thử tự động của Prompt rà soát Mục 05.
+- **Chuẩn Hóa 100% Quy Cách Hiển Thị Markdown (MD Editor Plus Compatible)**:
+  - Loại bỏ hoàn toàn đường dẫn tuyệt đối `file:///` trong Markdown, chuyển sang đường dẫn tương đối `./`.
+  - Bọc công thức và ký hiệu toán học/trắc lượng trong backtick inline code, tránh lỗi escape ký tự.
+  - Chuẩn hóa toàn bộ sơ đồ Mermaid theo cú pháp Mermaid 11.15.0+ (bọc ngoặc kép tên node, không dùng liên kết gộp `&`).
