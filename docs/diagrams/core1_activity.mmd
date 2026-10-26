@@ -1,98 +1,65 @@
-flowchart TD
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
     %% =========================================================================
-    %% LÀN 1: HỌC SINH (STUDENT)
+    %% LANE 1: STUDENT
     %% =========================================================================
-    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+    subgraph StudentLane ["Student"]
         direction TB
-        Start1A(("● Bắt đầu"))
-        Act_SelectTarget["Chọn Cơ sở (Campus) và Điểm mục tiêu"]
-        Act_ClickStartDiag["Bấm Bắt đầu làm bài thi chẩn đoán năng lực"]
-        Act_DoExam["Làm bài thi 30 câu chuẩn hóa trong vòng 45 phút"]
-        Dec_SubmitTrigger{"Điều kiện nộp bài là gì?"}
-        Act_ClickSubmit["Học sinh chủ động bấm Nộp bài"]
-        Act_WaitExpired["Được thông báo bài thi quá 24h & Bấm làm bài chẩn đoán mới"]
-        Act_ReviewResult["Xem Báo cáo kết quả Radar 4 miền & Lớp học phân bổ"]
-        End1A(("◉ Hoàn tất"))
+        Start1(("● Start"))
+        Act_ChooseTarget["Choose Campus and Target Score"]
+        Act_ClickStartDiag["Click Start diagnostic test"]
+        Act_AnswerQuestions["Answer 30 questions within 45 minutes"]
+        Dec_SubmitTrigger{"Submit trigger?"}
+        Act_ClickSubmit["Click Submit"]
+        Act_ClickNewDiag["Click Start a new diagnostic"]
+        Act_ReviewResult["Review diagnostic result (Radar chart & Tier)"]
+        End1(("◉ End Session"))
     end
 
     %% =========================================================================
-    %% LÀN 2: HỆ THỐNG V-EVAL (PRACTICE SERVICE)
+    %% LANE 2: SYSTEM (V-EVAL PLATFORM)
     %% =========================================================================
-    subgraph SystemLane ["Làn 2: Hệ Thống Khảo Thí (Practice Service)"]
+    subgraph SystemLane ["System (V-Eval Platform)"]
         direction TB
-        Act_LoadExam["Nạp đề thi chuẩn hóa 30 câu từ Content Service"]
-        Act_AutoSubmit["Tự động thu bài và đóng phiên thi (Auto-submit)"]
-        Dec_TimeCheck{"Bài thi có tạo trước đó > 24 giờ?"}
-        Act_MarkExpired["Đánh dấu bài thi HẾT HẠN (EXPIRED)"]
-        Act_VerifyProfile["Xác minh hồ sơ học sinh & Cơ sở qua Identity Service"]
-        Act_FetchKeys["Lấy bảng đáp án gốc & Siêu dữ liệu từ Content Service"]
-        Act_GradeSub["Chấm điểm 30 câu, tính độ chính xác & Gắn cờ kỹ năng yếu (< 60%)"]
-        Act_SendAiPayload["Gửi dữ liệu bài làm sang Phân hệ AI Engine"]
-        Act_SaveSubmission["Lưu ExamSubmissions & Cập nhật tiên nghiệm P(L0) vào LearningProfiles"]
-        Dec_ClassSpace{"Cơ sở có lớp mở cùng trình độ còn chỗ (< 20 em)?"}
-        Act_SelectOpenClass["Chọn lớp mở hiện có tại Campus"]
-        Act_CreateNewClass["Tự động tạo lớp mới cho trình độ này tại Campus"]
-        Act_EnrollClass["Ghi danh học sinh vào lớp & Cập nhật bài nộp"]
-        Act_DisplayRadar["Trả về kết quả hoàn chỉnh & Hiển thị biểu đồ Radar"]
+        Act_LoadExam["Load standardized 30-question exam"]
+        Act_AutoSubmit["Auto-submit answered questions (45 mins elapsed)"]
+        Dec_ExpiredCheck{"Older than 24 hours?"}
+        Act_MarkExpired["Mark exam EXPIRED"]
+        Act_ProcessSubmission["Process submission: IRT 2PL, BKT priors & placement tier"]
+        Act_DisplayRadar["Display 4-domain Radar chart & Class placement"]
     end
 
-    %% =========================================================================
-    %% LÀN 3: PHÂN HỆ AI (AI ENGINE & PSYCHOMETRICS)
-    %% =========================================================================
-    subgraph AILane ["Làn 3: Phân Hệ AI (AI Engine & Psychometrics)"]
-        direction TB
-        Act_FilterGuess["Lọc đoán mò: Nếu thời gian < 5s, đặt phân cách a = 0.1"]
-        Act_EstimateTheta["Ước lượng năng lực theta với IRT 2PL & Tối ưu Brent MAP trong [-3.0, +3.0]"]
-        Act_ComputeBKT["Tính tiên nghiệm BKT P(L0) kẹp trong [0.05, 0.95] & Suy diễn kỹ năng chưa test"]
-        Act_DetermineTier["Xác định phân tầng xếp lớp và tọa độ Radar 4 miền"]
-        Dec_GeminiAvail{"Gemini API có phản hồi khả dụng?"}
-        Act_CallGemini["Gọi Gemini API sinh lời khuyên sư phạm cá nhân hóa"]
-        Act_RuleFeedback["Tự động sinh nhận xét sư phạm dựa trên tập luật (Rule-based Fallback)"]
-        Act_ReturnDiag["Tổng hợp kết quả phân tích & Trả về cho Practice Service"]
-    end
-
-    %% Điều phối luồng tuần tự
-    Start1A --> Act_SelectTarget
-    Act_SelectTarget --> Act_ClickStartDiag
+    %% Sequential & Inter-lane Transitions
+    Start1 --> Act_ChooseTarget
+    Act_ChooseTarget --> Act_ClickStartDiag
     Act_ClickStartDiag --> Act_LoadExam
-    Act_LoadExam --> Act_DoExam
+    Act_LoadExam --> Act_AnswerQuestions
+    Act_AnswerQuestions --> Dec_SubmitTrigger
 
-    Act_DoExam --> Dec_SubmitTrigger
-    Dec_SubmitTrigger -->|"Học sinh bấm nộp"| Act_ClickSubmit
-    Dec_SubmitTrigger -->|"Hết 45 phút"| Act_AutoSubmit
+    Dec_SubmitTrigger -->|"[Student clicks Submit]"| Act_ClickSubmit
+    Dec_SubmitTrigger -->|"[45 minutes elapsed]"| Act_AutoSubmit
 
-    Act_ClickSubmit --> Dec_TimeCheck
-    Act_AutoSubmit --> Dec_TimeCheck
+    Act_ClickSubmit --> Dec_ExpiredCheck
+    Act_AutoSubmit --> Dec_ExpiredCheck
 
-    Dec_TimeCheck -->|"Lớn hơn 24h"| Act_MarkExpired
-    Act_MarkExpired --> Act_WaitExpired
-    Act_WaitExpired --> Act_ClickStartDiag
+    Dec_ExpiredCheck -->|"[Yes (>= 24h)]"| Act_MarkExpired
+    Act_MarkExpired --> Act_ClickNewDiag
+    Act_ClickNewDiag --> Act_ClickStartDiag
 
-    Dec_TimeCheck -->|"Hợp lệ (<= 24h)"| Act_VerifyProfile
-    Act_VerifyProfile --> Act_FetchKeys
-    Act_FetchKeys --> Act_GradeSub
-    Act_GradeSub --> Act_SendAiPayload
-
-    Act_SendAiPayload --> Act_FilterGuess
-    Act_FilterGuess --> Act_EstimateTheta
-    Act_EstimateTheta --> Act_ComputeBKT
-    Act_ComputeBKT --> Act_DetermineTier
-    Act_DetermineTier --> Dec_GeminiAvail
-
-    Dec_GeminiAvail -->|"Khả dụng"| Act_CallGemini
-    Dec_GeminiAvail -->|"Mất kết nối / Lỗi"| Act_RuleFeedback
-
-    Act_CallGemini --> Act_ReturnDiag
-    Act_RuleFeedback --> Act_ReturnDiag
-    Act_ReturnDiag --> Act_SaveSubmission
-
-    Act_SaveSubmission --> Dec_ClassSpace
-    Dec_ClassSpace -->|"Còn chỗ (< 20)"| Act_SelectOpenClass
-    Dec_ClassSpace -->|"Hết chỗ / Chưa có"| Act_CreateNewClass
-
-    Act_SelectOpenClass --> Act_EnrollClass
-    Act_CreateNewClass --> Act_EnrollClass
-
-    Act_EnrollClass --> Act_DisplayRadar
+    Dec_ExpiredCheck -->|"[No (< 24h)]"| Act_ProcessSubmission
+    Act_ProcessSubmission --> Act_DisplayRadar
     Act_DisplayRadar --> Act_ReviewResult
-    Act_ReviewResult --> End1A
+    Act_ReviewResult --> End1

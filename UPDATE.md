@@ -12,7 +12,9 @@
     - `core6_activity.mmd`: Sổ tay lỗi sai & Lập lịch ôn tập lặp lại ngắt quãng SuperMemo-2 (SM-2).
   - Duy trì sơ đồ kiến trúc tổng quan hệ thống: `architecture.mmd`.
   - Dọn sạch các file `.mmd` cũ mang tính chất tượng trưng/phác thảo trước đây (`02_logical_erd.mmd`, `03_state_machine.mmd`, `04_activity_swimlane.mmd`).
-  - Chuẩn hóa cú pháp node vòng tròn Mermaid: Chuyển đổi `(( "..." ))` sang cú pháp chuẩn `(("..."))` không chứa khoảng trắng cho toàn bộ các nút Start/End, khắc phục triệt để lỗi `Parse error Expecting 'DOUBLECIRCLEEND' got 'STR'` trên GitHub và MD Editor Plus.
+  - Chuẩn hóa ngôn ngữ Tiếng Anh toàn diện (English Language Standard): Chuyển ngữ 100% tất cả các node, swimlane và nhãn điều kiện trên 6 sơ đồ Activity Diagrams sang Tiếng Anh khớp chuẩn xác theo các bản thiết kế gốc (Figures Draw.io).
+  - Khắc phục triệt để lỗi render lúc trắng lúc đen (High-Contrast Theme Directive): Bổ sung khối cấu hình `%%{init: {"theme": "base", "themeVariables": ...}}%%` với nền node trắng `#FFFFFF`, chữ đậm `#0F172A`, đường nối xanh `#2563EB` và hộp nhãn điều kiện có nền, đảm bảo hiển thị sắc nét và đồng nhất 100% trên cả Dark Mode lẫn Light Mode.
+  - Tái cấu trúc làn bơi song song chuẩn UML (Side-by-Side Swimlanes): Đổi hướng gốc từ `flowchart TD` sang `flowchart LR` với từng làn bơi con giữ hướng `direction TB`, giúp các cột Student, System, Manager đứng cạnh nhau song song, triệt tiêu hoàn toàn hiện tượng đường mũi tên chạy ngược lên xuống đan chéo rối rắm.
   - Lưu giữ nguyên vẹn 2 thư mục chứa ảnh sơ đồ chuẩn: `activity_diagram/` và `ActivityDiagramCore236/`.
 
 - **Tái Cấu Trúc Toàn Diện Thư Mục [`docs/`](./docs/)**:

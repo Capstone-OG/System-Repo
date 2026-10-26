@@ -1,112 +1,82 @@
-flowchart TD
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
     %% =========================================================================
-    %% LÀN 1: HỌC SINH (STUDENT)
+    %% LANE 1: STUDENT
     %% =========================================================================
-    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+    subgraph StudentLane ["Student"]
         direction TB
-        Start5(("● Bắt đầu"))
-        Act_EnterClass["Đăng nhập & Vào lớp học"]
-        Act_SelectAct["Lựa chọn hoạt động học tập trên Dashboard"]
-        Dec_ActType{"Loại hoạt động học tập?"}
-        Act_DoZPD["Giải bài tập thích ứng ZPD"]
-        Act_WatchShort["Xem video bài giảng ngắn"]
-        Act_TakeMock["Làm bài thi thử chuẩn hóa"]
-        Act_SubmitActivity["Nộp bài hoàn tất hoạt động"]
-        Act_OpenDash["Mở Bảng thông tin cá nhân (Personal Dashboard)"]
-        Act_ReviewRadar["Xem biểu đồ Radar 4 miền, điểm mạnh/yếu & Chuỗi Streak"]
-        Act_AdjustPlan["Điều chỉnh kế hoạch tự học cho ngày tiếp theo"]
-        Dec_NextAct{"Tiếp tục hoạt động khác?"}
-        End5(("◉ Hoàn tất phiên"))
+        Start5(("● Start"))
+        Act_EnterClass["Log in and enter class"]
+        Act_SelectAct["Select a learning activity on Dashboard"]
+        Dec_ActType{"Activity type?"}
+        Act_DoZPD["Solve ZPD-adapted practice exercises"]
+        Act_WatchVideoShort["Watch a short concept video"]
+        Act_TakeMock["Take standardized mock examination"]
+        Act_ClickSubmitAct["Submit completed activity"]
+        Act_OpenDashboard["Open personal Analytics Dashboard"]
+        Act_ReviewRadarStrengths["Review 4-domain Radar chart, strengths/weaknesses & Streak"]
+        Act_AdjustSelfStudy["Adjust self-study plan for next day"]
+        Dec_ContinueAct{"Continue with another activity?"}
+        End5(("◉ End Session"))
     end
 
     %% =========================================================================
-    %% LÀN 2: HỆ THỐNG V-EVAL & ANALYTICS ENGINE
+    %% LANE 2: SYSTEM (ANALYTICS ENGINE)
     %% =========================================================================
-    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Analytics Engine"]
+    subgraph SystemLane ["System (Analytics Engine)"]
         direction TB
-        Act_RecordBehavior["Ghi nhận hành vi học tập vào cơ sở dữ liệu"]
-        Act_ComputeMastery["Tính xác suất thành thạo kỹ năng P(L_t) theo BKT"]
-        Act_UpdateTheta["Cập nhật ước lượng năng lực IRT (theta)"]
-        Dec_StreakToday{"Hôm nay đã ghi nhận Streak chưa?"}
-        Act_IncStreak["Tăng số ngày duy trì liên tục (Streak += 1)"]
-        Act_KeepStreak["Giữ nguyên chuỗi Streak hiện tại"]
-        Act_SaveAnalytics["Lưu kết quả phân tích vào bảng ClassSkillHeatmaps & Profiles"]
-        Act_PushDashboard["Đẩy dữ liệu cập nhật thời gian thực về Client Dashboard"]
-        
-        %% Phục vụ Teacher Heatmap (AD-5B)
-        Dec_NeedLatest{"Giáo viên yêu cầu tổng hợp dữ liệu mới nhất ngay?"}
-        Act_AggregateData["Tổng hợp dữ liệu toàn lớp (Mean, SD, Kiểm tra phân phối 2 đỉnh Bimodal)"]
-        Act_RefreshCache["Làm mới bộ nhớ đệm Cache"]
-        Act_LoadCache["Nạp dữ liệu lớp học từ Cache"]
-        Act_RenderHeatmap["Kết xuất Ma trận bản đồ nhiệt 2D Class Heatmap"]
-        Act_GroupStruggling["Tự động gom nhóm học sinh đang gặp khó khăn (Struggling Students)"]
-        Act_InsertLiveQA["Chèn buổi Live Q&A vào lộ trình học tập cá nhân của các em"]
-        Act_SendNoti["Bắn thông báo đẩy tới thiết bị của học sinh và phụ huynh"]
+        Act_RecordBehavior["Record learning interaction events in database"]
+        Act_ComputeMastery["Compute skill mastery probability P(Lt) via BKT"]
+        Act_UpdateIRT["Update student IRT ability estimate theta"]
+        Dec_StreakCredited{"Streak already credited today?"}
+        Act_IncStreak["Increment daily Streak counter"]
+        Act_KeepStreak["Keep Streak counter unchanged"]
+        Act_PushDashboard["Save computed analytics & push live updates to personal Dashboard"]
+        Act_RenderHeatmap["Render 2D Class Competency Heatmap (Skills vs Students)"]
     end
 
-    %% =========================================================================
-    %% LÀN 3: GIÁO VIÊN / MENTOR (TEACHER)
-    %% =========================================================================
-    subgraph TeacherLane ["Làn 3: Giáo Viên / Mentor (Teacher)"]
-        direction TB
-        Act_OpenClassDash["Đăng nhập & Mở Dashboard Quản lý lớp học"]
-        Act_ClickForce["Bấm Nút Buộc tổng hợp nhanh (Force Aggregate)"]
-        Act_ReviewColors["Xem xét màu sắc Heatmap & Phân bổ điểm số từng kỹ năng"]
-        Dec_CriticalTopic{"Có chủ đề Báo động ĐỎ (CRITICAL_RED) hoặc phân hóa 2 cực (Bimodal)?"}
-        Act_NormalPace["Tiếp tục giảng dạy theo tiến độ giáo án bình thường"]
-        Act_Click1Click["Bấm CTA 1-Click: Tạo buổi giải đáp trực tiếp (Live Q&A Session)"]
-        Act_HoldSession["Tổ chức buổi Live Q&A giải đáp thắc mắc theo lịch hẹn"]
-    end
-
-    %% Luồng Học sinh
+    %% Sequential & Inter-lane Transitions
     Start5 --> Act_EnterClass
     Act_EnterClass --> Act_SelectAct
     Act_SelectAct --> Dec_ActType
 
-    Dec_ActType -->|"[Bài tập ZPD]"| Act_DoZPD
-    Dec_ActType -->|"[Video bài giảng]"| Act_WatchShort
-    Dec_ActType -->|"[Thi thử Mock Exam]"| Act_TakeMock
+    Dec_ActType -->|"[ZPD Exercise]"| Act_DoZPD
+    Dec_ActType -->|"[Lecture Video]"| Act_WatchVideoShort
+    Dec_ActType -->|"[Mock Exam]"| Act_TakeMock
 
-    Act_DoZPD --> Act_SubmitActivity
-    Act_WatchShort --> Act_SubmitActivity
-    Act_TakeMock --> Act_SubmitActivity
+    Act_DoZPD --> Act_ClickSubmitAct
+    Act_WatchVideoShort --> Act_ClickSubmitAct
+    Act_TakeMock --> Act_ClickSubmitAct
 
-    Act_SubmitActivity --> Act_RecordBehavior
+    Act_ClickSubmitAct --> Act_RecordBehavior
     Act_RecordBehavior --> Act_ComputeMastery
-    Act_ComputeMastery --> Act_UpdateTheta
-    Act_UpdateTheta --> Dec_StreakToday
+    Act_ComputeMastery --> Act_UpdateIRT
+    Act_UpdateIRT --> Dec_StreakCredited
 
-    Dec_StreakToday -->|"Chưa ghi nhận"| Act_IncStreak
-    Dec_StreakToday -->|"Đã ghi nhận"| Act_KeepStreak
+    Dec_StreakCredited -->|"[No]"| Act_IncStreak
+    Dec_StreakCredited -->|"[Yes]"| Act_KeepStreak
 
-    Act_IncStreak --> Act_SaveAnalytics
-    Act_KeepStreak --> Act_SaveAnalytics
-    Act_SaveAnalytics --> Act_PushDashboard
-    Act_PushDashboard --> Act_OpenDash
-    Act_OpenDash --> Act_ReviewRadar
-    Act_ReviewRadar --> Act_AdjustPlan
-    Act_AdjustPlan --> Dec_NextAct
+    Act_IncStreak --> Act_PushDashboard
+    Act_KeepStreak --> Act_PushDashboard
 
-    Dec_NextAct -->|"Có"| Act_SelectAct
-    Dec_NextAct -->|"Không"| End5
+    Act_PushDashboard --> Act_RenderHeatmap
+    Act_RenderHeatmap --> Act_OpenDashboard
+    Act_OpenDashboard --> Act_ReviewRadarStrengths
+    Act_ReviewRadarStrengths --> Act_AdjustSelfStudy
+    Act_AdjustSelfStudy --> Dec_ContinueAct
 
-    %% Luồng Giáo viên (AD-5B)
-    Act_OpenClassDash --> Dec_NeedLatest
-    Dec_NeedLatest -->|"Có (Bấm Force Aggregate)"| Act_ClickForce
-    Act_ClickForce --> Act_AggregateData
-    Act_AggregateData --> Act_RefreshCache
-    Act_RefreshCache --> Act_LoadCache
-
-    Dec_NeedLatest -->|"Không (Tải bình thường)"| Act_LoadCache
-    Act_LoadCache --> Act_RenderHeatmap
-    Act_RenderHeatmap --> Act_ReviewColors
-    Act_ReviewColors --> Dec_CriticalTopic
-
-    Dec_CriticalTopic -->|"Không (Lớp nắm vững tốt)"| Act_NormalPace
-    Dec_CriticalTopic -->|"Có bế tắc nghiêm trọng"| Act_Click1Click
-
-    Act_Click1Click --> Act_GroupStruggling
-    Act_GroupStruggling --> Act_InsertLiveQA
-    Act_InsertLiveQA --> Act_SendNoti
-    Act_SendNoti --> Act_HoldSession
-    Act_HoldSession --> End5
+    Dec_ContinueAct -->|"[Yes]"| Act_SelectAct
+    Dec_ContinueAct -->|"[No]"| End5

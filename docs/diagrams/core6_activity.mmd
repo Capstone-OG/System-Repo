@@ -1,65 +1,79 @@
-flowchart TD
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
     %% =========================================================================
-    %% LÀN 1: HỌC SINH (STUDENT)
+    %% LANE 1: STUDENT
     %% =========================================================================
-    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+    subgraph StudentLane ["Student"]
         direction TB
-        Start6(("● Bắt đầu"))
-        Act_AccessNotebook["Truy cập Sổ tay lỗi sai (Mistake Notebook) từ Dashboard"]
-        Act_SelectItem["Chọn câu hỏi cần ôn tập trong hàng đợi đến hạn"]
-        Act_SolveReview["Giải câu hỏi & Nộp câu trả lời kèm đánh giá chất lượng (q: 0 đến 5)"]
-        Act_ViewRetention["Xem báo cáo tổng kết ôn tập & Các chỉ số ghi nhớ Spaced Repetition"]
-        End6(("◉ Hoàn tất phiên"))
+        Start6(("● Start"))
+        Act_AccessNotebook["Access Mistake Notebook from dashboard"]
+        Act_SelectItem["Select mistake item from review queue"]
+        Act_SolveReview["Solve question & submit answer with self-rated quality (q: 0-5)"]
+        Act_ViewRetention["View review summary & updated retention metrics"]
+        End6(("◉ End Session"))
     end
 
     %% =========================================================================
-    %% LÀN 2: HỆ THỐNG V-EVAL & GRAPH ENGINE (SM-2 & BKT)
+    %% LANE 2: SYSTEM (V-EVAL / GRAPH ENGINE)
     %% =========================================================================
-    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Graph Engine"]
+    subgraph SystemLane ["V-Eval System / Graph Engine"]
         direction TB
-        Act_QueryPending["Truy vấn các câu hỏi có lịch ôn tập đến hạn (next_review <= Today)"]
-        Dec_ItemsExist{"Có câu hỏi nào đến hạn ôn tập không?"}
-        Act_RenderContext["Kết xuất câu hỏi kèm ngữ cảnh lịch sử lỗi sai trước đây"]
-        Act_EvalSM2["Đánh giá kết quả và xác định điểm chất lượng SM-2 (q từ 0 đến 5)"]
-        Dec_QualityScore{"Điểm chất lượng ôn tập q >= 3?"}
-        Act_ResetSM2["Reset bộ đếm lặp về 1 & Đặt khoảng cách ôn tập I = 1 ngày"]
-        Act_UpdateSM2["Tính toán hệ số dễ EF mới & Mở rộng khoảng cách ôn tập I"]
-        Act_UpdateBKT["Thuật toán BKT: Cập nhật xác suất thành thạo P(L_t)"]
-        Dec_ConsecutiveReviews{"Số lần ôn tập thành công liên tiếp đạt >= 3 lần?"}
-        Act_MarkResolved["Cập nhật trạng thái câu hỏi trong Sổ tay lỗi sai -> RESOLVED"]
-        Act_KeepPending["Giữ trạng thái câu hỏi đang theo dõi & Lên lịch ôn tiếp theo"]
-        Dec_QueueRemaining{"Còn câu hỏi nào trong hàng đợi cần ôn không?"}
-        Act_AckCompletion["Xác nhận hoàn thành phiên ôn tập lặp lại ngắt quãng"]
+        Act_QueryPending["Query pending review items where next review date is due"]
+        Dec_ItemsExist{"Pending review items exist?"}
+        Act_RenderContext["Render question with historical mistake context"]
+        Act_EvalSM2["Evaluate response & determine SM-2 quality score q (0-5)"]
+        Dec_QualityScore{"Review quality score q >= 3?"}
+        Act_ResetSM2["Reset repetition counter to 1 & set interval I = 1 day"]
+        Act_UpdateSM2["Compute updated Easiness Factor EF & expanded interval I"]
+        Act_UpdateBKT["Update mastery probability P(Lt) in BKT engine"]
+        Dec_ConsecutiveReviews{"Consecutive successful reviews reaches 3?"}
+        Act_MarkResolved["Update mistake item status to RESOLVED"]
+        Act_KeepPending["Keep item in tracking & schedule next review interval"]
+        Dec_QueueRemaining{"Remaining review items in queue?"}
+        Act_AckCompletion["Acknowledge review session completion"]
     end
 
-    %% Điều phối luồng tuần tự
+    %% Sequential & Inter-lane Transitions
     Start6 --> Act_AccessNotebook
     Act_AccessNotebook --> Act_QueryPending
     Act_QueryPending --> Dec_ItemsExist
 
-    Dec_ItemsExist -->|"[Không có câu đến hạn]"| Act_ViewRetention
-    Dec_ItemsExist -->|"[Có câu cần ôn tập]"| Act_SelectItem
+    Dec_ItemsExist -->|"[No items]"| Act_ViewRetention
+    Dec_ItemsExist -->|"[Items exist]"| Act_SelectItem
 
     Act_SelectItem --> Act_RenderContext
     Act_RenderContext --> Act_SolveReview
     Act_SolveReview --> Act_EvalSM2
     Act_EvalSM2 --> Dec_QualityScore
 
-    Dec_QualityScore -->|"[q < 3 (Quên kiến thức)]"| Act_ResetSM2
-    Dec_QualityScore -->|"[q >= 3 (Nhớ tốt)]"| Act_UpdateSM2
+    Dec_QualityScore -->|"[q < 3 (Forgotten)]"| Act_ResetSM2
+    Dec_QualityScore -->|"[q >= 3 (Recalled)]"| Act_UpdateSM2
 
     Act_ResetSM2 --> Act_UpdateBKT
     Act_UpdateSM2 --> Act_UpdateBKT
+
     Act_UpdateBKT --> Dec_ConsecutiveReviews
 
-    Dec_ConsecutiveReviews -->|"Đạt >= 3 lần"| Act_MarkResolved
-    Dec_ConsecutiveReviews -->|"< 3 lần"| Act_KeepPending
+    Dec_ConsecutiveReviews -->|"[Yes (>= 3 times)]"| Act_MarkResolved
+    Dec_ConsecutiveReviews -->|"[No (< 3 times)]"| Act_KeepPending
 
     Act_MarkResolved --> Dec_QueueRemaining
     Act_KeepPending --> Dec_QueueRemaining
 
-    Dec_QueueRemaining -->|"[Còn câu trong hàng đợi]"| Act_SelectItem
-    Dec_QueueRemaining -->|"[Hàng đợi đã hết]"| Act_AckCompletion
-
+    Dec_QueueRemaining -->|"[Remaining items > 0]"| Act_SelectItem
+    Dec_QueueRemaining -->|"[Queue empty]"| Act_AckCompletion
     Act_AckCompletion --> Act_ViewRetention
     Act_ViewRetention --> End6

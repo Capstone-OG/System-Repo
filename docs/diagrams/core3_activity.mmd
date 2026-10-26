@@ -1,135 +1,83 @@
-flowchart TD
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
     %% =========================================================================
-    %% LÀN 1: HỌC SINH (STUDENT)
+    %% LANE 1: STUDENT
     %% =========================================================================
-    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+    subgraph StudentLane ["Student"]
         direction TB
-        Start3(("● Bắt đầu"))
-        Act_SelectMode["Chọn chế độ học tập trên Dashboard"]
-        
-        %% Nhánh 3A: P-L-A-R
-        Act_QuickCheck["Làm 3 câu Quick Check nền tảng"]
-        Act_WatchVideo["Xem video bài giảng lý thuyết"]
-        Act_AnsZPD["Chọn đáp án & Nộp bài làm ZPD"]
-        Act_DoRemedial["Giải gói bài tập cứu trợ (Summary + 3 câu dễ)"]
-        Act_Reflect["Đánh giá độ tự tin (1-5 sao) & Gắn nhãn nguyên nhân sai"]
-
-        %% Nhánh 3B: Mock Exam
-        Act_GrantPerms["Bật Webcam & Cấp quyền thi toàn màn hình (Fullscreen)"]
-        Act_AnswerExam["Làm bài thi trắc nghiệm 120 câu trong 150 phút"]
-        Act_SubmitExam["Chủ động nộp bài (hoặc hết 150 phút tự động thu)"]
-        Act_ViewFinal["Xem bảng điểm chính thức, phân tích Radar & Lời giải chi tiết"]
-        End3(("◉ Hoàn tất phiên"))
+        Start3(("● Start"))
+        Act_SelectMode["Select learning mode on Dashboard"]
+        Act_QuickCheck["Complete 3 foundational Quick Check questions"]
+        Act_WatchVideo["Watch core micro-lecture video"]
+        Act_SubmitZPD["Solve ZPD-adapted practice item & submit answer"]
+        Act_RemedialPackage["Complete Remedial Package (Summary + 3 easy drills)"]
+        Act_SelfReflect["Rate confidence (1-5 stars) & tag mistake root cause"]
+        Act_GrantProctor["Enable webcam & enter locked Fullscreen mode"]
+        Act_TakeMockExam["Answer 120 standardized questions in 150 minutes"]
+        Act_SubmitMock["Submit mock exam (or auto-submit on timer expiry)"]
+        Act_ViewResults["View performance report, Radar chart & solutions"]
+        End3(("◉ End Session"))
     end
 
     %% =========================================================================
-    %% LÀN 2: HỆ THỐNG V-EVAL & ADAPTIVE ENGINE
+    %% LANE 2: SYSTEM (V-EVAL / GRAPH ENGINE)
     %% =========================================================================
-    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Adaptive Engine"]
+    subgraph SystemLane ["V-Eval System / Graph Engine"]
         direction TB
-        Dec_Mode{"Chọn chế độ học tập?"}
-        
-        %% Xử lý 3A
-        Act_UnlockVideo["Ghi nhận điểm sơ bộ & Mở khóa video"]
-        Dec_VideoCheck{"Thời lượng xem video đạt >= 80%?"}
-        Act_FetchZPD["Bốc câu hỏi thích ứng theo vùng phát triển ZPD"]
-        Dec_GuessCheck{"Thời gian suy nghĩ t < 5s & Đúng? (BR-08)"}
-        Act_PenaltyGuess["Tăng tham số đoán mò P(G) = 0.60"]
-        Act_NormalGuess["Áp dụng tham số đoán mò chuẩn P(G) = 0.25"]
-        Act_CalcBKT["Thuật toán BKT: Cập nhật xác suất thành thạo P(L_t)"]
-        Dec_AnsRight{"Câu trả lời ĐÚNG hay SAI?"}
-        Act_SaveMistake["Lưu câu sai vào MistakeNotebook (Hẹn ôn sau 24h)"]
-        Dec_ThreeConsec{"Bị sai liên tiếp 3 câu cùng kỹ năng? (BR-03)"}
-        Act_IssueRem["Cấp gói cứu trợ: Tóm tắt công thức + 3 câu cơ bản"]
-        Dec_RemPass{"Bài cứu trợ đúng trọn vẹn 3/3?"}
-        Act_RestoreApp["Reset bộ đếm sai & Khôi phục luyện tập thích ứng"]
-        Dec_BR01Mastery{"Đạt chuẩn BR-01? (P(L_t) >= 0.85 & Đúng 2 câu b >= 0.50)"}
-        Act_CompleteStage["Đánh dấu RoadmapNode -> COMPLETED & Mở khóa chặng sau"]
-
-        %% Xử lý 3B
-        Act_InitMock["Khởi tạo ExamSubmission (120 câu) & Bật đồng hồ đếm ngược 150p"]
-        Act_MonitorWorker["Worker chạy ngầm: Chụp webcam 3-5 phút & Bắt sự kiện rời tab"]
-        Dec_TabLimit{"Số lần rời tab > 3 lần? (BR-20)"}
-        Act_FlagExam["Đánh dấu cờ vi phạm: integrity_status = FLAGGED_FOR_REVIEW"]
-        Act_KeepNormal["Giữ nguyên integrity_status = NORMAL"]
-        Act_GradeMock["Chấm điểm tự động 120 câu trắc nghiệm"]
-        Dec_IntegrityStatus{"Trạng thái liêm chính của bài thi?"}
-        Act_LockScore["Tạm khóa hiển thị điểm, status = UNDER_REVIEW & Gửi tới Mentor"]
-        Act_PubNormalScore["Công bố kết quả ngay, status = COMPLETED"]
-        Act_FinalizeApproved["Công nhận điểm bài thi chính thức & Mở khóa xem lời giải"]
-        Act_FinalizeDisqualified["Hủy kết quả: Điểm số = 0 & Ghi biên bản vi phạm"]
-        Act_SyncMistakes["Đẩy các câu làm sai vào Sổ tay lỗi sai MistakeNotebook"]
+        Dec_ModeType{"Select learning mode?"}
+        Dec_QuickCheckPass{"Quick Check accuracy >= 67% (2/3 correct)?"}
+        Act_SelectZPD["Select next practice item within Zone of Proximal Development (ZPD)"]
+        Dec_ZPDResult{"Answer correct?"}
+        Act_UpdateBKT_P["Update BKT skill mastery probability P(Lt)"]
+        Dec_ConsecutiveFails{"Consecutive incorrect answers >= 3?"}
+        Act_TriggerRemedial["Trigger Scaffolded Remedial Support & pause ZPD difficulty"]
+        Act_MonitorExam["Monitor proctored environment, tab-switch violations & webcam stream"]
+        Act_GradeMock["Grade 120 questions, update IRT ability estimate & upsert mistake notebook"]
     end
 
-    %% =========================================================================
-    %% LÀN 3: GIÁO VIÊN / GIÁM THỊ (TEACHER / MENTOR)
-    %% =========================================================================
-    subgraph TeacherLane ["Làn 3: Giáo Viên / Giám Thị (Teacher / Mentor)"]
-        direction TB
-        Act_ReviewProctor["Cổng Thẩm Định: Đối soát dòng thời gian ảnh chụp webcam & Nhật ký rời tab"]
-        Dec_MentorVerdict{"Phán quyết thẩm định của Mentor?"}
-    end
-
-    %% Luồng tổng quát
+    %% Sequential & Inter-lane Transitions
     Start3 --> Act_SelectMode
-    Act_SelectMode --> Dec_Mode
+    Act_SelectMode --> Dec_ModeType
 
-    %% LUỒNG 3A: P-L-A-R
-    Dec_Mode -->|"[Chế độ P-L-A-R]"| Act_QuickCheck
-    Act_QuickCheck --> Act_UnlockVideo
-    Act_UnlockVideo --> Act_WatchVideo
-    Act_WatchVideo --> Dec_VideoCheck
-    Dec_VideoCheck -->|"Chưa đủ (< 80%)"| Act_WatchVideo
-    Dec_VideoCheck -->|"Đạt >= 80%"| Act_FetchZPD
+    Dec_ModeType -->|"[Adaptive P-L-A-R Mode]"| Act_QuickCheck
+    Dec_ModeType -->|"[Proctored Mock Exam Mode]"| Act_GrantProctor
 
-    Act_FetchZPD --> Act_AnsZPD
-    Act_AnsZPD --> Dec_GuessCheck
-    Dec_GuessCheck -->|"Đoán mò (t < 5s)"| Act_PenaltyGuess
-    Dec_GuessCheck -->|"Bình thường"| Act_NormalGuess
-    Act_PenaltyGuess --> Act_CalcBKT
-    Act_NormalGuess --> Act_CalcBKT
-    Act_CalcBKT --> Dec_AnsRight
+    Act_QuickCheck --> Dec_QuickCheckPass
+    Dec_QuickCheckPass -->|"[Pass (>= 2/3)]"| Act_SelectZPD
+    Dec_QuickCheckPass -->|"[Fail (< 2/3)]"| Act_WatchVideo
+    Act_WatchVideo --> Act_SelectZPD
 
-    Dec_AnsRight -->|"SAI"| Act_SaveMistake
-    Act_SaveMistake --> Dec_ThreeConsec
-    Dec_ThreeConsec -->|"Chưa đủ 3 câu"| Act_FetchZPD
-    Dec_ThreeConsec -->|"Sai 3 câu (BR-03)"| Act_IssueRem
-    Act_IssueRem --> Act_DoRemedial
-    Act_DoRemedial --> Dec_RemPass
-    Dec_RemPass -->|"Chưa đạt (< 3/3)"| Act_IssueRem
-    Dec_RemPass -->|"Đạt 3/3"| Act_RestoreApp
-    Act_RestoreApp --> Act_FetchZPD
+    Act_SelectZPD --> Act_SubmitZPD
+    Act_SubmitZPD --> Dec_ZPDResult
 
-    Dec_AnsRight -->|"ĐÚNG"| Dec_BR01Mastery
-    Dec_BR01Mastery -->|"Chưa đạt"| Act_FetchZPD
-    Dec_BR01Mastery -->|"ĐẠT CHUẨN ĐẦU RA"| Act_Reflect
-    Act_Reflect --> Act_CompleteStage
-    Act_CompleteStage --> Act_ViewFinal
+    Dec_ZPDResult -->|"[Correct]"| Act_UpdateBKT_P
+    Dec_ZPDResult -->|"[Incorrect]"| Dec_ConsecutiveFails
 
-    %% LUỒNG 3B: MOCK EXAM
-    Dec_Mode -->|"[Chế độ Thi Thử Chuẩn Hóa]"| Act_GrantPerms
-    Act_GrantPerms --> Act_InitMock
-    Act_InitMock --> Act_AnswerExam
-    Act_AnswerExam --> Act_MonitorWorker
-    Act_MonitorWorker --> Dec_TabLimit
-    Dec_TabLimit -->|"Rời tab > 3 lần"| Act_FlagExam
-    Dec_TabLimit -->|"<= 3 lần"| Act_KeepNormal
-    Act_FlagExam --> Act_SubmitExam
-    Act_KeepNormal --> Act_SubmitExam
-    Act_AnswerExam --> Act_SubmitExam
+    Dec_ConsecutiveFails -->|"[Fails < 3]"| Act_SelfReflect
+    Dec_ConsecutiveFails -->|"[Fails >= 3]"| Act_TriggerRemedial
 
-    Act_SubmitExam --> Act_GradeMock
-    Act_GradeMock --> Dec_IntegrityStatus
-    Dec_IntegrityStatus -->|"NORMAL"| Act_PubNormalScore
-    Act_PubNormalScore --> Act_SyncMistakes
+    Act_TriggerRemedial --> Act_RemedialPackage
+    Act_RemedialPackage --> Act_SelfReflect
+    Act_SelfReflect --> Act_UpdateBKT_P
 
-    Dec_IntegrityStatus -->|"FLAGGED_FOR_REVIEW"| Act_LockScore
-    Act_LockScore --> Act_ReviewProctor
-    Act_ReviewProctor --> Dec_MentorVerdict
-    Dec_MentorVerdict -->|"APPROVED (Hợp lệ)"| Act_FinalizeApproved
-    Dec_MentorVerdict -->|"DISQUALIFIED (Gian lận)"| Act_FinalizeDisqualified
-    Act_FinalizeApproved --> Act_SyncMistakes
-    Act_FinalizeDisqualified --> Act_SyncMistakes
+    Act_GrantProctor --> Act_TakeMockExam
+    Act_TakeMockExam --> Act_MonitorExam
+    Act_MonitorExam --> Act_SubmitMock
+    Act_SubmitMock --> Act_GradeMock
 
-    Act_SyncMistakes --> Act_ViewFinal
-    Act_ViewFinal --> End3
+    Act_UpdateBKT_P --> Act_ViewResults
+    Act_GradeMock --> Act_ViewResults
+    Act_ViewResults --> End3

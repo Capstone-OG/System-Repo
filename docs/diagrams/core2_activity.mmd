@@ -1,77 +1,61 @@
-flowchart TD
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
     %% =========================================================================
-    %% LÀN 1: HỌC SINH (STUDENT)
+    %% LANE 1: STUDENT
     %% =========================================================================
-    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+    subgraph StudentLane ["Student"]
         direction TB
-        Start2(("● Bắt đầu"))
-        Act_EnterGoal["Nhập điểm mục tiêu, ngày thi và số giờ tự học mỗi ngày"]
-        Act_ViewRoadmap["Xem Timeline lộ trình học tập và danh sách bạn học nhóm vi mô (3-5 bạn)"]
-        End2_Success(("◉ Hoàn tất"))
+        Start2(("● Start"))
+        Act_InputGoals["Input target score, target date & daily study hours"]
+        Act_ViewRoadmap["View personalized study timeline & micro-group study partners"]
+        End2_Success(("◉ End Session"))
     end
 
     %% =========================================================================
-    %% LÀN 2: HỆ THỐNG V-EVAL & GRAPH ENGINE
+    %% LANE 2: SYSTEM (V-EVAL / GRAPH ENGINE)
     %% =========================================================================
-    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Graph Engine"]
+    subgraph SystemLane ["V-Eval System / Graph Engine"]
         direction TB
-        Act_CalcAvailTime["Tính tổng quỹ thời gian tự học khả dụng dựa trên ngày thi"]
-        Act_EstimateReqTime["Ước tính tổng thời gian cần thiết để bù đắp các lỗ hổng kỹ năng"]
-        Dec_TimeSufficient{"Quỹ thời gian tự học có đủ không?"}
-        Act_PathPruning["Thuật toán Path Pruning: Cắt tỉa kỹ năng phụ có trọng số đề thi < 5%"]
-        Act_RetainAll["Giữ nguyên toàn bộ danh mục kỹ năng trọng tâm"]
-        Act_LoadDAG["Nạp đồ thị kỹ năng tiên quyết từ CSDL (SkillPrerequisites)"]
-        Act_Tarjan["Thuật toán Tarjan: Quét các thành phần liên thông mạnh tìm chu trình kín"]
-        Dec_GraphValid{"Đồ thị tiên quyết có hợp lệ (Không chu trình)?"}
-        Act_RaiseCycleAlert["Phát sinh cảnh báo CRITICAL SystemAlert và đóng băng tiến trình tạo lộ trình"]
-        Act_KahnTopo["Thuật toán Kahn: Sắp xếp Topo tối ưu thứ tự học tuyến tính"]
-        Act_KMeans["Thuật toán K-Means++: Phân cụm học sinh theo vector lỗ hổng 4 miền"]
-        Act_IdentifyClass["Xác định lớp chuyên đề mục tiêu cho cụm học sinh"]
-        Dec_ClassCap{"Sĩ số lớp chuyên đề hiện tại >= 20 học sinh?"}
-        Act_CreateThematicClass["Tự động khởi tạo lớp chuyên đề mới (Tăng số thứ tự lớp)"]
-        Act_EnrollThematic["Ghi danh học sinh vào lớp chuyên đề tương ứng (ClassEnrollment)"]
-        Act_MicroCluster["Thuật toán gom cụm vi mô: Chia nhóm 3-5 bạn cùng điểm nghẽn"]
-        Act_PersistRoadmap["Lưu LearningRoadmap (ACTIVE) và RoadmapNodes (Chặng 1 IN_PROGRESS, các chặng sau LOCKED)"]
+        Act_EvalTime["Evaluate available time budget & prune unreachable knowledge paths"]
+        Act_ValidateDAG["Validate DAG prerequisite graph via Tarjan SCC & Kahn Topological Sort"]
+        Dec_GraphValid{"Prerequisite graph valid (Acyclic)?"}
+        Act_TriggerAlert["Trigger CRITICAL system alert & freeze roadmap generation"]
+        Act_ClusterRoadmap["Perform thematic clustering (K-Means) & initialize milestone roadmap"]
     end
 
     %% =========================================================================
-    %% LÀN 3: QUẢN LÝ HỌC VỤ (ACADEMIC MANAGER)
+    %% LANE 3: ACADEMIC MANAGER
     %% =========================================================================
-    subgraph ManagerLane ["Làn 3: Quản Lý Học Vụ (Academic Manager)"]
+    subgraph ManagerLane ["Academic Manager"]
         direction TB
-        Act_ReviewAlert["Tiếp nhận cảnh báo lỗi chu trình và điều chỉnh quan hệ tiên quyết trong CSDL"]
-        End2_Error(("◉ Dừng do lỗi chu trình"))
+        Act_ResolveCircular["Review system alert & resolve circular prerequisite dependencies in DB"]
+        End2_Error(("◉ Terminated on Cycle"))
     end
 
-    %% Điều phối luồng tuần tự
-    Start2 --> Act_EnterGoal
-    Act_EnterGoal --> Act_CalcAvailTime
-    Act_CalcAvailTime --> Act_EstimateReqTime
-    Act_EstimateReqTime --> Dec_TimeSufficient
+    %% Sequential & Inter-lane Transitions
+    Start2 --> Act_InputGoals
+    Act_InputGoals --> Act_EvalTime
+    Act_EvalTime --> Act_ValidateDAG
+    Act_ValidateDAG --> Dec_GraphValid
 
-    Dec_TimeSufficient -->|"Thiếu thời gian"| Act_PathPruning
-    Dec_TimeSufficient -->|"Đủ thời gian"| Act_RetainAll
+    Dec_GraphValid -->|"[Valid DAG (No Cycles)]"| Act_ClusterRoadmap
+    Dec_GraphValid -->|"[Cycle Detected]"| Act_TriggerAlert
 
-    Act_PathPruning --> Act_LoadDAG
-    Act_RetainAll --> Act_LoadDAG
+    Act_TriggerAlert --> Act_ResolveCircular
+    Act_ResolveCircular --> End2_Error
 
-    Act_LoadDAG --> Act_Tarjan
-    Act_Tarjan --> Dec_GraphValid
-
-    Dec_GraphValid -->|"Phát hiện chu trình kín"| Act_RaiseCycleAlert
-    Act_RaiseCycleAlert --> Act_ReviewAlert
-    Act_ReviewAlert --> End2_Error
-
-    Dec_GraphValid -->|"DAG hợp lệ chuẩn"| Act_KahnTopo
-    Act_KahnTopo --> Act_KMeans
-    Act_KMeans --> Act_IdentifyClass
-    Act_IdentifyClass --> Dec_ClassCap
-
-    Dec_ClassCap -->|"Đã đủ (>= 20)"| Act_CreateThematicClass
-    Dec_ClassCap -->|"Còn chỗ (< 20)"| Act_EnrollThematic
-
-    Act_CreateThematicClass --> Act_EnrollThematic
-    Act_EnrollThematic --> Act_MicroCluster
-    Act_MicroCluster --> Act_PersistRoadmap
-    Act_PersistRoadmap --> Act_ViewRoadmap
+    Act_ClusterRoadmap --> Act_ViewRoadmap
     Act_ViewRoadmap --> End2_Success
