@@ -4,10 +4,10 @@ flowchart TD
     %% =========================================================================
     subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
         direction TB
-        Start2(( "● Bắt đầu" ))
+        Start2(("● Bắt đầu"))
         Act_EnterGoal["Nhập điểm mục tiêu, ngày thi và số giờ tự học mỗi ngày"]
         Act_ViewRoadmap["Xem Timeline lộ trình học tập và danh sách bạn học nhóm vi mô (3-5 bạn)"]
-        End2_Success(( "◉ Hoàn tất" ))
+        End2_Success(("◉ Hoàn tất"))
     end
 
     %% =========================================================================
@@ -40,7 +40,7 @@ flowchart TD
     subgraph ManagerLane ["Làn 3: Quản Lý Học Vụ (Academic Manager)"]
         direction TB
         Act_ReviewAlert["Tiếp nhận cảnh báo lỗi chu trình và điều chỉnh quan hệ tiên quyết trong CSDL"]
-        End2_Error(( "◉ Dừng do lỗi chu trình" ))
+        End2_Error(("◉ Dừng do lỗi chu trình"))
     end
 
     %% Điều phối luồng tuần tự

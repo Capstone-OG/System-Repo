@@ -12,6 +12,7 @@
     - `core6_activity.mmd`: Sổ tay lỗi sai & Lập lịch ôn tập lặp lại ngắt quãng SuperMemo-2 (SM-2).
   - Duy trì sơ đồ kiến trúc tổng quan hệ thống: `architecture.mmd`.
   - Dọn sạch các file `.mmd` cũ mang tính chất tượng trưng/phác thảo trước đây (`02_logical_erd.mmd`, `03_state_machine.mmd`, `04_activity_swimlane.mmd`).
+  - Chuẩn hóa cú pháp node vòng tròn Mermaid: Chuyển đổi `(( "..." ))` sang cú pháp chuẩn `(("..."))` không chứa khoảng trắng cho toàn bộ các nút Start/End, khắc phục triệt để lỗi `Parse error Expecting 'DOUBLECIRCLEEND' got 'STR'` trên GitHub và MD Editor Plus.
   - Lưu giữ nguyên vẹn 2 thư mục chứa ảnh sơ đồ chuẩn: `activity_diagram/` và `ActivityDiagramCore236/`.
 
 - **Tái Cấu Trúc Toàn Diện Thư Mục [`docs/`](./docs/)**:

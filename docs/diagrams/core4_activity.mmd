@@ -4,7 +4,7 @@ flowchart TD
     %% =========================================================================
     subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
         direction TB
-        Start4(( "● Bắt đầu" ))
+        Start4(("● Bắt đầu"))
         Act_SelectWrong["Chọn phương án sai trong phiên luyện tập hoặc thi thử"]
         Act_AskTutor["Bấm Hỏi Gia sư Socratic AI"]
         Act_WaitRate["Nhận thông báo vượt hạn mức (429) & Chờ 1 phút"]
@@ -15,7 +15,7 @@ flowchart TD
         Act_RecvConfirm["Nhận thông báo xác nhận đã gửi báo cáo tới Giáo viên"]
         Act_AnsIsomorphic["Giải câu hỏi tương đương 4 lựa chọn (Isomorphic Question)"]
         Act_ContinueLearn["Xem kết quả câu tương đương & Tiếp tục lộ trình học"]
-        End4(( "◉ Hoàn tất" ))
+        End4(("◉ Hoàn tất"))
     end
 
     %% =========================================================================

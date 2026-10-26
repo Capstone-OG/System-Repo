@@ -180,7 +180,7 @@ flowchart TD
     %% =========================================================================
     subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
         direction TB
-        StartNode(( "● Bắt đầu" ))
+        StartNode(("● Bắt đầu"))
         Act_QuickCheck["Làm 3 câu Quick Check nền tảng"]
         Act_WatchVideo["Xem video bài giảng cốt lõi"]
         Act_AnsQuestion["Chọn phương án trả lời & Gửi đáp án"]
@@ -189,7 +189,7 @@ flowchart TD
         Act_SolveIsomorphic["Giải câu hỏi tương đương (Isomorphic Question)"]
         Act_DoRemedial["Giải và nộp bài luyện tập cứu trợ (Remedial Package)"]
         Act_Reflect["Đánh giá độ tự tin (1-5 sao) & Gắn nhãn nguyên nhân sai sót"]
-        EndNode(( "◉ Hoàn tất" ))
+        EndNode(("◉ Hoàn tất"))
     end
 
     %% =========================================================================
