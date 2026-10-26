@@ -1,0 +1,33 @@
+stateDiagram-v2
+    [*] --> Initialized: Học sinh bắt đầu phiên làm bài
+
+    state Initialized {
+        description: Khởi tạo phiên, nạp ma trận câu hỏi và cấu hình thời gian
+    }
+
+    Initialized --> InProgress: Xác nhận sẵn sàng & Bắt đầu tính giờ
+
+    state InProgress {
+        [*] --> Answering: Hiển thị câu hỏi hiện tại
+        
+        Answering --> HintRequested: Gặp khó khăn & Yêu cầu gia sư Socratic hỗ trợ
+        HintRequested --> Answering: Nhận gợi mở tư duy (không lộ đáp án)
+        
+        Answering --> AnswerSaved: Chọn phương án & Lưu tạm câu trả lời
+        AnswerSaved --> Answering: Điều hướng sang câu hỏi tiếp theo
+    }
+
+    InProgress --> Paused: Học sinh tạm dừng (chỉ áp dụng cho bài luyện tập tự do)
+    Paused --> InProgress: Tiếp tục phiên luyện tập
+
+    InProgress --> Submitted: Nộp bài chủ động hoặc Hết giờ thi (Auto-submit)
+
+    state Submitted {
+        description: Khóa phiên làm bài, ghi nhận timestamp nộp bài chính xác
+    }
+
+    Submitted --> AutoGrading: Động cơ chấm điểm tự động đối soát đáp án gốc
+    AutoGrading --> BktUpdating: Cập nhật thông số BKT P(L_t) & Ước lượng năng lực IRT
+    
+    BktUpdating --> Completed: Kết thúc phiên, xuất báo cáo Radar & Bảng phân tích lỗ hổng
+    Completed --> [*]

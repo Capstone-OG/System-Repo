@@ -1,0 +1,83 @@
+flowchart TB
+    %% =========================================================================
+    %% TIER 1: CLIENT LAYER
+    %% =========================================================================
+    subgraph Tier1 ["1. CLIENT LAYER"]
+        direction LR
+        WebClient["V-Eval Web Client<br/>(React 19 Responsive SPA + JSXGraph & KaTeX)"]
+        MobileClient["Mobile Client (PWA / Flutter)<br/>[Kế hoạch pha 2 / Planned]"]
+    end
+
+    %% =========================================================================
+    %% TIER 2: API GATEWAY LAYER
+    %% =========================================================================
+    subgraph Tier2 ["2. API GATEWAY LAYER"]
+        Gateway["V-Eval API Gateway<br/>(Microsoft YARP Reverse Proxy)"]
+    end
+
+    %% =========================================================================
+    %% TIER 3: CORE APPLICATION MICROSERVICES (.NET 9)
+    %% =========================================================================
+    subgraph Tier3 ["3. CORE APPLICATION MICROSERVICES (.NET 9)"]
+        direction TB
+        IdentitySvc["Identity Service<br/>(Auth & RBAC 4 Roles)"]
+        ContentSvc["Content Service<br/>(DAG Knowledge Tree & Question Bank)"]
+        PracticeSvc["Practice Service<br/>(ZPD Adaptive Engine, IRT/BKT & K-Means)"]
+    end
+
+    %% =========================================================================
+    %% TIER 4: AI SUBSYSTEM (2 DỊCH VỤ CHUYÊN BIỆT SONG HÀNH)
+    %% =========================================================================
+    subgraph Tier4 ["4. AI SUBSYSTEM (2 DỊCH VỤ SONG HÀNH ĐỘC LẬP)"]
+        direction LR
+        AiCoreNet["AI Engine Core (.NET 9)<br/>(Multimodal Vision OCR & Geometry 3D)"]
+        AiRagPy["AI RAG Service (Python FastAPI)<br/>(Hybrid GraphRAG & Socratic Tutor)"]
+    end
+
+    %% =========================================================================
+    %% TIER 5: DATA PERSISTENCE & STORAGE (SUPABASE POSTGRESQL 15+)
+    %% =========================================================================
+    subgraph Tier5 ["5. DATA PERSISTENCE & STORAGE (SUPABASE)"]
+        direction TB
+        PostgresDB[("Supabase PostgreSQL 15+<br/>(Schemas: identity, content, practice, ai / pgvector)")]
+        CloudStorage[("Supabase Object Storage<br/>(Exam Media, Textbooks, PDFs)")]
+    end
+
+    %% =========================================================================
+    %% TIER 6: EXTERNAL CLOUD SERVICES
+    %% =========================================================================
+    subgraph Tier6 ["6. EXTERNAL SERVICES"]
+        direction TB
+        GeminiAPI["Google Gemini API<br/>(Gemini 3.6 Flash / Primary LLM & OCR)"]
+        OpenAiAPI["OpenAI API<br/>(GPT-4o-mini / Secondary Fallback LLM)"]
+    end
+
+    %% Giao tiếp Client - Gateway
+    WebClient -->|"HTTPS / REST"| Gateway
+    MobileClient -.->|"HTTPS / REST (Dự kiến)"| Gateway
+
+    %% Điều phối từ Gateway
+    Gateway -->|"REST / JSON"| IdentitySvc
+    Gateway -->|"REST / JSON"| ContentSvc
+    Gateway -->|"REST / JSON"| PracticeSvc
+    Gateway -->|"REST / JSON"| AiCoreNet
+    Gateway -->|"REST / Stream"| AiRagPy
+
+    %% Giao tiếp liên dịch vụ Server-to-Server
+    PracticeSvc ==>|"gRPC HTTP/2"| ContentSvc
+
+    %% AI Subsystem & Dịch vụ ngoài (Primary & Fallback)
+    AiCoreNet -->|"HTTPS / API Key"| GeminiAPI
+    AiCoreNet -.->|"Fallback"| OpenAiAPI
+    AiRagPy -->|"HTTPS / API Key"| GeminiAPI
+    AiRagPy -.->|"Fallback"| OpenAiAPI
+    AiRagPy -->|"Vector Similarity Search"| PostgresDB
+
+    %% Tầng lưu trữ CSDL (EF Core & Npgsql)
+    IdentitySvc -->|"Npgsql / EF Core"| PostgresDB
+    ContentSvc -->|"Npgsql / EF Core"| PostgresDB
+    PracticeSvc -->|"Npgsql / EF Core"| PostgresDB
+
+    %% Tầng lưu trữ File Storage
+    ContentSvc -->|"Media Upload / Download"| CloudStorage
+    AiCoreNet -->|"Textbook Ingestion"| CloudStorage

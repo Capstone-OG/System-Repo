@@ -1,81 +1,177 @@
-# V-EVAL: Hệ Thống Cá Nhân Hóa Lộ Trình Học & Luyện Thi Đánh Giá Năng Lực Tích Hợp AI (V-ACT 2026)
+# V-EVAL: HỆ THỐNG CÁ NHÂN HÓA LỘ TRÌNH HỌC & LUYỆN THI ĐÁNH GIÁ NĂNG LỰC TÍCH HỢP AI (V-ACT 2026)
 
-> **Dự án CapStone 2026** - Kiến trúc Microservices linh hoạt dựa trên nền tảng .NET 9 Web API, YARP API Gateway, Supabase PostgreSQL, Qdrant Vector DB và Gemini AI OCR / Socratic Tutor.
+> **Dự án CapStone 2026** - Nền tảng khảo thí thích ứng và quy hoạch lộ trình học tập cá nhân hóa luyện thi Đánh Giá Năng Lực ĐHQG-HCM, vận hành theo kiến trúc Microservices phân tầng trên nền tảng .NET 9 Clean Architecture, YARP API Gateway, Supabase PostgreSQL (pgvector), gRPC Server-to-Server, JSXGraph Native Engine & Socratic AI Tutor.
 
 ---
 
-## 🏛️ KIẾN TRÚC HỆ THỐNG (MICROSERVICES ARCHITECTURE)
+## 📌 GIỚI THIỆU HỆ THỐNG (SYSTEM AT A GLANCE - 148 TỪ)
 
-Hệ thống được chia thành **5 Microservices chính** hoạt động độc lập và liên thông thông qua **V-Eval API Gateway**:
+> V-Eval giải quyết bài toán ôn thi Đánh Giá Năng Lực (V-ACT) ĐHQG-HCM dàn trải và thiếu cá nhân hóa cho học sinh THPT, đồng thời hỗ trợ giáo viên quản lý lớp học phân hóa. Hệ thống áp dụng mô hình tâm trắc học IRT 2PL và Bayesian Knowledge Tracing để định lượng chính xác lỗ hổng kiến thức, tự động quy hoạch lộ trình học tập trên đồ thị DAG và phân cụm vi mô K-Means nhóm 3–5 học sinh có cùng điểm yếu. V-Eval tích hợp gia sư Socratic AI định hướng tư duy từng bước cùng thư viện JSXGraph dựng hình học 2D/3D tương tác. Nền tảng xây dựng theo kiến trúc Microservices phân tầng .NET 9 Clean Architecture, điều phối bởi API Gateway YARP, giao tiếp liên dịch vụ qua gRPC HTTP/2 và cô lập dữ liệu theo từng schema trên Supabase PostgreSQL.
 
-```text
-[ Web Client / SPA / Mobile ]
-              │
-              ▼
-    ┌───────────────────┐
-    │  V-Eval Gateway   │ (Port 5212 - YARP Reverse Proxy & Edge Security)
-    └─────────┬─────────┘
-              │
-     ┌────────┼──────────────┬──────────────┬──────────────┐
-     │        │              │              │              │
-     ▼        ▼              ▼              ▼              ▼
-┌─────────┐ ┌──────────┐ ┌───────────┐ ┌──────────┐ ┌────────────┐
-│Identity │ │ Content  │ │ Practice  │ │AI Engine │ │ (Supabase/ │
-│ Service │ │ Service  │ │ Service   │ │ (Gemini/ │ │ Qdrant Cloud)
-│ (:5001) │ │ (:5249)  │ │ (:5002)   │ │  :5104)  │ └────────────┘
-└─────────┘ └──────────┘ └───────────┘ └──────────┘
+---
+
+## 🏛️ KIẾN TRÚC TỔNG QUAN HỆ THỐNG (SYSTEM OVERVIEW ARCHITECTURE)
+
+Sơ đồ thể hiện toàn bộ các tầng thành phần (Clients, Gateway, Core Microservices, AI Subsystem, Database & Storage, External Cloud) và các luồng dữ liệu chính giữa chúng:
+
+```mermaid
+flowchart TB
+    %% =========================================================================
+    %% TIER 1: CLIENT LAYER
+    %% =========================================================================
+    subgraph Tier1 ["1. CLIENT LAYER"]
+        direction LR
+        WebClient["V-Eval Web Client<br/>(React 19 Responsive SPA + JSXGraph & KaTeX)"]
+        MobileClient["Mobile Client (PWA / Flutter)<br/>[Kế hoạch pha 2 / Planned]"]
+    end
+
+    %% =========================================================================
+    %% TIER 2: API GATEWAY LAYER
+    %% =========================================================================
+    subgraph Tier2 ["2. API GATEWAY LAYER"]
+        Gateway["V-Eval API Gateway<br/>(Microsoft YARP Reverse Proxy)"]
+    end
+
+    %% =========================================================================
+    %% TIER 3: CORE APPLICATION MICROSERVICES (.NET 9)
+    %% =========================================================================
+    subgraph Tier3 ["3. CORE APPLICATION MICROSERVICES (.NET 9)"]
+        direction TB
+        IdentitySvc["Identity Service<br/>(Auth & RBAC 4 Roles)"]
+        ContentSvc["Content Service<br/>(DAG Knowledge Tree & Question Bank)"]
+        PracticeSvc["Practice Service<br/>(ZPD Adaptive Engine, IRT/BKT & K-Means)"]
+    end
+
+    %% =========================================================================
+    %% TIER 4: AI SUBSYSTEM (2 DỊCH VỤ CHUYÊN BIỆT SONG HÀNH)
+    %% =========================================================================
+    subgraph Tier4 ["4. AI SUBSYSTEM (2 DỊCH VỤ SONG HÀNH ĐỘC LẬP)"]
+        direction LR
+        AiCoreNet["AI Engine Core (.NET 9)<br/>(Multimodal Vision OCR & Geometry 3D)"]
+        AiRagPy["AI RAG Service (Python FastAPI)<br/>(Hybrid GraphRAG & Socratic Tutor)"]
+    end
+
+    %% =========================================================================
+    %% TIER 5: DATA PERSISTENCE & STORAGE (SUPABASE POSTGRESQL 15+)
+    %% =========================================================================
+    subgraph Tier5 ["5. DATA PERSISTENCE & STORAGE (SUPABASE)"]
+        direction TB
+        PostgresDB[("Supabase PostgreSQL 15+<br/>(Schemas: identity, content, practice, ai / pgvector)")]
+        CloudStorage[("Supabase Object Storage<br/>(Exam Media, Textbooks, PDFs)")]
+    end
+
+    %% =========================================================================
+    %% TIER 6: EXTERNAL CLOUD SERVICES
+    %% =========================================================================
+    subgraph Tier6 ["6. EXTERNAL SERVICES"]
+        direction TB
+        GeminiAPI["Google Gemini API<br/>(Gemini 3.6 Flash / Primary LLM & OCR)"]
+        OpenAiAPI["OpenAI API<br/>(GPT-4o-mini / Secondary Fallback LLM)"]
+    end
+
+    %% Giao tiếp Client - Gateway
+    WebClient -->|"HTTPS / REST"| Gateway
+    MobileClient -.->|"HTTPS / REST (Dự kiến)"| Gateway
+
+    %% Điều phối từ Gateway
+    Gateway -->|"REST / JSON"| IdentitySvc
+    Gateway -->|"REST / JSON"| ContentSvc
+    Gateway -->|"REST / JSON"| PracticeSvc
+    Gateway -->|"REST / JSON"| AiCoreNet
+    Gateway -->|"REST / Stream"| AiRagPy
+
+    %% Giao tiếp liên dịch vụ Server-to-Server
+    PracticeSvc ==>|"gRPC HTTP/2"| ContentSvc
+
+    %% AI Subsystem & Dịch vụ ngoài (Primary & Fallback)
+    AiCoreNet -->|"HTTPS / API Key"| GeminiAPI
+    AiCoreNet -.->|"Fallback"| OpenAiAPI
+    AiRagPy -->|"HTTPS / API Key"| GeminiAPI
+    AiRagPy -.->|"Fallback"| OpenAiAPI
+    AiRagPy -->|"Vector Similarity Search"| PostgresDB
+
+    %% Tầng lưu trữ CSDL (EF Core & Npgsql)
+    IdentitySvc -->|"Npgsql / EF Core"| PostgresDB
+    ContentSvc -->|"Npgsql / EF Core"| PostgresDB
+    PracticeSvc -->|"Npgsql / EF Core"| PostgresDB
+
+    %% Tầng lưu trữ File Storage
+    ContentSvc -->|"Media Upload / Download"| CloudStorage
+    AiCoreNet -->|"Textbook Ingestion"| CloudStorage
 ```
 
 ---
 
-## 📊 BẢNG MA TRẬN DỊCH VỤ & PORT MAPPING
+## 📁 CẤU TRÚC QUẢN TRỊ MÃ NGUỒN (SYSTEM REPOSITORY LAYOUT)
 
-| Tên Dịch Vụ | Tên Thư Mục Service | Cổng (Port) | Công Nghệ Chính | Trách Nhiệm Chính |
-| :--- | :--- | :---: | :--- | :--- |
-| **V-Eval Gateway** | `All Services/V-Eval-Gateway` | **5212** | .NET 9, YARP v2.3.0 | Single Entry Point, Anti-Header Spoofing, Token Warning, Rate Limiting, CORS |
-| **Identity Service** | `All Services/V-Eval-Identity_Service` | **5001** | .NET 9, JWT Auth, EF Core | Đăng ký, Đăng nhập, Quản lý Người dùng & Sinh JWT Token |
-| **Content Service** | `All Services/V-Eval-Content_Service` | **5249** | .NET 9, CQRS MediatR, Supabase | Ngân hàng câu hỏi, Chùm bài đọc, Import đề thi từ AI |
-| **Practice Service** | `All Services/V-Eval-Practice_Service` | **5002** | .NET 9, EF Core | Làm bài thi trực tuyến, Chấm điểm tự động, Thống kê kỹ năng |
-| **AI Engine** | `All Services/V-Eval-Ai_Engine` | **5104** | .NET 9, Gemini OCR, Qdrant | Ingestion đề thi PDF, Socratic AI Tutor Chatbot, RAG Vector Search |
-| **Web Client** | `All Services/V-Eval-Web_Client` | **5173** | React 19, Vite 8, TailwindCSS v4 | Giao diện người dùng Web SPA (Học sinh, Luyện thi, Khảo thí năng lực) |
+Dự án được tổ chức theo mô hình **System Repository (Monorepo Orchestration)** quản lý tập trung toàn bộ các dịch vụ và tài liệu:
+
+```text
+CapStone/
+├── All Services/                           # Mã nguồn các dịch vụ độc lập
+│   ├── V-Eval-Gateway/                     # API Gateway (Microsoft YARP Reverse Proxy)
+│   ├── V-Eval-Identity_Service/            # Dịch vụ Định danh & RBAC 4 Roles
+│   ├── V-Eval-Content_Service/             # Cây tri thức DAG & Ngân hàng đề (REST + gRPC :5250)
+│   ├── V-Eval-Practice_Service/            # Động cơ thích ứng ZPD & IRT/BKT
+│   ├── V-Eval-Ai_Engine/                   # AI OCR Vision (.NET) & Python FastAPI RAG
+│   └── V-Eval-Web_Client/                  # Giao diện Web SPA (React 19, TailwindCSS v4)
+├── Scripts/                                # Bộ script tự động hóa Windows Batch
+│   ├── run_docker/                         # Script chạy toàn bộ hệ thống bằng Docker
+│   ├── run_local/                          # Script chạy từng service môi trường Local
+│   └── setup/                              # Script cấu hình môi trường ban đầu
+├── docs/                                   # Hệ thống tài liệu đặc tả kiến trúc & nghiệp vụ
+│   ├── diagrams/                           # Trọn bộ 4 sơ đồ Mermaid bắt buộc (Review 2)
+│   ├── SQL/                                # Thiết kế CSDL & file DDL SQL (Supabase PostgreSQL 15+)
+│   └── V-Eval_Architecture_Plan.md         # Đặc tả kiến trúc tổng thể toàn diện (Report 4 SDD)
+├── grpc/                                   # Hợp đồng giao tiếp Protocol Buffers liên dịch vụ
+│   ├── content.proto                       # Hợp đồng gRPC Content Service (:5250)
+│   └── ai.proto                            # Hợp đồng gRPC AI Streaming Service
+├── docker-compose.yml                      # Điều phối container toàn bộ hệ sinh thái
+└── UPDATE.md                               # Nhật ký tiến độ hệ thống (System Update Log)
+```
 
 ---
 
-## 🚀 HƯỚNG DẪN CHẠY BẰNG DOCKER COMPOSE
+## 🛠️ CÔNG NGHỆ CHỦ ĐẠO (CORE TECHNOLOGY STACK)
 
-### 1. Yêu cầu môi trường:
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Hỗ trợ Docker Compose v2)
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (Nếu muốn chạy local không qua Docker)
+- **Backend Framework**: ASP.NET Core .NET 9 Clean Architecture, CQRS (MediatR), FluentValidation, Result Pattern.
+- **API Gateway & Routing**: Microsoft YARP (Yet Another Reverse Proxy v2.3.0), Anti-Header Spoofing, Rate Limiting.
+- **Inter-Service Communication**: gRPC HTTP/2 nhị phân (Server-to-Server) qua cổng `:5250`.
+- **Frontend Client**: React 19 Responsive SPA (tối ưu hóa hiển thị desktop & mobile; Mobile App PWA/Flutter nằm trong lộ trình pha 2), Vite 8, TailwindCSS v4, Framer Motion.
+- **Interactive Math Engines**: JSXGraph Native Vector Engine (render đồ thị 2D & hình học không gian 3D), KaTeX Live Math.
+- **AI & RAG Subsystem**: Google Gemini API (`gemini-3.6-flash`, `gemini-embedding-001`) & OpenAI API (`gpt-4o-mini` Fallback), Python FastAPI, Supabase pgvector (3072-dim Embeddings).
+- **Database & Storage**: Supabase PostgreSQL 15+ (Schema-based Multi-tenancy: `v_eval_identity`, `v_eval_content`, `v_eval_practice`, `v_eval_ai`), Supabase Object Storage (S3-compatible).
 
-### 2. Chạy tự động bằng Script:
-Mở Terminal hoặc click đúp chuột chạy file script:
+---
+
+## 🚀 KHỞI CHẠY HỆ THỐNG (QUICK START)
+
+### 1. Khởi chạy toàn bộ hệ sinh thái (Docker Compose):
+Nhấp đúp chuột vào file script hoặc chạy từ Terminal:
 ```cmd
 Scripts\run_docker\run_docker.bat
 ```
-
-### 3. Chạy thủ công bằng Docker Compose Lệnh CLI:
+Hoặc bằng lệnh CLI:
 ```bash
-# Khởi chạy và build lại toàn bộ 5 Microservices
-docker-compose up --build -d
-
-# Kiểm tra trạng thái các container đang chạy
-docker compose ps
-
-# Kiểm tra Health Check của Gateway
-curl http://localhost:5212/healthz
+docker compose up --build -d
 ```
 
----
-
-## 🛡️ BẢO MẬT MÃ NGUỒN & CẤU HÌNH PRODUCTION
-
-1. **Tệp cấu hình mẫu (`appsettings.example.json`)**: Mỗi microservice đều có 1 file mẫu chứa các label tham số cho Production.
-2. **Loại bỏ Secret khỏi Git (`.gitignore`)**: Mọi file `appsettings.json` cá nhân chứa password / API Key thật trên máy local đều được tự động ẩn khỏi Git tracking.
+### 2. Điểm truy cập hệ thống (Access Endpoints):
+- **Web Client (Giao diện người dùng)**: `http://localhost:5173`
+- **API Gateway (Single Entry Point)**: `http://localhost:5212`
+- **Gateway Health Check**: `http://localhost:5212/healthz`
 
 ---
 
-## 📑 HỆ THỐNG TÀI LIỆU (DOCUMENTATION)
+## 📑 MỤC LỤC TÀI LIỆU TRỌNG YẾU (KEY SPECIFICATIONS)
 
-- 📘 **Triển khai Gateway**: [`All Services/V-Eval-Gateway/docs/trien_khai_gateway.md`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/docs/trien_khai_gateway.md)
-- 📕 **Nghiệm thu Kiến trúc Gateway**: [`All Services/V-Eval-Gateway/docs/nghiem_thu_va_thau_hieu_kien_truc.md`](file:///e:/CapStone/All%20Services/V-Eval-Gateway/docs/nghiem_thu_va_thau_hieu_kien_truc.md)
-- 🟢 **Nhật ký Cập nhật Hệ thống**: [`UPDATE.md`](file:///e:/CapStone/UPDATE.md)
+- 📘 **Bản Đặc Tả Kiến Trúc Tổng Thể (Report 4 SDD)**: [`docs/V-Eval_Architecture_Plan.md`](./docs/V-Eval_Architecture_Plan.md)
+- 📊 **Trọn Bộ 4 Sơ Đồ Mermaid Bắt Buộc**:
+  - [Sơ đồ 1: Kiến trúc tổng quan](./docs/diagrams/architecture.mmd)
+  - [Sơ đồ 2: Logical ERD](./docs/diagrams/02_logical_erd.mmd)
+  - [Sơ đồ 3: State Machine](./docs/diagrams/03_state_machine.mmd)
+  - [Sơ đồ 4: Activity Swimlane](./docs/diagrams/04_activity_swimlane.mmd)
+- 🗄️ **Thiết Kế CSDL & SQL DDL**: [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql)
+- 📐 **Đặc Tả Sơ Đồ Hoạt Động (Activity Diagrams)**: [`docs/mo_ta_activity_diagram_core_2_3_6.md`](./docs/mo_ta_activity_diagram_core_2_3_6.md)
+- 🛡️ **Đặc Tả Định Tuyến Gateway YARP**: [`docs/api_gateway_yarp_dinh_tuyen.md`](./docs/api_gateway_yarp_dinh_tuyen.md)
+- 🟢 **Nhật Ký Tiến Độ Hệ Thống**: [`UPDATE.md`](./UPDATE.md)

@@ -1,0 +1,74 @@
+flowchart TD
+    %% =========================================================================
+    %% LÀN 1: HỌC SINH (STUDENT)
+    %% =========================================================================
+    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+        direction TB
+        A1["Bắt đầu phiên luyện tập kỹ năng trong lộ trình"]
+        A2["Nhận câu hỏi thích ứng theo vùng phát triển ZPD"]
+        A3{"Có gặp bế tắc khi giải bài không?"}
+        A4["Nhấn nút Trợ giúp từ Socratic AI Tutor"]
+        A5["Tương tác mô hình đồ thị 2D / 3D (JSXGraph)"]
+        A6["Chọn phương án trả lời & Gửi đáp án"]
+        A7["Xem giải thích chi tiết & Báo cáo độ nắm vững P(L_t)"]
+    end
+
+    %% =========================================================================
+    %% LÀN 2: API GATEWAY (YARP)
+    %% =========================================================================
+    subgraph GatewayLane ["Làn 2: API Gateway (YARP :5212)"]
+        direction TB
+        B1["Xác thực JWT Token & Kiểm tra Rate Limit"]
+        B2["Chuyển tiếp yêu cầu tới Upstream Microservices"]
+    end
+
+    %% =========================================================================
+    %% LÀN 3: HỆ THỐNG KHẢO THÍ (PRACTICE & CONTENT SERVICE)
+    %% =========================================================================
+    subgraph BackendLane ["Làn 3: Hệ Thống Khảo Thí (Practice & Content Service)"]
+        direction TB
+        C1["Xác định độ khó phù hợp theo cấp độ Bloom"]
+        C2["Gọi gRPC lấy câu hỏi tương ứng từ Content Service"]
+        C3["Chấm điểm đáp án & So sánh với đáp án gốc"]
+        C4["Cập nhật xác suất nắm vững kỹ năng P(L_t) theo BKT"]
+        C5{"P(L_t) <= 10%?"}
+        C6["Kích hoạt cơ chế Bó dạng bài yếu liền kề (Adjacent Weak Skill)"]
+        C7["Nâng mức độ nhận thức sang câu hỏi nâng cao tiếp theo"]
+    end
+
+    %% =========================================================================
+    %% LÀN 4: PHÂN HỆ AI (AI ENGINE & RAG SOCRATIC)
+    %% =========================================================================
+    subgraph AILane ["Làn 4: Phân Hệ AI (AI Engine & Socratic RAG)"]
+        direction TB
+        D1["Truy xuất kiến thức liên quan từ pgvector"]
+        D2["Sinh câu hỏi gợi mở tư duy (không làm lộ đáp án)"]
+        D3["Trích xuất thẻ hình học [MATH_GRAPH] / [MATH_GRAPH_3D]"]
+    end
+
+    %% Luồng tuần tự giữa các làn bơi
+    A1 --> B1
+    B1 --> B2
+    B2 --> C1
+    C1 --> C2
+    C2 --> A2
+
+    A2 --> A3
+    A3 -->|"Bế tắc cần gợi ý"| A4
+    A3 -->|"Tự tin giải bài"| A6
+
+    A4 --> D1
+    D1 --> D2
+    D2 --> D3
+    D3 --> A5
+    A5 --> A6
+
+    A6 --> C3
+    C3 --> C4
+    C4 --> C5
+
+    C5 -->|"Đúng (Hổng kiến thức nặng)"| C6
+    C5 -->|"Sai (Nắm vững tốt)"| C7
+
+    C6 --> A7
+    C7 --> A7
