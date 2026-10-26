@@ -1,0 +1,121 @@
+flowchart TD
+    %% =========================================================================
+    %% LÀN 1: HỌC SINH (STUDENT)
+    %% =========================================================================
+    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+        direction TB
+        Start4(( "● Bắt đầu" ))
+        Act_SelectWrong["Chọn phương án sai trong phiên luyện tập hoặc thi thử"]
+        Act_AskTutor["Bấm Hỏi Gia sư Socratic AI"]
+        Act_WaitRate["Nhận thông báo vượt hạn mức (429) & Chờ 1 phút"]
+        Act_ReadStaticSol["Đọc lời giải tĩnh được bốc từ ngân hàng đề thi"]
+        Act_ReadSocratic["Tiếp nhận gợi ý tư duy Socratic được Stream qua SSE"]
+        Dec_FlagResp{"Học sinh có bấm báo cáo phản hồi AI không?"}
+        Act_ClickFlag["Bấm Báo cáo câu trả lời của AI có vấn đề (Flag Report)"]
+        Act_RecvConfirm["Nhận thông báo xác nhận đã gửi báo cáo tới Giáo viên"]
+        Act_AnsIsomorphic["Giải câu hỏi tương đương 4 lựa chọn (Isomorphic Question)"]
+        Act_ContinueLearn["Xem kết quả câu tương đương & Tiếp tục lộ trình học"]
+        End4(( "◉ Hoàn tất" ))
+    end
+
+    %% =========================================================================
+    %% LÀN 2: HỆ THỐNG V-EVAL & PHÂN HỆ AI (SYSTEM & AI RAG)
+    %% =========================================================================
+    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Phân Hệ AI (AI Engine & GraphRAG)"]
+        direction TB
+        Act_RecvReq["Tiếp nhận yêu cầu hỗ trợ từ học sinh"]
+        Dec_RateLimit{"Tần suất yêu cầu <= 10 req/phút?"}
+        Act_Reject429["Trả về mã lỗi HTTP 429 Too Many Requests"]
+        Act_PackContext["Đóng gói ngữ cảnh: Câu hỏi, phương án sai, đáp án đúng, mã kỹ năng"]
+        Act_Hop1["Hop 1: Embed câu hỏi & Truy vấn vector gần nhất trong pgvector"]
+        Dec_Similarity{"Độ tương đồng Cosine >= 0.78?"}
+        Act_HaltLLM["Ngắt LLM chống ảo giác & Trả về lời giải tĩnh từ CSDL"]
+        Act_QueueNovel["Đẩy câu hỏi mới vào Hàng đợi chờ Giáo viên duyệt (AD-4B)"]
+        Act_Hop23["Hop 2 & 3: Trích xuất mẫu chuẩn (Exemplar) & Bẫy nhận thức"]
+        Act_BuildGrounded["Xây dựng Grounded Context từ Đồ thị tri thức"]
+        Act_LLMDraft["LLM sinh gợi mở tư duy Socratic (tuyệt đối không lộ đáp án)"]
+        Dec_Guardrails{"Vượt qua Guardrails? (Regex & Điểm lộ đáp án Leak Score <= 0.2)"}
+        Act_ApproveDraft["Phê duyệt bản nháp gợi ý hợp lệ"]
+        Act_FallbackHint["Thay thế bằng gợi ý chuẩn an toàn (Resilient Socratic Fallback)"]
+        Act_StreamSSE["Stream phản hồi đã duyệt tới Client qua giao thức SSE"]
+        Act_GenIsomorphic["Sinh câu hỏi tương đương cùng cấu trúc nhận thức"]
+        Act_LogFlagReport["Ghi nhận báo cáo vi phạm của học sinh để Giáo viên đối soát (AD-4C)"]
+        Act_RecordStreak["Ghi nhận hoạt động vào chuỗi học tập (Streak) & Giờ học"]
+        Dec_IsoCorrect{"Câu trả lời tương đương ĐÚNG hay SAI?"}
+        Act_ShowCongrat["Hiển thị chúc mừng & Tăng độ tự tin"]
+        Act_ShowIsoExplain["Hiển thị đáp án đúng & Lời giải thích ngắn gọn"]
+    end
+
+    %% =========================================================================
+    %% LÀN 3: GIÁO VIÊN / MENTOR (TEACHER)
+    %% =========================================================================
+    subgraph TeacherLane ["Làn 3: Giáo Viên / Mentor (Teacher)"]
+        direction TB
+        Act_OpenException["Mở Mentor Studio và chọn tab Hàng đợi câu hỏi mới (Exception Queue)"]
+        Act_ReviewProposal["Xem xét nội dung câu hỏi, gợi ý giải pháp & Độ tương đồng (< 0.78)"]
+        Dec_TeacherReview{"Quyết định phê duyệt của Giáo viên?"}
+        Act_CreatePattern["Tạo mẫu câu hỏi mới trong Đồ thị tri thức Knowledge Graph"]
+        Act_MergePattern["Hợp nhất vào mẫu có sẵn để làm giàu ngân hàng đề"]
+        Act_RejectProposal["Đánh dấu Từ chối đề xuất kèm phản hồi học thuật"]
+        Act_ReviewFlagged["Mở tab Thẩm định cờ báo cáo phản hồi AI từ học sinh (AD-4C)"]
+    end
+
+    %% Luồng tuần tự
+    Start4 --> Act_SelectWrong
+    Act_SelectWrong --> Act_AskTutor
+    Act_AskTutor --> Act_RecvReq
+    Act_RecvReq --> Dec_RateLimit
+
+    Dec_RateLimit -->|"Vượt giới hạn (> 10 req/m)"| Act_Reject429
+    Act_Reject429 --> Act_WaitRate
+    Act_WaitRate --> End4
+
+    Dec_RateLimit -->|"Hợp lệ (<= 10 req/m)"| Act_PackContext
+    Act_PackContext --> Act_Hop1
+    Act_Hop1 --> Dec_Similarity
+
+    Dec_Similarity -->|"Thấp (< 0.78)"| Act_HaltLLM
+    Act_HaltLLM --> Act_QueueNovel
+    Act_QueueNovel --> Act_ReadStaticSol
+    Act_QueueNovel -. Chuyển tiếp AD-4B .-> Act_OpenException
+    Act_ReadStaticSol --> End4
+
+    Dec_Similarity -->|"Chuẩn (>= 0.78)"| Act_Hop23
+    Act_Hop23 --> Act_BuildGrounded
+    Act_BuildGrounded --> Act_LLMDraft
+    Act_LLMDraft --> Dec_Guardrails
+
+    Dec_Guardrails -->|"Đạt chuẩn"| Act_ApproveDraft
+    Dec_Guardrails -->|"Không đạt (Lộ đáp án)"| Act_FallbackHint
+
+    Act_ApproveDraft --> Act_StreamSSE
+    Act_FallbackHint --> Act_StreamSSE
+    Act_StreamSSE --> Act_GenIsomorphic
+
+    Act_StreamSSE --> Act_ReadSocratic
+    Act_GenIsomorphic --> Act_AnsIsomorphic
+
+    Act_ReadSocratic --> Dec_FlagResp
+    Dec_FlagResp -->|"Bấm Báo cáo lỗi"| Act_ClickFlag
+    Dec_FlagResp -->|"Bình thường"| Act_AnsIsomorphic
+
+    Act_ClickFlag --> Act_LogFlagReport
+    Act_LogFlagReport --> Act_RecvConfirm
+    Act_LogFlagReport -. Chuyển tiếp AD-4C .-> Act_ReviewFlagged
+    Act_RecvConfirm --> Act_AnsIsomorphic
+
+    Act_AnsIsomorphic --> Act_RecordStreak
+    Act_RecordStreak --> Dec_IsoCorrect
+    Dec_IsoCorrect -->|"ĐÚNG"| Act_ShowCongrat
+    Dec_IsoCorrect -->|"SAI"| Act_ShowIsoExplain
+
+    Act_ShowCongrat --> Act_ContinueLearn
+    Act_ShowIsoExplain --> Act_ContinueLearn
+    Act_ContinueLearn --> End4
+
+    %% Nhánh Giáo viên AD-4B
+    Act_OpenException --> Act_ReviewProposal
+    Act_ReviewProposal --> Dec_TeacherReview
+    Dec_TeacherReview -->|"APPROVED"| Act_CreatePattern
+    Dec_TeacherReview -->|"MERGED"| Act_MergePattern
+    Dec_TeacherReview -->|"REJECTED"| Act_RejectProposal

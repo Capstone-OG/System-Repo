@@ -120,9 +120,9 @@ CapStone/
 │   ├── run_local/                          # Script chạy từng service môi trường Local
 │   └── setup/                              # Script cấu hình môi trường ban đầu
 ├── docs/                                   # Hệ thống tài liệu đặc tả kiến trúc & nghiệp vụ
-│   ├── diagrams/                           # Trọn bộ 4 sơ đồ Mermaid bắt buộc (Review 2)
+│   ├── diagrams/                           # Trọn bộ sơ đồ kiến trúc & Activity Diagrams chuẩn 6 Core Flows
 │   ├── SQL/                                # Thiết kế CSDL & file DDL SQL (Supabase PostgreSQL 15+)
-│   └── V-Eval_Architecture_Plan.md         # Đặc tả kiến trúc tổng thể toàn diện (Report 4 SDD)
+│   └── docs_noi_bo/                        # Kho lưu trữ tài liệu đặc tả nghiệp vụ & kế hoạch nội bộ
 ├── grpc/                                   # Hợp đồng giao tiếp Protocol Buffers liên dịch vụ
 │   ├── content.proto                       # Hợp đồng gRPC Content Service (:5250)
 │   └── ai.proto                            # Hợp đồng gRPC AI Streaming Service
@@ -165,13 +165,15 @@ docker compose up --build -d
 
 ## 📑 MỤC LỤC TÀI LIỆU TRỌNG YẾU (KEY SPECIFICATIONS)
 
-- 📘 **Bản Đặc Tả Kiến Trúc Tổng Thể (Report 4 SDD)**: [`docs/V-Eval_Architecture_Plan.md`](./docs/V-Eval_Architecture_Plan.md)
-- 📊 **Trọn Bộ 4 Sơ Đồ Mermaid Bắt Buộc**:
-  - [Sơ đồ 1: Kiến trúc tổng quan](./docs/diagrams/architecture.mmd)
-  - [Sơ đồ 2: Logical ERD](./docs/diagrams/02_logical_erd.mmd)
-  - [Sơ đồ 3: State Machine](./docs/diagrams/03_state_machine.mmd)
-  - [Sơ đồ 4: Activity Swimlane](./docs/diagrams/04_activity_swimlane.mmd)
+- 📘 **Bản Đặc Tả Kiến Trúc Tổng Thể (Report 4 SDD)**: [`docs/docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs/docs_noi_bo/V-Eval_Architecture_Plan.md)
+- 📊 **Trọn Bộ Sơ Đồ Mermaid Kiến Trúc & Hoạt Động (Activity Diagrams)**:
+  - [Sơ đồ Kiến trúc tổng quan hệ thống](./docs/diagrams/architecture.mmd)
+  - [Core Flow 1: Khảo thí chẩn đoán & Phân tầng](./docs/diagrams/core1_activity.mmd)
+  - [Core Flow 2: Quy hoạch lộ trình DAG & Gom cụm vi mô](./docs/diagrams/core2_activity.mmd)
+  - [Core Flow 3: Luyện tập thích ứng P-L-A-R & Thi thử](./docs/diagrams/core3_activity.mmd)
+  - [Core Flow 4: Socratic AI Tutor & Giám sát tri thức](./docs/diagrams/core4_activity.mmd)
+  - [Core Flow 5: Dashboard phân tích & Ma trận Heatmap](./docs/diagrams/core5_activity.mmd)
+  - [Core Flow 6: Sổ tay lỗi sai & Ôn tập ngắt quãng SM-2](./docs/diagrams/core6_activity.mmd)
 - 🗄️ **Thiết Kế CSDL & SQL DDL**: [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql)
-- 📐 **Đặc Tả Sơ Đồ Hoạt Động (Activity Diagrams)**: [`docs/mo_ta_activity_diagram_core_2_3_6.md`](./docs/mo_ta_activity_diagram_core_2_3_6.md)
-- 🛡️ **Đặc Tả Định Tuyến Gateway YARP**: [`docs/api_gateway_yarp_dinh_tuyen.md`](./docs/api_gateway_yarp_dinh_tuyen.md)
+- 📁 **Kho Tài Liệu Đặc Tả Nội Bộ**: [`docs/docs_noi_bo/`](./docs/docs_noi_bo/)
 - 🟢 **Nhật Ký Tiến Độ Hệ Thống**: [`UPDATE.md`](./UPDATE.md)

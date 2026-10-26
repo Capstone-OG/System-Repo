@@ -1,0 +1,112 @@
+flowchart TD
+    %% =========================================================================
+    %% LÀN 1: HỌC SINH (STUDENT)
+    %% =========================================================================
+    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+        direction TB
+        Start5(( "● Bắt đầu" ))
+        Act_EnterClass["Đăng nhập & Vào lớp học"]
+        Act_SelectAct["Lựa chọn hoạt động học tập trên Dashboard"]
+        Dec_ActType{"Loại hoạt động học tập?"}
+        Act_DoZPD["Giải bài tập thích ứng ZPD"]
+        Act_WatchShort["Xem video bài giảng ngắn"]
+        Act_TakeMock["Làm bài thi thử chuẩn hóa"]
+        Act_SubmitActivity["Nộp bài hoàn tất hoạt động"]
+        Act_OpenDash["Mở Bảng thông tin cá nhân (Personal Dashboard)"]
+        Act_ReviewRadar["Xem biểu đồ Radar 4 miền, điểm mạnh/yếu & Chuỗi Streak"]
+        Act_AdjustPlan["Điều chỉnh kế hoạch tự học cho ngày tiếp theo"]
+        Dec_NextAct{"Tiếp tục hoạt động khác?"}
+        End5(( "◉ Hoàn tất phiên" ))
+    end
+
+    %% =========================================================================
+    %% LÀN 2: HỆ THỐNG V-EVAL & ANALYTICS ENGINE
+    %% =========================================================================
+    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Analytics Engine"]
+        direction TB
+        Act_RecordBehavior["Ghi nhận hành vi học tập vào cơ sở dữ liệu"]
+        Act_ComputeMastery["Tính xác suất thành thạo kỹ năng P(L_t) theo BKT"]
+        Act_UpdateTheta["Cập nhật ước lượng năng lực IRT (theta)"]
+        Dec_StreakToday{"Hôm nay đã ghi nhận Streak chưa?"}
+        Act_IncStreak["Tăng số ngày duy trì liên tục (Streak += 1)"]
+        Act_KeepStreak["Giữ nguyên chuỗi Streak hiện tại"]
+        Act_SaveAnalytics["Lưu kết quả phân tích vào bảng ClassSkillHeatmaps & Profiles"]
+        Act_PushDashboard["Đẩy dữ liệu cập nhật thời gian thực về Client Dashboard"]
+        
+        %% Phục vụ Teacher Heatmap (AD-5B)
+        Dec_NeedLatest{"Giáo viên yêu cầu tổng hợp dữ liệu mới nhất ngay?"}
+        Act_AggregateData["Tổng hợp dữ liệu toàn lớp (Mean, SD, Kiểm tra phân phối 2 đỉnh Bimodal)"]
+        Act_RefreshCache["Làm mới bộ nhớ đệm Cache"]
+        Act_LoadCache["Nạp dữ liệu lớp học từ Cache"]
+        Act_RenderHeatmap["Kết xuất Ma trận bản đồ nhiệt 2D Class Heatmap"]
+        Act_GroupStruggling["Tự động gom nhóm học sinh đang gặp khó khăn (Struggling Students)"]
+        Act_InsertLiveQA["Chèn buổi Live Q&A vào lộ trình học tập cá nhân của các em"]
+        Act_SendNoti["Bắn thông báo đẩy tới thiết bị của học sinh và phụ huynh"]
+    end
+
+    %% =========================================================================
+    %% LÀN 3: GIÁO VIÊN / MENTOR (TEACHER)
+    %% =========================================================================
+    subgraph TeacherLane ["Làn 3: Giáo Viên / Mentor (Teacher)"]
+        direction TB
+        Act_OpenClassDash["Đăng nhập & Mở Dashboard Quản lý lớp học"]
+        Act_ClickForce["Bấm Nút Buộc tổng hợp nhanh (Force Aggregate)"]
+        Act_ReviewColors["Xem xét màu sắc Heatmap & Phân bổ điểm số từng kỹ năng"]
+        Dec_CriticalTopic{"Có chủ đề Báo động ĐỎ (CRITICAL_RED) hoặc phân hóa 2 cực (Bimodal)?"}
+        Act_NormalPace["Tiếp tục giảng dạy theo tiến độ giáo án bình thường"]
+        Act_Click1Click["Bấm CTA 1-Click: Tạo buổi giải đáp trực tiếp (Live Q&A Session)"]
+        Act_HoldSession["Tổ chức buổi Live Q&A giải đáp thắc mắc theo lịch hẹn"]
+    end
+
+    %% Luồng Học sinh
+    Start5 --> Act_EnterClass
+    Act_EnterClass --> Act_SelectAct
+    Act_SelectAct --> Dec_ActType
+
+    Dec_ActType -->|"[Bài tập ZPD]"| Act_DoZPD
+    Dec_ActType -->|"[Video bài giảng]"| Act_WatchShort
+    Dec_ActType -->|"[Thi thử Mock Exam]"| Act_TakeMock
+
+    Act_DoZPD --> Act_SubmitActivity
+    Act_WatchShort --> Act_SubmitActivity
+    Act_TakeMock --> Act_SubmitActivity
+
+    Act_SubmitActivity --> Act_RecordBehavior
+    Act_RecordBehavior --> Act_ComputeMastery
+    Act_ComputeMastery --> Act_UpdateTheta
+    Act_UpdateTheta --> Dec_StreakToday
+
+    Dec_StreakToday -->|"Chưa ghi nhận"| Act_IncStreak
+    Dec_StreakToday -->|"Đã ghi nhận"| Act_KeepStreak
+
+    Act_IncStreak --> Act_SaveAnalytics
+    Act_KeepStreak --> Act_SaveAnalytics
+    Act_SaveAnalytics --> Act_PushDashboard
+    Act_PushDashboard --> Act_OpenDash
+    Act_OpenDash --> Act_ReviewRadar
+    Act_ReviewRadar --> Act_AdjustPlan
+    Act_AdjustPlan --> Dec_NextAct
+
+    Dec_NextAct -->|"Có"| Act_SelectAct
+    Dec_NextAct -->|"Không"| End5
+
+    %% Luồng Giáo viên (AD-5B)
+    Act_OpenClassDash --> Dec_NeedLatest
+    Dec_NeedLatest -->|"Có (Bấm Force Aggregate)"| Act_ClickForce
+    Act_ClickForce --> Act_AggregateData
+    Act_AggregateData --> Act_RefreshCache
+    Act_RefreshCache --> Act_LoadCache
+
+    Dec_NeedLatest -->|"Không (Tải bình thường)"| Act_LoadCache
+    Act_LoadCache --> Act_RenderHeatmap
+    Act_RenderHeatmap --> Act_ReviewColors
+    Act_ReviewColors --> Dec_CriticalTopic
+
+    Dec_CriticalTopic -->|"Không (Lớp nắm vững tốt)"| Act_NormalPace
+    Dec_CriticalTopic -->|"Có bế tắc nghiêm trọng"| Act_Click1Click
+
+    Act_Click1Click --> Act_GroupStruggling
+    Act_GroupStruggling --> Act_InsertLiveQA
+    Act_InsertLiveQA --> Act_SendNoti
+    Act_SendNoti --> Act_HoldSession
+    Act_HoldSession --> End5

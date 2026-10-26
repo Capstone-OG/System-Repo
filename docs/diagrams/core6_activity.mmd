@@ -1,0 +1,65 @@
+flowchart TD
+    %% =========================================================================
+    %% LÀN 1: HỌC SINH (STUDENT)
+    %% =========================================================================
+    subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
+        direction TB
+        Start6(( "● Bắt đầu" ))
+        Act_AccessNotebook["Truy cập Sổ tay lỗi sai (Mistake Notebook) từ Dashboard"]
+        Act_SelectItem["Chọn câu hỏi cần ôn tập trong hàng đợi đến hạn"]
+        Act_SolveReview["Giải câu hỏi & Nộp câu trả lời kèm đánh giá chất lượng (q: 0 đến 5)"]
+        Act_ViewRetention["Xem báo cáo tổng kết ôn tập & Các chỉ số ghi nhớ Spaced Repetition"]
+        End6(( "◉ Hoàn tất phiên" ))
+    end
+
+    %% =========================================================================
+    %% LÀN 2: HỆ THỐNG V-EVAL & GRAPH ENGINE (SM-2 & BKT)
+    %% =========================================================================
+    subgraph SystemLane ["Làn 2: Hệ Thống V-Eval & Graph Engine"]
+        direction TB
+        Act_QueryPending["Truy vấn các câu hỏi có lịch ôn tập đến hạn (next_review <= Today)"]
+        Dec_ItemsExist{"Có câu hỏi nào đến hạn ôn tập không?"}
+        Act_RenderContext["Kết xuất câu hỏi kèm ngữ cảnh lịch sử lỗi sai trước đây"]
+        Act_EvalSM2["Đánh giá kết quả và xác định điểm chất lượng SM-2 (q từ 0 đến 5)"]
+        Dec_QualityScore{"Điểm chất lượng ôn tập q >= 3?"}
+        Act_ResetSM2["Reset bộ đếm lặp về 1 & Đặt khoảng cách ôn tập I = 1 ngày"]
+        Act_UpdateSM2["Tính toán hệ số dễ EF mới & Mở rộng khoảng cách ôn tập I"]
+        Act_UpdateBKT["Thuật toán BKT: Cập nhật xác suất thành thạo P(L_t)"]
+        Dec_ConsecutiveReviews{"Số lần ôn tập thành công liên tiếp đạt >= 3 lần?"}
+        Act_MarkResolved["Cập nhật trạng thái câu hỏi trong Sổ tay lỗi sai -> RESOLVED"]
+        Act_KeepPending["Giữ trạng thái câu hỏi đang theo dõi & Lên lịch ôn tiếp theo"]
+        Dec_QueueRemaining{"Còn câu hỏi nào trong hàng đợi cần ôn không?"}
+        Act_AckCompletion["Xác nhận hoàn thành phiên ôn tập lặp lại ngắt quãng"]
+    end
+
+    %% Điều phối luồng tuần tự
+    Start6 --> Act_AccessNotebook
+    Act_AccessNotebook --> Act_QueryPending
+    Act_QueryPending --> Dec_ItemsExist
+
+    Dec_ItemsExist -->|"[Không có câu đến hạn]"| Act_ViewRetention
+    Dec_ItemsExist -->|"[Có câu cần ôn tập]"| Act_SelectItem
+
+    Act_SelectItem --> Act_RenderContext
+    Act_RenderContext --> Act_SolveReview
+    Act_SolveReview --> Act_EvalSM2
+    Act_EvalSM2 --> Dec_QualityScore
+
+    Dec_QualityScore -->|"[q < 3 (Quên kiến thức)]"| Act_ResetSM2
+    Dec_QualityScore -->|"[q >= 3 (Nhớ tốt)]"| Act_UpdateSM2
+
+    Act_ResetSM2 --> Act_UpdateBKT
+    Act_UpdateSM2 --> Act_UpdateBKT
+    Act_UpdateBKT --> Dec_ConsecutiveReviews
+
+    Dec_ConsecutiveReviews -->|"Đạt >= 3 lần"| Act_MarkResolved
+    Dec_ConsecutiveReviews -->|"< 3 lần"| Act_KeepPending
+
+    Act_MarkResolved --> Dec_QueueRemaining
+    Act_KeepPending --> Dec_QueueRemaining
+
+    Dec_QueueRemaining -->|"[Còn câu trong hàng đợi]"| Act_SelectItem
+    Dec_QueueRemaining -->|"[Hàng đợi đã hết]"| Act_AckCompletion
+
+    Act_AckCompletion --> Act_ViewRetention
+    Act_ViewRetention --> End6

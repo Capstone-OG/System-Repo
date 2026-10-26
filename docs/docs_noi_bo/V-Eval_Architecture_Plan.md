@@ -175,61 +175,123 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
+    %% =========================================================================
+    %% LÀN 1: HỌC SINH (STUDENT)
+    %% =========================================================================
     subgraph StudentLane ["Làn 1: Học Sinh (Student)"]
         direction TB
-        A1["Bắt đầu bài luyện tập trong lộ trình DAG"]
-        A2["Nhận câu hỏi thích ứng ZPD"]
-        A3{"Có gặp bế tắc khi giải toán?"}
-        A4["Yêu cầu Gia sư Socratic hỗ trợ"]
-        A5["Tương tác mô hình đồ thị 2D / 3D (JSXGraph)"]
-        A6["Gửi câu trả lời hoàn tất"]
-        A7["Xem giải thích & Báo cáo độ nắm vững P(L_t)"]
+        StartNode(( "● Bắt đầu" ))
+        Act_QuickCheck["Làm 3 câu Quick Check nền tảng"]
+        Act_WatchVideo["Xem video bài giảng cốt lõi"]
+        Act_AnsQuestion["Chọn phương án trả lời & Gửi đáp án"]
+        Act_AskTutor["Nhấn nút Trợ giúp từ Socratic AI Tutor"]
+        Act_InteractMath["Xem gợi mở tư duy & Tương tác đồ thị 2D/3D (JSXGraph)"]
+        Act_SolveIsomorphic["Giải câu hỏi tương đương (Isomorphic Question)"]
+        Act_DoRemedial["Giải và nộp bài luyện tập cứu trợ (Remedial Package)"]
+        Act_Reflect["Đánh giá độ tự tin (1-5 sao) & Gắn nhãn nguyên nhân sai sót"]
+        EndNode(( "◉ Hoàn tất" ))
     end
 
-    subgraph GatewayLane ["Làn 2: API Gateway (YARP :5212)"]
+    %% =========================================================================
+    %% LÀN 2: HỆ THỐNG KHẢO THÍ & ĐỒ THỊ (PRACTICE & CONTENT SERVICE)
+    %% =========================================================================
+    subgraph SystemLane ["Làn 2: Hệ Thống Khảo Thí & Đồ Thị (Practice & Content Service)"]
         direction TB
-        B1["Xác thực JWT Token & Kiểm tra Rate Limit"]
-        B2["Chuyển tiếp yêu cầu tới Microservices"]
+        Act_InitLesson["Ghi nhận điểm sơ bộ & Mở khóa video bài giảng"]
+        Dec_VideoWatch{"Thời lượng xem video đạt >= 80%?"}
+        Act_FetchZPD["Bốc câu hỏi thích ứng theo vùng phát triển ZPD"]
+        Dec_HelpNeeded{"Học sinh tự giải hay cần AI gợi ý?"}
+        Dec_GuessCheck{"Thời gian suy nghĩ t < 5s & Trả lời đúng? (BR-08)"}
+        Act_GuessPenalty["Tăng tham số đoán mò P(G) = 0.60"]
+        Act_StandardBKT["Áp dụng tham số đoán mò mặc định P(G) = 0.25"]
+        Act_UpdateBKT["Thuật toán BKT: Cập nhật xác suất thành thạo P(L_t)"]
+        Dec_AnswerCorrect{"Câu trả lời ĐÚNG hay SAI?"}
+        Act_SaveMistake["Lưu vào MistakeNotebook (Lập lịch ôn tập SM-2 sau 24h)"]
+        Dec_ThreeFails{"Sai liên tiếp 3 câu cùng kỹ năng? (BR-03)"}
+        Act_IssueRemedial["Phát gói cứu trợ (Tóm tắt công thức + 3 câu hỏi cơ bản)"]
+        Dec_RemedialPass{"Điểm bài cứu trợ đạt 3/3 (100%)?"}
+        Act_ResetErrorCounter["Reset bộ đếm câu sai & Khôi phục luyện tập thích ứng"]
+        Dec_MasteryCriteria{"Đạt chuẩn BR-01? (P(L_t) >= 0.85 & Đúng 2 câu b >= 0.50)"}
+        Act_CompleteNode["Chuyển RoadmapNode -> COMPLETED & Mở khóa chặng tiếp theo"]
     end
 
-    subgraph BackendLane ["Làn 3: Hệ Thống Khảo Thí (Practice & Content)"]
+    %% =========================================================================
+    %% LÀN 3: PHÂN HỆ AI & GIA SƯ SOCRATIC (AI ENGINE & RAG)
+    %% =========================================================================
+    subgraph AILane ["Làn 3: Phân Hệ AI & Gia Sư Socratic (AI Engine & Socratic RAG)"]
         direction TB
-        C1["Xác định độ khó phù hợp theo Bloom"]
-        C2["Gọi gRPC lấy câu hỏi từ Content Service"]
-        C3["Chấm điểm đáp án với bảng đáp án gốc"]
-        C4["Cập nhật xác suất nắm vững P(L_t) theo BKT"]
-        C5{"P(L_t) <= 10%?"}
-        C6["Bó dạng bài yếu liền kề (Adjacent Weak Skill)"]
-        C7["Nâng độ khó sang câu hỏi nâng cao tiếp theo"]
+        Dec_RateLimit{"Tần suất yêu cầu <= 10 req/phút?"}
+        Act_RateReject["Trả về lỗi 429 Too Many Requests (Yêu cầu chờ 1 phút)"]
+        Act_BuildQuery["Đóng gói ngữ cảnh: Câu hỏi, phương án sai, mã kỹ năng"]
+        Act_Hop1["Hop 1: Embed câu hỏi & Quét tri thức tương đồng trong pgvector"]
+        Dec_Similarity{"Độ tương đồng Cosine >= 0.78?"}
+        Act_StaticFallback["Ngắt LLM chống ảo giác: Trả về lời giải tĩnh từ đề thi"]
+        Act_Hop23["Hop 2 & 3: Trích xuất mẫu chuẩn (Exemplar) & Bẫy nhận thức"]
+        Act_LLMDraft["LLM sinh gợi ý tư duy Socratic từng bước (không lộ đáp án)"]
+        Dec_Guardrails{"Vượt qua bộ lọc bảo vệ? (Regex & Leak Score <= 0.2)"}
+        Act_FallbackHint["Chuyển hướng sang gợi ý chuẩn an toàn (Resilient Fallback)"]
+        Act_StreamResponse["Stream gợi ý qua SSE & Sinh câu hỏi tương đương 4 lựa chọn"]
     end
 
-    subgraph AILane ["Làn 4: Phân Hệ AI (AI Engine & Socratic RAG)"]
-        direction TB
-        D1["Truy xuất ngữ cảnh từ pgvector"]
-        D2["Sinh câu hỏi gợi mở tư duy từng bước"]
-        D3["Trích xuất thẻ hình học [MATH_GRAPH]"]
-    end
+    %% =========================================================================
+    %% ĐIỀU PHỐI LUỒNG HOẠT ĐỘNG GIỮA CÁC LÀN (INTER-SWIMLANE FLOW)
+    %% =========================================================================
+    %% 1. Khởi động bài học & Video lý thuyết
+    StartNode --> Act_QuickCheck
+    Act_QuickCheck --> Act_InitLesson
+    Act_InitLesson --> Act_WatchVideo
+    Act_WatchVideo --> Dec_VideoWatch
+    Dec_VideoWatch -->|"Chưa đủ (< 80%)"| Act_WatchVideo
+    Dec_VideoWatch -->|"Đạt >= 80%"| Act_FetchZPD
 
-    A1 --> B1
-    B1 --> B2
-    B2 --> C1
-    C1 --> C2
-    C2 --> A2
-    A2 --> A3
-    A3 -->|"Có bế tắc"| A4
-    A3 -->|"Tự giải được"| A6
-    A4 --> D1
-    D1 --> D2
-    D2 --> D3
-    D3 --> A5
-    A5 --> A6
-    A6 --> C3
-    C3 --> C4
-    C4 --> C5
-    C5 -->|"Đúng (Hổng kiến thức)"| C6
-    C5 -->|"Sai (Nắm vững tốt)"| C7
-    C6 --> A7
-    C7 --> A7
+    %% 2. Bốc câu hỏi thích ứng & Chọn hướng giải
+    Act_FetchZPD --> Dec_HelpNeeded
+    Dec_HelpNeeded -->|"Tự tin giải bài"| Act_AnsQuestion
+    Dec_HelpNeeded -->|"Bế tắc cần gợi ý"| Act_AskTutor
+
+    %% 3. Phân hệ Gia sư AI Socratic & Phòng vệ ảo giác
+    Act_AskTutor --> Dec_RateLimit
+    Dec_RateLimit -->|"Vượt ngưỡng (> 10 req/m)"| Act_RateReject
+    Act_RateReject --> Act_AnsQuestion
+    Dec_RateLimit -->|"Hợp lệ (<= 10 req/m)"| Act_BuildQuery
+    Act_BuildQuery --> Act_Hop1
+    Act_Hop1 --> Dec_Similarity
+    Dec_Similarity -->|"Thấp (< 0.78)"| Act_StaticFallback
+    Act_StaticFallback --> Act_InteractMath
+    Dec_Similarity -->|"Chuẩn (>= 0.78)"| Act_Hop23
+    Act_Hop23 --> Act_LLMDraft
+    Act_LLMDraft --> Dec_Guardrails
+    Dec_Guardrails -->|"Không đạt (Lộ đáp án)"| Act_FallbackHint
+    Dec_Guardrails -->|"Hợp lệ"| Act_StreamResponse
+    Act_FallbackHint --> Act_StreamResponse
+    Act_StreamResponse --> Act_InteractMath
+    Act_InteractMath --> Act_SolveIsomorphic
+    Act_SolveIsomorphic --> Act_AnsQuestion
+
+    %% 4. Nộp bài & Đánh giá tâm trắc học BKT
+    Act_AnsQuestion --> Dec_GuessCheck
+    Dec_GuessCheck -->|"Đoán mò (t < 5s & Đúng)"| Act_GuessPenalty
+    Dec_GuessCheck -->|"Suy nghĩ bình thường"| Act_StandardBKT
+    Act_GuessPenalty --> Act_UpdateBKT
+    Act_StandardBKT --> Act_UpdateBKT
+    Act_UpdateBKT --> Dec_AnswerCorrect
+
+    %% 5. Phân nhánh kết quả: Cứu trợ (Remedial) hoặc Hoàn thành (Mastery)
+    Dec_AnswerCorrect -->|"SAI"| Act_SaveMistake
+    Act_SaveMistake --> Dec_ThreeFails
+    Dec_ThreeFails -->|"Sai < 3 câu"| Act_FetchZPD
+    Dec_ThreeFails -->|"Sai liên tiếp 3 câu (BR-03)"| Act_IssueRemedial
+    Act_IssueRemedial --> Act_DoRemedial
+    Act_DoRemedial --> Dec_RemedialPass
+    Dec_RemedialPass -->|"Chưa đạt (< 3/3)"| Act_IssueRemedial
+    Dec_RemedialPass -->|"Đạt 3/3 (100%)"| Act_ResetErrorCounter
+    Act_ResetErrorCounter --> Act_FetchZPD
+
+    Dec_AnswerCorrect -->|"ĐÚNG"| Dec_MasteryCriteria
+    Dec_MasteryCriteria -->|"Chưa đạt chuẩn"| Act_FetchZPD
+    Dec_MasteryCriteria -->|"Đạt chuẩn hoàn thành (BR-01)"| Act_Reflect
+    Act_Reflect --> Act_CompleteNode
+    Act_CompleteNode --> EndNode
 ```
 
 ---

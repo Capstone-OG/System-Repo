@@ -1,27 +1,31 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [26/10/2026] - Khắc Phục Toàn Diện 7 Điểm Lệch Kiến Trúc Review 2, Chuẩn Hóa 100% Mermaid & Bổ Sung Trọn Bộ 4 Sơ Đồ Bắt Buộc
+## [26/10/2026] - Chuẩn Hóa Cấu Trúc Tài Liệu docs, Tinh Gọn diagrams Trực Tiếp & Khắc Phục Kiến Trúc Review 2
 
-- **Khắc Phục Toàn Diện 7 Điểm Lệch Kiến Trúc (Theo Kết Quả Audit Review 2)**:
-  1. **Thống nhất duy nhất 1 chuẩn Mermaid**: Xóa bỏ file `architecture.puml` để tránh lệch hai bản, đảm bảo tất cả sơ đồ kiến trúc đều hiển thị trực quan tự động trên GitHub và MD Editor Plus.
-  2. **Chốt hạ Vector Database**: Xác định chính xác 100% trong code là **`Supabase PostgreSQL (pgvector)`** (extension `vector`, schema `v_eval_ai`), loại bỏ hoàn toàn tên Qdrant khỏi sơ đồ và tài liệu.
-  3. **Chốt chính xác model Google Gemini**: Khớp cấu hình code với model ID cụ thể: `gemini-3.6-flash` (RAG LLM), `gemini-embedding-001` (3072-dim Embeddings) và `gemini-flash-lite-latest` (C# Vision OCR).
-  4. **Đối chiếu khớp 1:1 hộp và luồng dữ liệu**:
-     - Định danh `Mobile Client` dạng `[Kế hoạch pha 2 / Planned]` kết nối nét đứt, tập trung nghiệm thu Web Client (React 19 Responsive SPA).
-     - Bổ sung `OpenAI API (GPT-4o-mini)` làm Secondary Fallback LLM khi Gemini chạm rate-limit.
-     - Điều chỉnh luồng Gateway điều phối độc lập tới cả `AI Engine Core (.NET)` và `AI RAG Service (Python)`.
-     - Loại bỏ mũi tên gọi ảo `PracticeSvc -> AiCoreNet`.
-  5. **Thống nhất số lượng Service**: Xác định rõ cấu trúc hệ thống gồm: 1 Web Client, 1 API Gateway, 3 Core Microservices, 1 Phân hệ AI Subsystem và 1 Hệ lưu trữ Supabase PostgreSQL (Multi-Schema & pgvector).
-  6. **Viết lại "System at a Glance"**: Đạt chuẩn **148 từ** (≤150 từ), tập trung đúng 3 trọng tâm: Vấn đề giải quyết, Đối tượng thụ hưởng và Giải pháp công nghệ cốt lõi.
-  7. **Rút gọn nhãn sơ đồ**: Loại bỏ toàn bộ port và endpoint chi tiết khỏi các hộp sơ đồ Mermaid để tránh nặng hình, chuyển toàn bộ thông số kỹ thuật sang bảng ma trận trong Report 4.
+- **Tinh Gọn & Chuẩn Hóa Thư Mục Sơ Đồ [`docs/diagrams/`](./docs/diagrams/)**:
+  - Đưa trực tiếp toàn bộ 6 file mã nguồn Mermaid sơ đồ hoạt động (Activity Diagrams) chuẩn hóa theo từng Core Flow ra thẳng thư mục gốc `docs/diagrams/`:
+    - `core1_activity.mmd`: Khảo thí chẩn đoán năng lực & Phân tầng xếp lớp cơ sở.
+    - `core2_activity.mmd`: Cắt tỉa thời gian, kiểm định DAG (Tarjan SCC), Kahn Topo & Gom cụm vi mô K-Means.
+    - `core3_activity.mmd`: Chu trình tự học thích ứng P-L-A-R (BR-01, BR-03, BR-08) & Phòng thi thử giám sát liêm chính (BR-20).
+    - `core4_activity.mmd`: Gia sư Socratic AI, phòng vệ ảo giác GraphRAG & Thẩm định mẫu đề mới Exception Queue.
+    - `core5_activity.mmd`: Dashboard phân tích học sinh, Streak, Ma trận 2D Heatmap lớp học & CTA Live Q&A.
+    - `core6_activity.mmd`: Sổ tay lỗi sai & Lập lịch ôn tập lặp lại ngắt quãng SuperMemo-2 (SM-2).
+  - Duy trì sơ đồ kiến trúc tổng quan hệ thống: `architecture.mmd`.
+  - Dọn sạch các file `.mmd` cũ mang tính chất tượng trưng/phác thảo trước đây (`02_logical_erd.mmd`, `03_state_machine.mmd`, `04_activity_swimlane.mmd`).
+  - Lưu giữ nguyên vẹn 2 thư mục chứa ảnh sơ đồ chuẩn: `activity_diagram/` và `ActivityDiagramCore236/`.
 
-- **Bổ Sung Trọn Bộ 4 Sơ Đồ Mermaid Bắt Buộc Tại [`docs/diagrams/`](./docs/diagrams/)**:
-  - [Sơ đồ 1: Kiến trúc tổng quan hệ thống](./docs/diagrams/architecture.mmd) (`flowchart TB`).
-  - [Sơ đồ 2: Sơ đồ thực thể logic - Logical ERD](./docs/diagrams/02_logical_erd.mmd) (`erDiagram`).
-  - [Sơ đồ 3: Máy trạng thái phiên thi thích ứng](./docs/diagrams/03_state_machine.mmd) (`stateDiagram-v2`).
-  - [Sơ đồ 4: Sơ đồ hoạt động phân làn Swimlane](./docs/diagrams/04_activity_swimlane.mmd) (`flowchart TD`).
+- **Tái Cấu Trúc Toàn Diện Thư Mục [`docs/`](./docs/)**:
+  - Tại gốc `docs/` chỉ duy trì đúng 2 thư mục tài nguyên chính quy:
+    1. [`docs/diagrams/`](./docs/diagrams/): Chứa các sơ đồ kiến trúc và activity diagrams chuẩn 6 Core Flows.
+    2. [`docs/SQL/`](./docs/SQL/): Chứa file kịch bản CSDL chính thức `SQL.sql` và tài liệu nghiệm thu 74 quan hệ thực thể.
+  - Di chuyển toàn bộ các tài liệu đặc tả, kế hoạch triển khai chi tiết, báo cáo nội bộ và biên bản họp sang thư mục tập trung mới: [`docs/docs_noi_bo/`](./docs/docs_noi_bo/).
+  - Cập nhật mục lục điều hướng và cây thư mục dự án trong [`README.md`](./README.md) đồng bộ hoàn toàn với cấu trúc mới.
 
-- **Hoàn Thiện Bảng Khai Báo Công Nghệ Đủ 5 Nhóm Trong [`docs/V-Eval_Architecture_Plan.md`](./docs/V-Eval_Architecture_Plan.md)**:
-  - Bổ sung nhóm Dịch vụ bên thứ ba & Dữ liệu gửi đi (cam kết bảo vệ PII học sinh).
-  - Bổ sung môi trường Staging (Ubuntu VPS Demo 1.1), quy trình CI/CD và chiến lược Rollback container tag dưới 30 giây.
-  - Bổ sung quy tắc phân nhánh Gitflow và công cụ AI hỗ trợ phát triển.
+- **Khắc Phục Toàn Diện 7 Điểm Lệch Kiến Trúc Review 2**:
+  1. Thống nhất duy nhất 1 chuẩn Mermaid (đã loại bỏ PlantUML lệch bản).
+  2. Chốt hạ Vector Database trong mã nguồn là Supabase PostgreSQL `pgvector` (`v_eval_ai`).
+  3. Khớp chính xác model ID Google Gemini: `gemini-3.6-flash`, `gemini-embedding-001`, `gemini-flash-lite-latest`.
+  4. Chuẩn hóa luồng Gateway điều phối độc lập tới `AI Engine Core (.NET)` và `AI RAG Service (Python)`.
+  5. Thống nhất số lượng Service: 1 Web Client, 1 API Gateway, 3 Core Microservices, 1 Phân hệ AI Subsystem và 1 CSDL Supabase PostgreSQL.
+  6. Viết lại System at a Glance đạt chuẩn 148 từ.
+  7. Hoàn thiện bảng khai báo công nghệ đủ 5 nhóm chuẩn Report 4 trong tài liệu kiến trúc.
