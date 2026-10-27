@@ -20,10 +20,13 @@
     - `AI RAG Service (Python FastAPI)`: Cổng `8000` (HNSW Vector Search & KG -> Schema `v_eval_ai`).
   - Tầng dịch vụ bên ngoài: Thể hiện rõ `Google Gemini API` (LLM & Vision chính), `OpenAI API` (Fallback dự phòng) và `Google OAuth 2.0` (Social Login).
 
-- **Khởi Tạo Độc Lập & Cập Nhật Đầy Đủ Thuộc Tính Sơ Đồ Thực Thể [`docs/diagrams/erd.mmd`](./docs/diagrams/erd.mmd)**:
-  - **Khai báo thuộc tính chi tiết (Attribute Definitions)**: Khai báo đầy đủ 100% thuộc tính/cột (`column_type`, `column_name`, `PK`, `FK`, `UK` và chú thích nghiệp vụ) cho toàn bộ các thực thể trong `docs/diagrams/erd.mmd` và tài liệu kiến trúc [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md).
-  - **Đồng bộ thực thể AI Engine**: Bổ sung chính thức 2 thực thể của AI Engine là `TheoreticalDocuments` và `TutorSessions` vào kịch bản CSDL chính thức [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql) (schema `v_eval_ai`), tạo chỉ mục (`idx_theoretical_docs_skill`, `idx_tutor_sessions_student_question`) và thiết lập mối quan hệ trong `erd.mmd` (`Skills ||--o{ TheoreticalDocuments`, `TheoreticalDocuments ||--o{ KnowledgeVectorChunks`, `Students ||--o{ TutorSessions`, `Questions ||--o{ TutorSessions`, `TutorSessions ||--o{ ai_tutor_interaction_logs`).
-  - Hệ thống đạt quy mô chuẩn hóa: 49 Thực thể (Identity: 13, Content: 8, Practice: 19, AI: 9) và 79 Mối quan hệ liên kết logic & vật lý.
+- **Khởi Tạo Độc Lập & Cập Nhật Đầy Đủ Thuộc Tính Sơ Đồ Thực Thể [`docs/diagrams/erd.mmd`](./docs/diagrams/erd.mmd) & Đồng Bộ CSDL**:
+  - **Khai báo thuộc tính chi tiết (Attribute Definitions)**: Khai báo đầy đủ 100% thuộc tính/cột (`column_type`, `column_name`, `PK`, `FK`, `UK` và chú thích nghiệp vụ) cho toàn bộ 50 thực thể trong `docs/diagrams/erd.mmd` và tài liệu kiến trúc [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md).
+  - **Bổ sung thực thể `LearningProfiles`**: Bổ sung đầy đủ entity block và quan hệ cho `LearningProfiles` (lưu tiên nghiệm BKT $P(L_0)$) trong `erd.mmd` khớp 100% với code `PracticeDbContext.cs` và `SQL.sql`.
+  - **Bổ sung vòng đời trạng thái Sổ tay lỗi sai (`MistakeNotebooks`)**: Bổ sung cột `status` và lớp hằng số `MistakeLifecycleState` (`NEW_MISTAKE`, `DUE_FOR_REVIEW`, `REVIEWING`, `RETAINED`, `RELAPSED`, `MASTERED`) trong code [`MistakeNotebook.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/MistakeNotebook.cs), CSDL `SQL.sql` và `erd.mmd`.
+  - **Chuẩn hóa Vector Embedding 768 Chiều & HNSW Indexing**: Thống nhất toàn hệ thống chiều vector embedding về 768 chiều (Google Gemini `text-embedding-004`) cho cả `KnowledgeVectorChunks` và `archetype_patterns`, khắc phục triệt để giới hạn 2000 chiều của pgvector và kích hoạt chỉ mục HNSW `idx_archetype_patterns_hnsw`.
+  - **Đồng bộ kịch bản DDL Python RAG**: Đồng bộ trọn vẹn 9 bảng của schema `v_eval_ai` vào `graph_schema.sql` và `apply_graph_schema.py`.
+  - Quy mô hệ thống hoàn thiện: **50 Thực thể** (Identity: 13, Content: 8, Practice: 20, AI: 9) và **81 Mối quan hệ** liên kết logic & vật lý.
 
 - **Chuẩn Hóa Bộ Unit Tests Tinh Gọn (2-4 Tests/Service) Phủ Đầy Đủ 100% Các Service & Tích Hợp CI Pipelines**:
   - Triển khai đồng bộ bộ Unit Test tinh gọn, đúng định mức 2–4 test cases cho toàn bộ 6 repositories có code trong hệ thống V-Eval:
@@ -38,7 +41,5 @@
 - **Gắn Tag Git `review-2` Đồng Loạt 100% Toàn Bộ Organization `Capstone-OG`**:
   - Gắn và đẩy tag `review-2` thành công lên `System-Repo` và toàn bộ 6 repo dịch vụ con (`v-eval-ai-engine`, `v-eval-content-service`, `v-eval-gateway`, `v-eval-identity-service`, `v-eval-practice-service`, `v-eval-web-client`).
 
-- **Hoàn Thiện Hồ Sơ BM02 (Self-Review Report)**:
-  - Chạy đầy đủ Prompt chuẩn của môn học đối chiếu toàn diện 7 hạng mục (Scope, Requirements, Data, States, Flows, Architecture, Design vs code).
-  - Xuất 10 phát hiện thực tế kèm phân loại `Team response` minh bạch: 3 Fixed, 1 Kept, 6 Planned.
-  - Điền trực tiếp dữ liệu chuẩn hóa vào file [`docs_noi_bo/SWP490_R2_BM02_Self_Review_Report_1.docx`](./docs_noi_bo/SWP490_R2_BM02_Self_Review_Report_1.docx) và khởi tạo bản xem trước [`docs_noi_bo/SWP490_R2_BM02_Self_Review_Report.md`](./docs_noi_bo/SWP490_R2_BM02_Self_Review_Report.md).
+- **Chuẩn Hóa Hồ Sơ Biểu Mẫu BM02 (Self-Review Report)**:
+  - Khởi tạo và làm sạch biểu mẫu BM02 chuẩn [`docs/docs/SWP490_R2_BM02_Self_Review_Report_1.docx`](./docs/docs/SWP490_R2_BM02_Self_Review_Report_1.docx) sẵn sàng phục vụ báo cáo đối soát và đánh giá nghiệm thu đợt Review 2.

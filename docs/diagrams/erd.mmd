@@ -1,7 +1,7 @@
 erDiagram
     %% =========================================================================
     %% V-EVAL UNIFIED MASTER DATABASE SCHEMA (SCHEMA V4.1)
-    %% 49 Entities (47 Master Tables + 2 AI Engine Domain Entities)
+    %% 50 Entities (47 Master Tables + 1 Practice LearningProfile + 2 AI Engine Domain Entities)
     %% Full Attribute Definitions, Data Types & Cardinalities
     %% Reference: docs/SQL/SQL.sql & docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md
     %% =========================================================================
@@ -316,7 +316,16 @@ erDiagram
         integer repetition_count "SM-2 consecutive success streak"
         numeric ease_factor "SM-2 ease factor EF (min 1.3)"
         date next_review_date "SM-2 scheduled next recall date"
+        varchar status "NEW_MISTAKE, DUE_FOR_REVIEW, REVIEWING, RETAINED, RELAPSED, MASTERED"
         boolean is_mastered "Mastery graduation status"
+    }
+
+    LearningProfiles {
+        uuid profile_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        uuid skill_id FK "References Skills"
+        numeric mastery_score "BKT initial prior probability P(L0)"
+        timestamptz last_updated "Profile update timestamp"
     }
 
     ScorePredictions {
@@ -421,7 +430,7 @@ erDiagram
         text description "Pedagogical problem archetype"
         text core_theorems "Foundational mathematical formulas and theorems"
         text fast_solving_heuristics "Fast-solving shortcuts and heuristics"
-        vector embedding "3072-dimensional Gemini text embedding"
+        vector embedding "768-dimensional Gemini text-embedding-004 vector"
         boolean is_verified "Academic Director verification status"
         timestamptz created_at "Pattern registration timestamp"
         timestamptz updated_at "Latest modification timestamp"
@@ -582,3 +591,5 @@ erDiagram
     Skills ||--o{ archetype_patterns : "classifies_pattern"
     Students ||--o{ ai_tutor_interaction_logs : "logs_student_tutor"
     Questions ||--o{ ai_tutor_interaction_logs : "logs_question_tutor"
+    Students ||--o{ LearningProfiles : "has_bkt_profile"
+    Skills ||--o{ LearningProfiles : "bkt_skill"

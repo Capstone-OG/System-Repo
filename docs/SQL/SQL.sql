@@ -3,12 +3,12 @@
 -- =====================================================================
 -- Phiên bản: Schema V4.1 (Đồng bộ 100% Microservices, Mô hình Offline Cohort 20 học sinh & Nhóm vi mô thích ứng)
 -- Ngày ban hành: 24/10/2026
--- Tổng số thực thể: 49 bảng (Identity: 13, Content: 8, Practice: 19, AI: 9)
+-- Tổng số thực thể: 50 bảng (Identity: 13, Content: 8, Practice: 20, AI: 9)
 -- Phân vùng 4 Bounded Context Schemas:
 --   1. v_eval_identity : Quản trị định danh, RBAC, 6 Actor Profiles, Cơ sở & Bảo mật OTP/Token (13 bảng)
 --   2. v_eval_content  : Khung năng lực 3 cấp, DAG tiên quyết, Đề thi chuẩn hóa & Ngân hàng câu hỏi (8 bảng)
---   3. v_eval_practice : Lộ trình thích ứng P-L-A-R, Lớp học offline, Nhóm vi mô 3-5 HS, BKT/SM-2, Proctoring, Dự báo SEM & Heatmap Analytics (19 bảng)
---   4. v_eval_ai       : Nguồn tri thức RAG, Vector Chunks 768d, Archetype Knowledge Graph, Theoretical Documents & Socratic Tutor Sessions (9 bảng)
+--   3. v_eval_practice : Lộ trình thích ứng P-L-A-R, Lớp học offline, Nhóm vi mô 3-5 HS, BKT/SM-2, Proctoring, LearningProfiles, Dự báo SEM & Heatmap Analytics (20 bảng)
+--   4. v_eval_ai       : Nguồn tri thức RAG, Vector Chunks 768d, Archetype Knowledge Graph 768d, Theoretical Documents & Socratic Tutor Sessions (9 bảng)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -412,6 +412,7 @@ CREATE TABLE IF NOT EXISTS v_eval_practice."MistakeNotebooks" (
     "consecutive_correct_reviews" integer DEFAULT 0,
     "interval_days" integer DEFAULT 1,
     "ease_factor" double precision DEFAULT 2.50,
+    "status" varchar(30) NOT NULL DEFAULT 'NEW_MISTAKE', -- 'NEW_MISTAKE', 'DUE_FOR_REVIEW', 'REVIEWING', 'RETAINED', 'RELAPSED', 'MASTERED'
     "is_mastered" boolean DEFAULT false,
     "last_reviewed_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT now(),
@@ -557,7 +558,7 @@ CREATE TABLE IF NOT EXISTS v_eval_ai.archetype_patterns (
     "description" text,
     "core_theorems" text NOT NULL,
     "fast_solving_heuristics" text,
-    "embedding" vector(3072), -- 3072 chiều gemini-embedding-001 hoặc 768 chiều
+    "embedding" vector(768), -- Chuẩn hóa thống nhất 768 chiều (Google Gemini text-embedding-004), tối ưu pgvector HNSW (< 2000d limit)
     "is_verified" boolean DEFAULT false,
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
@@ -665,6 +666,9 @@ CREATE INDEX IF NOT EXISTS "idx_roadmap_nodes_order" ON v_eval_practice."Roadmap
 CREATE INDEX IF NOT EXISTS "idx_stage_progress_node" ON v_eval_practice."StageProgress"("roadmap_node_id");
 CREATE INDEX IF NOT EXISTS "idx_adaptive_attempts_progress" ON v_eval_practice."AdaptiveQuizAttempts"("stage_progress_id");
 CREATE INDEX IF NOT EXISTS "idx_mistake_review_schedule" ON v_eval_practice."MistakeNotebooks"("student_id", "is_mastered", "next_review_date");
+CREATE INDEX IF NOT EXISTS "idx_mistake_notebooks_status" ON v_eval_practice."MistakeNotebooks"("status");
+CREATE INDEX IF NOT EXISTS "idx_learning_profiles_student" ON v_eval_practice."LearningProfiles"("student_id");
+CREATE INDEX IF NOT EXISTS "idx_learning_profiles_skill" ON v_eval_practice."LearningProfiles"("skill_id");
 CREATE INDEX IF NOT EXISTS "idx_score_predictions_student" ON v_eval_practice."ScorePredictions"("student_id");
 CREATE INDEX IF NOT EXISTS "idx_system_alerts_student" ON v_eval_practice."SystemAlerts"("student_id", "is_read");
 
@@ -675,8 +679,9 @@ CREATE INDEX IF NOT EXISTS "idx_heatmap_summaries_class_status" ON v_eval_practi
 CREATE INDEX IF NOT EXISTS "idx_student_activity_date" ON v_eval_practice."StudentDailyActivities"("student_id", "activity_date" DESC);
 CREATE INDEX IF NOT EXISTS "idx_readiness_student" ON v_eval_practice."StudentReadinessMetrics"("student_id");
 
--- 5. AI Engine & Vector Search
+-- 5. AI Engine & Vector Search (HNSW Indexing on 768d Embeddings)
 CREATE INDEX IF NOT EXISTS "idx_knowledge_vector_hnsw" ON v_eval_ai."KnowledgeVectorChunks" USING hnsw ("embedding" vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS "idx_archetype_patterns_hnsw" ON v_eval_ai.archetype_patterns USING hnsw ("embedding" vector_cosine_ops);
 CREATE INDEX IF NOT EXISTS "idx_knowledge_chunks_source" ON v_eval_ai."KnowledgeVectorChunks"("source_id");
 CREATE INDEX IF NOT EXISTS "idx_archetype_patterns_code" ON v_eval_ai.archetype_patterns("pattern_code");
 CREATE INDEX IF NOT EXISTS "idx_archetype_patterns_skill" ON v_eval_ai.archetype_patterns("skill_id");
