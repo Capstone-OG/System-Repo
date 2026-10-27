@@ -20,10 +20,10 @@
     - `AI RAG Service (Python FastAPI)`: Cổng `8000` (HNSW Vector Search & KG -> Schema `v_eval_ai`).
   - Tầng dịch vụ bên ngoài: Thể hiện rõ `Google Gemini API` (LLM & Vision chính), `OpenAI API` (Fallback dự phòng) và `Google OAuth 2.0` (Social Login).
 
-- **Khởi Tạo Độc Lập & Đồng Bộ 100% Sơ Đồ Thực Thể [`docs/diagrams/erd.mmd`](./docs/diagrams/erd.mmd)**:
-  - Khởi tạo file độc lập `docs/diagrams/erd.mmd` khớp 100% với kịch bản CSDL chính thức [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql) (Schema V4.1) và báo cáo nghiệm thu 74 mối quan hệ [`docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md`](./docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md).
-  - Phân vùng chính xác 47 thực thể trên 4 Bounded Contexts (`v_eval_identity`: 13, `v_eval_content`: 8, `v_eval_practice`: 19, `v_eval_ai`: 7) và 74 mối quan hệ (42 Khóa ngoại vật lý nội bộ + 32 Tham chiếu logic liên service).
-  - Cập nhật khối `erDiagram` trong [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md) (mục 2.2), loại bỏ hoàn toàn các thực thể giả định cũ lỗi thời.
+- **Khởi Tạo Độc Lập & Cập Nhật Đầy Đủ Thuộc Tính Sơ Đồ Thực Thể [`docs/diagrams/erd.mmd`](./docs/diagrams/erd.mmd)**:
+  - **Khai báo thuộc tính chi tiết (Attribute Definitions)**: Khai báo đầy đủ 100% thuộc tính/cột (`column_type`, `column_name`, `PK`, `FK`, `UK` và chú thích nghiệp vụ) cho toàn bộ các thực thể trong `docs/diagrams/erd.mmd` và tài liệu kiến trúc [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md).
+  - **Đồng bộ thực thể AI Engine**: Bổ sung chính thức 2 thực thể của AI Engine là `TheoreticalDocuments` và `TutorSessions` vào kịch bản CSDL chính thức [`docs/SQL/SQL.sql`](./docs/SQL/SQL.sql) (schema `v_eval_ai`), tạo chỉ mục (`idx_theoretical_docs_skill`, `idx_tutor_sessions_student_question`) và thiết lập mối quan hệ trong `erd.mmd` (`Skills ||--o{ TheoreticalDocuments`, `TheoreticalDocuments ||--o{ KnowledgeVectorChunks`, `Students ||--o{ TutorSessions`, `Questions ||--o{ TutorSessions`, `TutorSessions ||--o{ ai_tutor_interaction_logs`).
+  - Hệ thống đạt quy mô chuẩn hóa: 49 Thực thể (Identity: 13, Content: 8, Practice: 19, AI: 9) và 79 Mối quan hệ liên kết logic & vật lý.
 
 - **Chuẩn Hóa Bộ Unit Tests Tinh Gọn (2-4 Tests/Service) Phủ Đầy Đủ 100% Các Service & Tích Hợp CI Pipelines**:
   - Triển khai đồng bộ bộ Unit Test tinh gọn, đúng định mức 2–4 test cases cho toàn bộ 6 repositories có code trong hệ thống V-Eval:

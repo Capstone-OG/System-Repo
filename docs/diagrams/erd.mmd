@@ -1,12 +1,500 @@
 erDiagram
     %% =========================================================================
     %% V-EVAL UNIFIED MASTER DATABASE SCHEMA (SCHEMA V4.1)
-    %% 47 Entities & 74 Relationships (42 Physical FKs + 32 Logical Cross-Service Refs)
+    %% 49 Entities (47 Master Tables + 2 AI Engine Domain Entities)
+    %% Full Attribute Definitions, Data Types & Cardinalities
     %% Reference: docs/SQL/SQL.sql & docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md
     %% =========================================================================
 
     %% =========================================================================
     %% BOUNDED CONTEXT 1: V_EVAL_IDENTITY (13 ENTITIES)
+    %% =========================================================================
+    Campuses {
+        uuid campus_id PK "Primary Key"
+        varchar code UK "Campus unique code"
+        varchar name "Campus descriptive name"
+        varchar address "Physical street location"
+        varchar phone "Contact hotline"
+        boolean is_active "Operational status"
+        timestamptz created_at "Registration timestamp"
+    }
+
+    Roles {
+        uuid role_id PK "Primary Key"
+        varchar role_name UK "Role identifier string"
+    }
+
+    Users {
+        uuid user_id PK "Primary Key"
+        varchar email UK "Login email address"
+        text password_hash "BCrypt hashed password"
+        varchar full_name "Legal full name"
+        varchar phone "Mobile contact number"
+        text avatar_url "Profile avatar image URL"
+        boolean is_active "Account active status"
+        timestamptz created_at "Registration timestamp"
+    }
+
+    UserRoles {
+        uuid user_id PK,FK "References Users"
+        uuid role_id PK,FK "References Roles"
+        timestamptz assigned_at "Role assignment timestamp"
+    }
+
+    Students {
+        uuid student_id PK,FK "References Users"
+        uuid campus_id FK "References Campuses"
+        varchar enrollment_number UK "Student serial identifier"
+        integer grade_level "Grade 10, 11, or 12"
+        varchar target_school "Desired university or goal"
+        numeric target_score "Desired national exam score"
+        boolean is_active "Enrollment status"
+    }
+
+    Parents {
+        uuid parent_id PK,FK "References Users"
+        varchar occupation "Parent occupation"
+        text contact_address "Mailing address"
+    }
+
+    Teachers {
+        uuid teacher_id PK,FK "References Users"
+        uuid campus_id FK "References Campuses"
+        varchar specialization "Subject expertise"
+        text bio "Academic biography"
+    }
+
+    AcademicManagers {
+        uuid manager_id PK,FK "References Users"
+        uuid campus_id FK "References Campuses"
+        varchar office_room "Office room number"
+    }
+
+    AcademicDirectors {
+        uuid director_id PK,FK "References Users"
+        varchar decision_number "Appointment decision identifier"
+    }
+
+    Administrators {
+        uuid admin_id PK,FK "References Users"
+        integer access_level "System permission level"
+    }
+
+    ParentStudentRelations {
+        uuid relation_id PK "Primary Key"
+        uuid parent_id FK "References Parents"
+        uuid student_id FK "References Students"
+        varchar relationship_type "Father, Mother, Guardian"
+        boolean is_primary_contact "Main contact for SMS/notifications"
+    }
+
+    RefreshTokens {
+        uuid token_id PK "Primary Key"
+        uuid user_id FK "References Users"
+        text token_hash UK "Hashed refresh token"
+        timestamptz expires_at "Token expiry timestamp"
+        boolean is_revoked "Revocation status"
+        timestamptz created_at "Issued timestamp"
+    }
+
+    OtpVerifications {
+        uuid otp_id PK "Primary Key"
+        varchar email "Verification target email"
+        varchar otp_code "6-digit OTP code"
+        varchar type "REGISTER, FORGOT_PASSWORD"
+        timestamptz expires_at "Expiry timestamp"
+        boolean is_used "Usage flag"
+        timestamptz created_at "Generation timestamp"
+    }
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 2: V_EVAL_CONTENT (8 ENTITIES)
+    %% =========================================================================
+    CompetencyDomains {
+        uuid domain_id PK "Primary Key"
+        varchar code UK "Domain code, e.g. MATH_CALC"
+        varchar name "Domain descriptive title"
+        text description "Detailed scope definition"
+        integer order_index "Display priority order"
+    }
+
+    Skills {
+        uuid skill_id PK "Primary Key"
+        uuid domain_id FK "References CompetencyDomains"
+        uuid parent_id FK "Self-referencing parent skill"
+        varchar code UK "Skill unique code"
+        varchar name "Skill name"
+        varchar bloom_level "REMEMBER, UNDERSTAND, APPLY, ANALYZE"
+        numeric difficulty_weight "Base IRT difficulty weight"
+        integer order_index "Sort order within domain"
+    }
+
+    SkillPrerequisites {
+        uuid prerequisite_id PK "Primary Key"
+        uuid skill_id FK "Target skill"
+        uuid prerequisite_skill_id FK "Required prerequisite skill"
+        varchar strictness_level "STRICT, RECOMMENDED"
+    }
+
+    Materials {
+        uuid material_id PK "Primary Key"
+        uuid skill_id FK "References Skills"
+        varchar title "Material lesson title"
+        text content_url "Supabase S3 storage URL"
+        varchar material_type "VIDEO, PDF_SUMMARY, INFOGRAPHIC"
+        integer duration_seconds "Playback or estimated reading duration"
+        timestamptz created_at "Creation timestamp"
+    }
+
+    Passages {
+        uuid passage_id PK "Primary Key"
+        varchar title "Reading passage title"
+        text content "Full contextual reading text or problem backdrop"
+        varchar subject "Subject category"
+        timestamptz created_at "Creation timestamp"
+    }
+
+    Questions {
+        uuid question_id PK "Primary Key"
+        uuid skill_id FK "References Skills"
+        uuid passage_id FK "References Passages"
+        text content "Problem statement in KaTeX LaTeX"
+        varchar question_type "MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER"
+        jsonb options "Serialized array of choices A, B, C, D"
+        text correct_answer "Key option or exact numeric value"
+        text explanation "Pedagogical step-by-step solution"
+        numeric difficulty_level "IRT 2PL parameter b (-3.0 to +3.0)"
+        numeric discrimination_index "IRT 2PL parameter a (0.5 to 2.5)"
+        numeric pseudo_guessing "IRT 3PL parameter c (guessing rate)"
+        boolean is_active "Approval status"
+        timestamptz created_at "Creation timestamp"
+    }
+
+    MockExams {
+        uuid exam_id PK "Primary Key"
+        varchar title "Exam title"
+        text description "Exam guidelines and syllabus coverage"
+        integer duration_minutes "Total exam duration"
+        numeric total_marks "Maximum reachable points"
+        numeric pass_marks "Minimum passing benchmark score"
+        varchar exam_category "DIAGNOSTIC, NATIONAL_SIMULATION, CHAPTER_TEST"
+        varchar subject_code "Subject code e.g. MATH, PHYS"
+        varchar difficulty_level "EASY, STANDARD, ADVANCED"
+        boolean is_active "Published status"
+        timestamptz created_at "Creation timestamp"
+    }
+
+    ExamQuestions {
+        uuid exam_question_id PK "Primary Key"
+        uuid exam_id FK "References MockExams"
+        uuid question_id FK "References Questions"
+        integer question_order "Position order in exam (1 to N)"
+        numeric point_weight "Allocated score weight"
+    }
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 3: V_EVAL_PRACTICE (19 ENTITIES)
+    %% =========================================================================
+    Classes {
+        uuid class_id PK "Primary Key"
+        uuid campus_id FK "References Campuses"
+        varchar name "Cohort class identifier"
+        varchar academic_year "Academic term e.g. 2026-2027"
+        integer grade_level "Grade 10, 11, or 12"
+        integer max_capacity "Maximum cohort capacity (default 20)"
+        varchar status "PLANNING, ACTIVE, ARCHIVED"
+        timestamptz created_at "Class creation timestamp"
+    }
+
+    ClassEnrollments {
+        uuid enrollment_id PK "Primary Key"
+        uuid class_id FK "References Classes"
+        uuid student_id FK "References Students"
+        uuid placement_exam_submission_id FK "Diagnostic placement test reference"
+        varchar status "ENROLLED, COMPLETED, TRANSFERRED"
+        timestamptz enrolled_at "Enrollment date"
+    }
+
+    ClassGroups {
+        uuid group_id PK "Primary Key"
+        uuid class_id FK "References Classes"
+        varchar name "Micro-group name e.g. Nhom 1"
+        varchar cluster_code "K-Means cluster label e.g. CLUSTER_ZPD_1"
+        timestamptz created_at "Clustering timestamp"
+    }
+
+    ClassGroupMembers {
+        uuid member_id PK "Primary Key"
+        uuid group_id FK "References ClassGroups"
+        uuid student_id FK "References Students"
+        timestamptz joined_at "Assignment timestamp"
+    }
+
+    ExamSubmissions {
+        uuid submission_id PK "Primary Key"
+        uuid exam_id FK "References MockExams"
+        uuid student_id FK "References Students"
+        uuid class_id FK "References Classes"
+        timestamptz start_time "Exam commencement timestamp"
+        timestamptz submit_time "Final submission timestamp"
+        numeric total_score "Calculated total score"
+        varchar status "IN_PROGRESS, SUBMITTED, GRADED"
+        numeric anti_cheat_score "Integrity confidence rating (0 to 100)"
+    }
+
+    SubmissionAnswers {
+        uuid submission_answer_id PK "Primary Key"
+        uuid submission_id FK "References ExamSubmissions"
+        uuid question_id FK "References Questions"
+        text student_answer "Student chosen option or input"
+        boolean is_correct "Grading outcome"
+        numeric score_awarded "Points allocated"
+        integer time_spent_seconds "Duration spent answering"
+        timestamptz answered_at "Timestamp of answer commitment"
+    }
+
+    ProctoringSnapshots {
+        uuid snapshot_id PK "Primary Key"
+        uuid submission_id FK "References ExamSubmissions"
+        varchar event_type "TAB_SWITCH, FACE_ABSENT, MULTI_FACE"
+        text snapshot_url "Storage URL of webcam/screen capture"
+        numeric confidence_score "AI anti-cheat suspicion confidence"
+        timestamptz captured_at "Incident timestamp"
+    }
+
+    LearningRoadmaps {
+        uuid roadmap_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        uuid placement_exam_submission_id FK "Diagnostic test baseline reference"
+        varchar status "ACTIVE, COMPLETED, RECALIBRATING"
+        timestamptz created_at "Generation timestamp"
+    }
+
+    RoadmapNodes {
+        uuid roadmap_node_id PK "Primary Key"
+        uuid roadmap_id FK "References LearningRoadmaps"
+        uuid skill_id FK "References Skills"
+        integer step_order "Sequential milestone order"
+        varchar stage_type "P_DIAGNOSTIC, L_LESSON, A_ADAPTIVE, R_REVIEW"
+        uuid material_id FK "References Materials"
+        varchar status "LOCKED, IN_PROGRESS, MASTERED"
+        numeric target_mastery "Target mastery benchmark (e.g. 0.85)"
+        numeric current_mastery "Current evaluated BKT mastery"
+        timestamptz created_at "Node creation timestamp"
+    }
+
+    StageProgress {
+        uuid stage_progress_id PK "Primary Key"
+        uuid roadmap_node_id FK "References RoadmapNodes"
+        varchar stage_type "L_THEORY, A_QUIZ"
+        varchar status "NOT_STARTED, IN_PROGRESS, COMPLETED"
+        integer time_spent_seconds "Cumulative active learning duration"
+        timestamptz completed_at "Stage completion timestamp"
+    }
+
+    AdaptiveQuizAttempts {
+        uuid attempt_id PK "Primary Key"
+        uuid stage_progress_id FK "References StageProgress"
+        uuid question_id FK "References Questions"
+        text student_answer "Student submitted response"
+        boolean is_correct "Response correctness"
+        numeric theta_before "IRT theta student ability before attempt"
+        numeric theta_after "IRT theta updated ability after attempt"
+        numeric mastery_prob_before "BKT p(L) probability before attempt"
+        numeric mastery_prob_after "BKT p(L) updated mastery probability"
+        integer time_spent_seconds "Response latency in seconds"
+        timestamptz answered_at "Submission timestamp"
+    }
+
+    MistakeNotebooks {
+        uuid mistake_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        uuid question_id FK "References Questions"
+        integer error_count "Cumulative error occurrences"
+        timestamptz last_error_at "Most recent wrong answer timestamp"
+        integer interval_days "SM-2 current scheduled interval"
+        integer repetition_count "SM-2 consecutive success streak"
+        numeric ease_factor "SM-2 ease factor EF (min 1.3)"
+        date next_review_date "SM-2 scheduled next recall date"
+        boolean is_mastered "Mastery graduation status"
+    }
+
+    ScorePredictions {
+        uuid prediction_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        varchar subject_code "Subject code"
+        numeric predicted_score "Estimated national exam score"
+        numeric confidence_lower "Lower 95 percent confidence bound"
+        numeric confidence_upper "Upper 95 percent confidence bound"
+        varchar model_version "SEM prediction engine model version"
+        timestamptz predicted_at "Calculation timestamp"
+    }
+
+    SystemAlerts {
+        uuid alert_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        varchar alert_type "FALLING_BEHIND, STREAK_BROKEN, MISTAKE_DUE"
+        varchar title "Alert headline"
+        text message "Pedagogical intervention message"
+        varchar severity "LOW, MEDIUM, HIGH, CRITICAL"
+        boolean is_read "Acknowledgement status"
+        timestamptz created_at "Trigger timestamp"
+    }
+
+    ClassSkillHeatmaps {
+        uuid heatmap_id PK "Primary Key"
+        uuid class_id FK "References Classes"
+        uuid student_id FK "References Students"
+        uuid skill_id FK "References Skills"
+        numeric mastery_level "Evaluated mastery rating (0.0 to 1.0)"
+        timestamptz last_updated_at "Latest telemetry update"
+    }
+
+    ClassHeatmapSummaries {
+        uuid summary_id PK "Primary Key"
+        uuid class_id FK "References Classes"
+        uuid skill_id FK "References Skills"
+        numeric average_mastery "Cohort average mastery score"
+        integer struggling_students_count "Count of students below benchmark"
+        varchar alert_status "GREEN, YELLOW, RED"
+        timestamptz updated_at "Summary calculation timestamp"
+    }
+
+    StudentDailyActivities {
+        uuid activity_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        date activity_date "Calendar tracking date"
+        integer practice_minutes "Total engaged study minutes"
+        integer questions_attempted "Total problem attempts"
+        integer correct_count "Total correct answers"
+    }
+
+    StudentReadinessMetrics {
+        uuid metric_id PK "Primary Key"
+        uuid student_id FK "References Students"
+        numeric overall_readiness_score "Overall exam readiness rating"
+        numeric competency_index "Holistic competency metric"
+        numeric consistency_index "Study habit regularity index"
+        integer current_streak_days "Continuous active day streak"
+        timestamptz calculated_at "Evaluation timestamp"
+    }
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 4: V_EVAL_AI (9 ENTITIES: 7 TABLES + 2 DOMAIN ENTITIES)
+    %% =========================================================================
+    KnowledgeSources {
+        uuid source_id PK "Primary Key"
+        varchar domain_id "Associated domain ID"
+        varchar skill_id "Associated skill ID"
+        varchar title "Textbook or syllabus document title"
+        varchar file_url "Supabase storage source file URL"
+        varchar file_hash "SHA256 checksum for idempotency"
+        varchar document_type "TEXTBOOK, CURRICULUM, GENERAL_KNOWLEDGE"
+        integer total_pages "Total page count"
+        integer total_chars "Total character count"
+        integer total_chunks "Total parsed chunk count"
+        varchar vector_status "PENDING, PROCESSING, COMPLETED, FAILED"
+        timestamptz created_at "Ingestion start timestamp"
+        timestamptz updated_at "Vectorization completion timestamp"
+    }
+
+    KnowledgeVectorChunks {
+        uuid chunk_id PK "Primary Key"
+        uuid source_id FK "References KnowledgeSources"
+        varchar domain_id "Competency domain identifier"
+        varchar skill_id "Competency skill identifier"
+        integer chunk_index "Index position within source document"
+        integer page_number "Origin page number"
+        text content_snippet "Decomposed textbook textual content"
+        vector embedding "768-dimensional semantic embedding vector"
+        varchar document_type "Origin document classification"
+        integer char_count "Snippet character length"
+        jsonb metadata "Section headers and textbook layout metadata"
+        timestamptz created_at "Chunk generation timestamp"
+    }
+
+    archetype_patterns {
+        uuid id PK "Primary Key"
+        uuid skill_id FK "References Skills"
+        varchar pattern_code UK "Unique taxonomy level 4 pattern code"
+        varchar pattern_name "Pattern canonical name"
+        text description "Pedagogical problem archetype"
+        text core_theorems "Foundational mathematical formulas and theorems"
+        text fast_solving_heuristics "Fast-solving shortcuts and heuristics"
+        vector embedding "3072-dimensional Gemini text embedding"
+        boolean is_verified "Academic Director verification status"
+        timestamptz created_at "Pattern registration timestamp"
+        timestamptz updated_at "Latest modification timestamp"
+    }
+
+    pattern_exemplars {
+        uuid id PK "Primary Key"
+        uuid archetype_pattern_id FK "References archetype_patterns"
+        text question_latex "Standard exemplar problem in LaTeX"
+        text golden_solution "Gold-standard rigorous pedagogical proof"
+        varchar correct_option "Canonical answer choice key"
+        jsonb explanation_steps "Structured step-by-step reasoning tree"
+        timestamptz created_at "Exemplar creation timestamp"
+    }
+
+    pattern_traps {
+        uuid id PK "Primary Key"
+        uuid archetype_pattern_id FK "References archetype_patterns"
+        varchar trap_code "Cognitive trap code"
+        varchar trap_name "Trap pedagogical name"
+        varchar wrong_option "Distractor choice associated with trap"
+        text misconception_explanation "Diagnostic root-cause misconception analysis"
+        text socratic_hint "Scaffolded reflective question for Socratic AI"
+        timestamptz created_at "Trap catalog timestamp"
+    }
+
+    novel_pattern_proposals {
+        uuid id PK "Primary Key"
+        varchar source_exam_name "Origin mock exam or provincial paper"
+        text raw_question_latex "Extracted raw problem statement in LaTeX"
+        jsonb image_urls "Extracted diagram image URLs"
+        jsonb extracted_metadata "Extracted metadata"
+        float max_similarity_score "Cosine similarity with closest archetype"
+        uuid nearest_archetype_id FK "References closest archetype_patterns"
+        varchar status "PENDING_REVIEW, APPROVED, MERGED, REJECTED"
+        text academic_feedback "Auditor notes and review feedback"
+        timestamptz created_at "Discovery timestamp"
+    }
+
+    ai_tutor_interaction_logs {
+        uuid id PK "Primary Key"
+        uuid student_id FK "References Students"
+        uuid question_id FK "References Questions"
+        uuid archetype_pattern_id FK "References archetype_patterns"
+        varchar student_selected_option "Option selected by learner"
+        varchar correct_option "Standard correct option"
+        uuid matched_trap_id FK "References pattern_traps"
+        jsonb ai_guidance_transcript "Multi-turn Socratic dialogue exchange"
+        varchar validation_status "PASSED, OVERRIDDEN, REJECTED"
+        boolean student_reported "Learner grievance flag"
+        text mentor_resolution "Auditor override or remediation note"
+        timestamptz created_at "Session timestamp"
+    }
+
+    TheoreticalDocuments {
+        varchar document_id PK "Domain Entity Primary Key"
+        varchar title "Theoretical lesson or paper title"
+        text content "Comprehensive instructional theory body"
+        varchar skill_id "References Skills domain"
+        timestamptz created_at "Registration timestamp"
+    }
+
+    TutorSessions {
+        varchar session_id PK "Domain Entity Primary Key"
+        varchar student_id "References Students identity"
+        varchar question_id "References Questions bank"
+        boolean is_active "Live session active status"
+        jsonb messages "Serialized dialogue messages with Socratic AI"
+        timestamptz created_at "Session initialization timestamp"
+    }
+
+    %% =========================================================================
+    %% RELATIONSHIPS: BOUNDED CONTEXT 1 (IDENTITY)
     %% =========================================================================
     Users ||--|{ UserRoles : "assigned"
     Roles ||--o{ UserRoles : "defines"
@@ -25,7 +513,7 @@ erDiagram
     Students ||--o{ ParentStudentRelations : "supervised_by"
 
     %% =========================================================================
-    %% BOUNDED CONTEXT 2: V_EVAL_CONTENT (8 ENTITIES)
+    %% RELATIONSHIPS: BOUNDED CONTEXT 2 (CONTENT)
     %% =========================================================================
     CompetencyDomains ||--o{ Skills : "contains"
     Skills ||--o{ Skills : "sub_skill_of"
@@ -38,7 +526,7 @@ erDiagram
     Questions ||--o{ ExamQuestions : "included_in"
 
     %% =========================================================================
-    %% BOUNDED CONTEXT 3: V_EVAL_PRACTICE (19 ENTITIES)
+    %% RELATIONSHIPS: BOUNDED CONTEXT 3 (PRACTICE)
     %% =========================================================================
     Classes ||--o{ ExamSubmissions : "class_exams"
     ExamSubmissions ||--o{ SubmissionAnswers : "records"
@@ -55,45 +543,42 @@ erDiagram
     Classes ||--o{ ClassHeatmapSummaries : "summarizes"
 
     %% =========================================================================
-    %% BOUNDED CONTEXT 4: V_EVAL_AI (7 ENTITIES)
+    %% RELATIONSHIPS: BOUNDED CONTEXT 4 (AI ENGINE & DOMAIN ENTITIES)
     %% =========================================================================
     KnowledgeSources ||--o{ KnowledgeVectorChunks : "chunked_into"
-    archetype_patterns ||--o{ pattern_exemplars : "exemplified_by"
-    archetype_patterns ||--o{ pattern_traps : "traps"
-    archetype_patterns ||--o{ novel_pattern_proposals : "nearest_to"
-    archetype_patterns ||--o{ ai_tutor_interaction_logs : "activates"
-    pattern_traps ||--o{ ai_tutor_interaction_logs : "triggers"
+    archetype_patterns ||--o{ pattern_exemplars : "has_golden_solutions"
+    archetype_patterns ||--o{ pattern_traps : "catalogs_misconceptions"
+    archetype_patterns ||--o{ novel_pattern_proposals : "nearest_cluster"
+    pattern_traps ||--o{ ai_tutor_interaction_logs : "matched_trap"
+    archetype_patterns ||--o{ ai_tutor_interaction_logs : "diagnosed_pattern"
+    Skills ||--o{ TheoreticalDocuments : "indexed_for"
+    TheoreticalDocuments ||--o{ KnowledgeVectorChunks : "vectorized_into"
+    Students ||--o{ TutorSessions : "participates_in"
+    Questions ||--o{ TutorSessions : "discussed_in"
+    TutorSessions ||--o{ ai_tutor_interaction_logs : "records_into"
 
     %% =========================================================================
-    %% CROSS-SERVICE LOGICAL REFERENCES (32 RELATIONS VIA gRPC & ASYNC BUS)
+    %% CROSS-SERVICE LOGICAL BOUNDARY RELATIONSHIPS (VIA GRPC HTTP/2)
     %% =========================================================================
-    Campuses ||--o{ Classes : "hosts"
-    Teachers ||--o{ Classes : "teaches"
-    AcademicManagers ||--o{ Classes : "assigned_by"
+    Campuses ||--o{ Classes : "operates_class"
     Students ||--o{ ClassEnrollments : "enrolled_student"
-    Students ||--o{ ClassGroupMembers : "group_member"
-    Students ||--o{ ExamSubmissions : "takes_exam"
+    Students ||--o{ ClassGroupMembers : "grouped_member"
+    Students ||--o{ ExamSubmissions : "submits_exam"
     MockExams ||--o{ ExamSubmissions : "submitted_for"
-    Questions ||--o{ SubmissionAnswers : "answers_question"
-    Students ||--o{ LearningRoadmaps : "follows_roadmap"
-    Skills ||--o{ RoadmapNodes : "learns_skill"
-    Materials ||--o{ RoadmapNodes : "watches_lecture"
-    MockExams ||--o{ RoadmapNodes : "milestone_quiz"
-    Students ||--o{ StageProgress : "progress_of"
-    Students ||--o{ LearningProfiles : "has_bkt_profile"
-    Skills ||--o{ LearningProfiles : "bkt_skill"
-    Students ||--o{ AdaptiveQuizAttempts : "attempted_by"
-    Questions ||--o{ AdaptiveQuizAttempts : "attempt_question"
-    Students ||--o{ MistakeNotebooks : "logs_mistake"
-    Questions ||--o{ MistakeNotebooks : "mistake_question"
-    Skills ||--o{ MistakeNotebooks : "mistake_skill"
+    Questions ||--o{ SubmissionAnswers : "answered_question"
+    Students ||--o{ LearningRoadmaps : "executes_roadmap"
+    Skills ||--o{ RoadmapNodes : "develops_skill"
+    Materials ||--o{ RoadmapNodes : "curates_lesson"
+    Questions ||--o{ AdaptiveQuizAttempts : "attempted_question"
+    Students ||--o{ MistakeNotebooks : "maintains_notebook"
+    Questions ||--o{ MistakeNotebooks : "mistaken_question"
     Students ||--o{ ScorePredictions : "predicts_score"
     Students ||--o{ SystemAlerts : "receives_alert"
     Students ||--o{ ClassSkillHeatmaps : "student_heatmap"
     Skills ||--o{ ClassSkillHeatmaps : "skill_heatmap"
-    Skills ||--o{ ClassHeatmapSummaries : "summary_skill"
-    Students ||--o{ StudentDailyActivities : "logs_daily_activity"
-    Students ||--o{ StudentReadinessMetrics : "calculates_readiness"
-    Skills ||--o{ archetype_patterns : "mapped_skill"
-    Students ||--o{ ai_tutor_interaction_logs : "student_dialogue"
-    Questions ||--o{ ai_tutor_interaction_logs : "question_dialogue"
+    Skills ||--o{ ClassHeatmapSummaries : "skill_summary"
+    Students ||--o{ StudentDailyActivities : "tracks_daily_activity"
+    Students ||--o{ StudentReadinessMetrics : "evaluates_readiness"
+    Skills ||--o{ archetype_patterns : "classifies_pattern"
+    Students ||--o{ ai_tutor_interaction_logs : "logs_student_tutor"
+    Questions ||--o{ ai_tutor_interaction_logs : "logs_question_tutor"

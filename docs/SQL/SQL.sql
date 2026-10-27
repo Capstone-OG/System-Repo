@@ -3,12 +3,12 @@
 -- =====================================================================
 -- Phiên bản: Schema V4.1 (Đồng bộ 100% Microservices, Mô hình Offline Cohort 20 học sinh & Nhóm vi mô thích ứng)
 -- Ngày ban hành: 24/10/2026
--- Tổng số thực thể: 47 bảng (Identity: 13, Content: 8, Practice: 19, AI: 7)
+-- Tổng số thực thể: 49 bảng (Identity: 13, Content: 8, Practice: 19, AI: 9)
 -- Phân vùng 4 Bounded Context Schemas:
 --   1. v_eval_identity : Quản trị định danh, RBAC, 6 Actor Profiles, Cơ sở & Bảo mật OTP/Token (13 bảng)
 --   2. v_eval_content  : Khung năng lực 3 cấp, DAG tiên quyết, Đề thi chuẩn hóa & Ngân hàng câu hỏi (8 bảng)
 --   3. v_eval_practice : Lộ trình thích ứng P-L-A-R, Lớp học offline, Nhóm vi mô 3-5 HS, BKT/SM-2, Proctoring, Dự báo SEM & Heatmap Analytics (19 bảng)
---   4. v_eval_ai       : Nguồn tri thức RAG, Vector Chunks 768d, Archetype Knowledge Graph & AI Tutor Socratic Logs (7 bảng)
+--   4. v_eval_ai       : Nguồn tri thức RAG, Vector Chunks 768d, Archetype Knowledge Graph, Theoretical Documents & Socratic Tutor Sessions (9 bảng)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -616,6 +616,25 @@ CREATE TABLE IF NOT EXISTS v_eval_ai.ai_tutor_interaction_logs (
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 4.8 Tài liệu Lý thuyết Nạp AI RAG (TheoreticalDocuments) - Domain Entity AI Engine
+CREATE TABLE IF NOT EXISTS v_eval_ai."TheoreticalDocuments" (
+    "document_id" varchar(100) PRIMARY KEY,
+    "title" varchar(255) NOT NULL,
+    "content" text NOT NULL,
+    "skill_id" varchar(100) NOT NULL, -- Tham chiếu logic v_eval_content."Skills"(skill_id)
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+
+-- 4.9 Phiên Gia sư Ảo Socratic (TutorSessions) - Domain Entity AI Engine
+CREATE TABLE IF NOT EXISTS v_eval_ai."TutorSessions" (
+    "session_id" varchar(100) PRIMARY KEY,
+    "student_id" varchar(100) NOT NULL, -- Tham chiếu logic v_eval_identity."Students"(student_id)
+    "question_id" varchar(100) NOT NULL, -- Tham chiếu logic v_eval_content."Questions"(question_id)
+    "is_active" boolean NOT NULL DEFAULT true,
+    "messages" jsonb NOT NULL DEFAULT '[]'::jsonb,
+    "created_at" timestamp with time zone NOT NULL DEFAULT now()
+);
+
 -- =====================================================================
 -- CHỈ MỤC TỐI ƯU HÓA HIỆU NĂNG CAO (ENTERPRISE INDEXES)
 -- =====================================================================
@@ -665,3 +684,5 @@ CREATE INDEX IF NOT EXISTS "idx_exemplars_archetype" ON v_eval_ai.pattern_exempl
 CREATE INDEX IF NOT EXISTS "idx_traps_archetype" ON v_eval_ai.pattern_traps("archetype_pattern_id");
 CREATE INDEX IF NOT EXISTS "idx_novel_proposals_status" ON v_eval_ai.novel_pattern_proposals("status");
 CREATE INDEX IF NOT EXISTS "idx_ai_logs_student_question" ON v_eval_ai.ai_tutor_interaction_logs("student_id", "question_id");
+CREATE INDEX IF NOT EXISTS "idx_theoretical_docs_skill" ON v_eval_ai."TheoreticalDocuments"("skill_id");
+CREATE INDEX IF NOT EXISTS "idx_tutor_sessions_student_question" ON v_eval_ai."TutorSessions"("student_id", "question_id");
