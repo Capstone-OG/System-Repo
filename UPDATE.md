@@ -1,6 +1,6 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [27/10/2026] - Chuẩn Hóa Kiến Trúc, Đồng Bộ ERD.mmd, Hoàn Thiện BM02 & Gắn Tag review-2
+## [27/10/2026] - Chuẩn Hóa Kiến Trúc, Đồng Bộ ERD.mmd, Triển Khai 10 Unit Tests & Gắn Tag review-2 Toàn Bộ Hệ Thống
 
 - **Bổ Sung Đầy Đủ Các Kênh Giao Tiếp Server-to-Server Thực Tế**:
   - Bổ sung kết nối `Practice Service ==> Identity Service` qua `gRPC HTTP/2 (:5155)`: Phục vụ truy vấn thông tin định danh học sinh (`GetStudentProfileSummary`) và phân quyền phụ huynh - học sinh (`GetParentStudents`) trong luồng Diagnostic & Analytics Dashboard.
@@ -25,9 +25,15 @@
   - Phân vùng chính xác 47 thực thể trên 4 Bounded Contexts (`v_eval_identity`: 13, `v_eval_content`: 8, `v_eval_practice`: 19, `v_eval_ai`: 7) và 74 mối quan hệ (42 Khóa ngoại vật lý nội bộ + 32 Tham chiếu logic liên service).
   - Cập nhật khối `erDiagram` trong [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md) (mục 2.2), loại bỏ hoàn toàn các thực thể giả định cũ lỗi thời.
 
-- **Đồng Bộ Hoàn Toàn Nhánh `develop` & Tạo Tag Git `review-2`**:
-  - Hợp nhất (Fast-forward merge) toàn bộ commit từ `ThinhTT/bf_review2_fix` vào `develop` và đẩy lên remote `origin/develop` (Commit SHA: `82d5836`).
-  - Khởi tạo và đẩy tag git chính thức `review-2` phục vụ đối chiếu tự động của Hội đồng môn học SWP490.
+- **Triển Khai Bộ 10 xUnit Tests Chuẩn Mực & Cập Nhật CI Pipeline**:
+  - Khởi tạo project `V-Eval-Practice_Service.Tests` với 10 unit test cases bao phủ toàn diện 3 thuật toán cốt lõi:
+    1. `BktEngineTests`: Kiểm thử xác suất Bayesian Knowledge Tracing khi làm đúng, làm sai, phạt đoán mò theo quy tắc BR-08 và kẹp biên an toàn.
+    2. `SpacedRepetitionCalculatorTests`: Kiểm thử thuật toán lặp lại ngắt quãng SuperMemo-2 (SM-2), chuỗi làm đúng 3 lần liên tiếp đạt chuẩn thành thạo và cơ chế reset interval khi làm sai.
+    3. `ZpdQuestionSelectorTests`: Kiểm thử mô hình trắc lượng IRT 2PL, chuyển đổi logit năng lực $\theta$ và thuật toán chọn câu hỏi rơi vào vùng phát triển gần nhất (ZPD: $P \in [0.60, 0.75]$).
+  - Thêm bước chạy test tự động (`dotnet test`) vào file CI workflow `.github/workflows/ci.yml` của Practice Service.
+
+- **Gắn Tag Git `review-2` Đồng Loạt 100% Toàn Bộ Organization `Capstone-OG`**:
+  - Gắn và đẩy tag `review-2` thành công lên `System-Repo` và toàn bộ 6 repo dịch vụ con (`v-eval-ai-engine`, `v-eval-content-service`, `v-eval-gateway`, `v-eval-identity-service`, `v-eval-practice-service`, `v-eval-web-client`).
 
 - **Hoàn Thiện Hồ Sơ BM02 (Self-Review Report)**:
   - Chạy đầy đủ Prompt chuẩn của môn học đối chiếu toàn diện 7 hạng mục (Scope, Requirements, Data, States, Flows, Architecture, Design vs code).
