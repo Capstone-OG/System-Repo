@@ -25,12 +25,15 @@
   - Phân vùng chính xác 47 thực thể trên 4 Bounded Contexts (`v_eval_identity`: 13, `v_eval_content`: 8, `v_eval_practice`: 19, `v_eval_ai`: 7) và 74 mối quan hệ (42 Khóa ngoại vật lý nội bộ + 32 Tham chiếu logic liên service).
   - Cập nhật khối `erDiagram` trong [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md) (mục 2.2), loại bỏ hoàn toàn các thực thể giả định cũ lỗi thời.
 
-- **Triển Khai Bộ 10 xUnit Tests Chuẩn Mực & Cập Nhật CI Pipeline**:
-  - Khởi tạo project `V-Eval-Practice_Service.Tests` với 10 unit test cases bao phủ toàn diện 3 thuật toán cốt lõi:
-    1. `BktEngineTests`: Kiểm thử xác suất Bayesian Knowledge Tracing khi làm đúng, làm sai, phạt đoán mò theo quy tắc BR-08 và kẹp biên an toàn.
-    2. `SpacedRepetitionCalculatorTests`: Kiểm thử thuật toán lặp lại ngắt quãng SuperMemo-2 (SM-2), chuỗi làm đúng 3 lần liên tiếp đạt chuẩn thành thạo và cơ chế reset interval khi làm sai.
-    3. `ZpdQuestionSelectorTests`: Kiểm thử mô hình trắc lượng IRT 2PL, chuyển đổi logit năng lực $\theta$ và thuật toán chọn câu hỏi rơi vào vùng phát triển gần nhất (ZPD: $P \in [0.60, 0.75]$).
-  - Thêm bước chạy test tự động (`dotnet test`) vào file CI workflow `.github/workflows/ci.yml` của Practice Service.
+- **Chuẩn Hóa Bộ Unit Tests Tinh Gọn (2-4 Tests/Service) Phủ Đầy Đủ 100% Các Service & Tích Hợp CI Pipelines**:
+  - Triển khai đồng bộ bộ Unit Test tinh gọn, đúng định mức 2–4 test cases cho toàn bộ 6 repositories có code trong hệ thống V-Eval:
+    1. `V-Eval-Practice_Service` (4 tests): Kiểm thử công thức cập nhật xác suất thành thạo BKT (khi đúng/sai), thuật toán lặp lại ngắt quãng SM-2 và bộ chọn câu hỏi thích ứng ZPD.
+    2. `V-Eval-Content_Service` (3 tests): Kiểm thử trình xác thực FluentValidation cho lệnh tạo đề thi `CreateQuizExamCommandValidatorTests` (hợp lệ, thiếu title, sai thời lượng).
+    3. `V-Eval-Identity_Service` (3 tests): Kiểm thử kiến trúc Common Result Pattern (`Result.Success`, `Result.Failure`, `Result<T>.Success`).
+    4. `V-Eval-Gateway` (3 tests): Kiểm thử pipeline middleware `CorrelationIdMiddlewareTests` (tự động sinh GUID khi thiếu header, bảo tồn header khi có sẵn, đảm bảo next pipeline).
+    5. `V-Eval-Ai_Engine` (3 tests): Kiểm thử thực thể Socratic Tutor Session Domain `TutorSessionTests` (khởi tạo, validate dữ liệu rỗng, ghi nhận hội thoại & kết thúc phiên).
+    6. `V-Eval-Web_Client` (3 tests): Kiểm thử module quản lý token & phiên đăng nhập `tokenStorage.test.js` bằng Node.js Native Test Runner (set/get tokens, parse user profile, clear storage).
+  - Tích hợp bước chạy test tự động (`dotnet test` / `npm test`) vào toàn bộ file `.github/workflows/ci.yml` của các repositories tương ứng.
 
 - **Gắn Tag Git `review-2` Đồng Loạt 100% Toàn Bộ Organization `Capstone-OG`**:
   - Gắn và đẩy tag `review-2` thành công lên `System-Repo` và toàn bộ 6 repo dịch vụ con (`v-eval-ai-engine`, `v-eval-content-service`, `v-eval-gateway`, `v-eval-identity-service`, `v-eval-practice-service`, `v-eval-web-client`).
