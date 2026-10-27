@@ -1,6 +1,6 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [27/10/2026] - Rà Soát Toàn Diện & Chuẩn Hóa Sơ Đồ Kiến Trúc Hệ Thống (System Overview Architecture) & Đồng Bộ ERD.mmd
+## [27/10/2026] - Chuẩn Hóa Kiến Trúc, Đồng Bộ ERD.mmd, Hoàn Thiện BM02 & Gắn Tag review-2
 
 - **Bổ Sung Đầy Đủ Các Kênh Giao Tiếp Server-to-Server Thực Tế**:
   - Bổ sung kết nối `Practice Service ==> Identity Service` qua `gRPC HTTP/2 (:5155)`: Phục vụ truy vấn thông tin định danh học sinh (`GetStudentProfileSummary`) và phân quyền phụ huynh - học sinh (`GetParentStudents`) trong luồng Diagnostic & Analytics Dashboard.
@@ -25,11 +25,11 @@
   - Phân vùng chính xác 47 thực thể trên 4 Bounded Contexts (`v_eval_identity`: 13, `v_eval_content`: 8, `v_eval_practice`: 19, `v_eval_ai`: 7) và 74 mối quan hệ (42 Khóa ngoại vật lý nội bộ + 32 Tham chiếu logic liên service).
   - Cập nhật khối `erDiagram` trong [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md) (mục 2.2), loại bỏ hoàn toàn các thực thể giả định cũ lỗi thời.
 
-- **Tối Ưu Hóa Nhãn Súc Tích & Thuận Tiện Trực Quan Hóa Trên Miro**:
-  - Tinh gọn văn bản trong từng node, loại bỏ các đoạn văn dài thừa thãi; giữ cấu trúc Title + Subtitle ngắn gọn 1-2 dòng giúp người dùng dễ dàng chuyển đổi thành các card/box trực quan trên Miro.
-  - Đảm bảo 100% chuẩn Mermaid 11.15.0+ (bọc ngoặc kép node có ký tự đặc biệt, không liên kết gộp `A & B --> C`).
-  - Đồng bộ đồng nhất trên toàn bộ hệ thống tài liệu:
-    1. [`docs/diagrams/architecture.mmd`](./docs/diagrams/architecture.mmd)
-    2. [`docs/diagrams/erd.mmd`](./docs/diagrams/erd.mmd)
-    3. [`docs_noi_bo/V-Eval_Architecture_Plan.md`](./docs_noi_bo/V-Eval_Architecture_Plan.md)
-    4. [`README.md`](./README.md)
+- **Đồng Bộ Hoàn Toàn Nhánh `develop` & Tạo Tag Git `review-2`**:
+  - Hợp nhất (Fast-forward merge) toàn bộ commit từ `ThinhTT/bf_review2_fix` vào `develop` và đẩy lên remote `origin/develop` (Commit SHA: `82d5836`).
+  - Khởi tạo và đẩy tag git chính thức `review-2` phục vụ đối chiếu tự động của Hội đồng môn học SWP490.
+
+- **Hoàn Thiện Hồ Sơ BM02 (Self-Review Report)**:
+  - Chạy đầy đủ Prompt chuẩn của môn học đối chiếu toàn diện 7 hạng mục (Scope, Requirements, Data, States, Flows, Architecture, Design vs code).
+  - Xuất 10 phát hiện thực tế kèm phân loại `Team response` minh bạch: 3 Fixed, 1 Kept, 6 Planned.
+  - Điền trực tiếp dữ liệu chuẩn hóa vào file [`docs_noi_bo/SWP490_R2_BM02_Self_Review_Report_1.docx`](./docs_noi_bo/SWP490_R2_BM02_Self_Review_Report_1.docx) và khởi tạo bản xem trước [`docs_noi_bo/SWP490_R2_BM02_Self_Review_Report.md`](./docs_noi_bo/SWP490_R2_BM02_Self_Review_Report.md).
