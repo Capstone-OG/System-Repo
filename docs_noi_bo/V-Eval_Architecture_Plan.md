@@ -22,19 +22,22 @@
 ```mermaid
 flowchart TB
     %% =========================================================================
-    %% TIER 1: CLIENT LAYER
+    %% TIER 1: CLIENTS & USER ROLES LAYER
     %% =========================================================================
-    subgraph Tier1 ["1. CLIENT LAYER"]
-        direction LR
-        WebClient["V-Eval Web Client<br/>(React 19 Responsive SPA + JSXGraph & KaTeX)"]
-        MobileClient["Mobile Client (PWA / Flutter)<br/>[Kế hoạch pha 2 / Planned]"]
+    subgraph Tier1 ["1. CLIENTS & USERS LAYER"]
+        direction TB
+        Users["Users: Students, Teachers, Parents, Admins"]
+        WebClient["V-Eval Web Client<br/>(React 19 SPA + JSXGraph & KaTeX)"]
+        MobileClient["Mobile Client (PWA / Flutter)<br/>[Phase 2 / Planned]"]
+        Users -->|"Access via Browser"| WebClient
+        Users -.->|"Planned Access"| MobileClient
     end
 
     %% =========================================================================
     %% TIER 2: API GATEWAY LAYER
     %% =========================================================================
     subgraph Tier2 ["2. API GATEWAY LAYER"]
-        Gateway["V-Eval API Gateway<br/>(Microsoft YARP Reverse Proxy)"]
+        Gateway["V-Eval API Gateway<br/>(Microsoft YARP Reverse Proxy - Port 5000)"]
     end
 
     %% =========================================================================
@@ -42,101 +45,169 @@ flowchart TB
     %% =========================================================================
     subgraph Tier3 ["3. CORE APPLICATION MICROSERVICES (.NET 9)"]
         direction TB
-        IdentitySvc["Identity Service<br/>(Auth & RBAC 4 Roles)"]
-        ContentSvc["Content Service<br/>(DAG Knowledge Tree & Question Bank)"]
-        PracticeSvc["Practice Service<br/>(ZPD Adaptive Engine, IRT/BKT & K-Means)"]
+        IdentitySvc["Identity Service (:5155)<br/>(Auth, RBAC 4 Roles & Profiles)"]
+        ContentSvc["Content Service (:5249/5250)<br/>(Skill Tree DAG & Question Bank)"]
+        PracticeSvc["Practice Service (:5261)<br/>(ZPD Adaptive, IRT 2PL, BKT & K-Means)"]
     end
 
     %% =========================================================================
-    %% TIER 4: AI SUBSYSTEM (2 DỊCH VỤ CHUYÊN BIỆT SONG HÀNH)
+    %% TIER 4: AI SUBSYSTEM (DUAL ENGINES)
     %% =========================================================================
-    subgraph Tier4 ["4. AI SUBSYSTEM (2 DỊCH VỤ SONG HÀNH ĐỘC LẬP)"]
-        direction LR
-        AiCoreNet["AI Engine Core (.NET 9)<br/>(Multimodal Vision OCR & Geometry 3D)"]
-        AiRagPy["AI RAG Service (Python FastAPI)<br/>(Hybrid GraphRAG & Socratic Tutor)"]
+    subgraph Tier4 ["4. AI SUBSYSTEM (DUAL SPECIALIZED ENGINES)"]
+        direction TB
+        AiCoreNet["AI Engine Core (:5104)<br/>(.NET 9 Minimal APIs / Vision OCR & Math LaTeX)"]
+        AiRagPy["AI RAG Service (:8000)<br/>(Python FastAPI / GraphRAG & Socratic Tutor)"]
     end
 
     %% =========================================================================
-    %% TIER 5: DATA PERSISTENCE & STORAGE (SUPABASE POSTGRESQL 15+)
+    %% TIER 5: DATA PERSISTENCE & STORAGE (SUPABASE)
     %% =========================================================================
     subgraph Tier5 ["5. DATA PERSISTENCE & STORAGE (SUPABASE)"]
         direction TB
-        PostgresDB[("Supabase PostgreSQL 15+<br/>(Schemas: identity, content, practice, ai / pgvector)")]
-        CloudStorage[("Supabase Object Storage<br/>(Exam Media, Textbooks, PDFs)")]
+        PostgresDB[("Supabase PostgreSQL 15+<br/>(Schemas: identity, content, practice, ai + pgvector)")]
+        CloudStorage[("Supabase Object Storage<br/>(Buckets: exam-media, textbooks, diagrams)")]
     end
 
     %% =========================================================================
     %% TIER 6: EXTERNAL CLOUD SERVICES
     %% =========================================================================
-    subgraph Tier6 ["6. EXTERNAL SERVICES"]
+    subgraph Tier6 ["6. EXTERNAL CLOUD SERVICES"]
         direction TB
-        GeminiAPI["Google Gemini API<br/>(Gemini 3.6 Flash / Primary LLM & OCR)"]
-        OpenAiAPI["OpenAI API<br/>(GPT-4o-mini / Secondary Fallback LLM)"]
+        GeminiAPI["Google Gemini API<br/>(Gemini 2.5/1.5 Flash Vision & Embeddings)"]
+        OpenAiAPI["OpenAI API<br/>(GPT-4o-mini Fallback)"]
+        GoogleOAuth["Google OAuth 2.0<br/>(Social Authentication)"]
     end
 
-    %% Giao tiếp Client - Gateway
-    WebClient -->|"HTTPS / REST"| Gateway
-    MobileClient -.->|"HTTPS / REST (Dự kiến)"| Gateway
+    %% Client to Gateway
+    WebClient -->|"HTTPS / REST / SSE"| Gateway
+    MobileClient -.->|"HTTPS / REST (Planned)"| Gateway
 
-    %% Điều phối từ Gateway
+    %% Gateway Routing to Services
     Gateway -->|"REST / JSON"| IdentitySvc
     Gateway -->|"REST / JSON"| ContentSvc
     Gateway -->|"REST / JSON"| PracticeSvc
-    Gateway -->|"REST / JSON"| AiCoreNet
-    Gateway -->|"REST / Stream"| AiRagPy
+    Gateway -->|"REST / Multi-part"| AiCoreNet
+    Gateway -->|"REST / SSE Stream"| AiRagPy
 
-    %% Giao tiếp liên dịch vụ Server-to-Server
-    PracticeSvc ==>|"gRPC HTTP/2"| ContentSvc
+    %% Inter-Service Communication (Server-to-Server)
+    PracticeSvc ==>|"gRPC HTTP/2 (:5250)<br/>(SkillTree, Quiz, AnswerKeys)"| ContentSvc
+    PracticeSvc ==>|"gRPC HTTP/2 (:5155)<br/>(StudentProfile, ParentStudents)"| IdentitySvc
+    PracticeSvc -->|"HTTP / SSE Stream (:8000)<br/>(Socratic Guidance Proxy)"| AiRagPy
 
-    %% AI Subsystem & Dịch vụ ngoài (Primary & Fallback)
-    AiCoreNet -->|"HTTPS / API Key"| GeminiAPI
+    %% AI Subsystem to External Cloud
+    AiCoreNet -->|"Vision OCR / Math LaTeX"| GeminiAPI
     AiCoreNet -.->|"Fallback"| OpenAiAPI
-    AiRagPy -->|"HTTPS / API Key"| GeminiAPI
+    AiRagPy -->|"GraphRAG / Socratic LLM"| GeminiAPI
     AiRagPy -.->|"Fallback"| OpenAiAPI
-    AiRagPy -->|"Vector Similarity Search"| PostgresDB
+    IdentitySvc -->|"Verify OAuth Token"| GoogleOAuth
 
-    %% Tầng lưu trữ CSDL (EF Core & Npgsql)
-    IdentitySvc -->|"Npgsql / EF Core"| PostgresDB
-    ContentSvc -->|"Npgsql / EF Core"| PostgresDB
-    PracticeSvc -->|"Npgsql / EF Core"| PostgresDB
+    %% Database Schemas Connection (EF Core & Vector Search)
+    IdentitySvc -->|"EF Core (v_eval_identity)"| PostgresDB
+    ContentSvc -->|"EF Core (v_eval_content)"| PostgresDB
+    PracticeSvc -->|"EF Core (v_eval_practice)"| PostgresDB
+    AiCoreNet -->|"EF Core / Npgsql (v_eval_ai)"| PostgresDB
+    AiRagPy -->|"HNSW Vector Search & KG (v_eval_ai)"| PostgresDB
 
-    %% Tầng lưu trữ File Storage
-    ContentSvc -->|"Media Upload / Download"| CloudStorage
-    AiCoreNet -->|"Textbook Ingestion"| CloudStorage
+    %% Object Storage Connection
+    ContentSvc -->|"Store Question Images"| CloudStorage
+    AiCoreNet -->|"Fetch Exam PDFs & Upload Assets"| CloudStorage
 ```
 
 ---
 
 ### 2.2 Sơ Đồ 2: Sơ Đồ Thực Thể Logic (Logical ERD)
-*Mã nguồn độc lập*: [`./diagrams/02_logical_erd.mmd`](./diagrams/02_logical_erd.mmd)
+*Mã nguồn độc lập*: [`../docs/diagrams/erd.mmd`](../docs/diagrams/erd.mmd) | *Đặc tả chi tiết 74 quan hệ*: [`../docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md`](../docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md)
 
 ```mermaid
 erDiagram
-    %% IAM DOMAIN (v_eval_identity)
-    USERS ||--o{ REFRESH_TOKENS : "has"
-    USERS }o--|| ROLES : "belongs_to"
-    USERS ||--|| STUDENT_PROFILES : "identifies"
+    %% =========================================================================
+    %% V-EVAL UNIFIED MASTER DATABASE SCHEMA (SCHEMA V4.1)
+    %% 47 Entities & 74 Relationships (42 Physical FKs + 32 Logical Cross-Service Refs)
+    %% Reference: docs/SQL/SQL.sql
+    %% =========================================================================
 
-    %% CURRICULUM DOMAIN (v_eval_content)
-    DOMAINS ||--o{ SKILLS : "categorizes"
-    SKILLS ||--o{ SKILLS : "parent_of"
-    SKILLS ||--o{ SKILL_PREREQUISITES : "precedes"
-    SKILLS ||--o{ QUESTIONS : "groups"
-    QUESTIONS ||--o{ QUESTION_OPTIONS : "contains"
-    MOCK_EXAMS ||--o{ EXAM_QUESTIONS : "includes"
-    QUESTIONS ||--o{ EXAM_QUESTIONS : "referenced_in"
+    %% BOUNDED CONTEXT 1: V_EVAL_IDENTITY (13 ENTITIES)
+    Users ||--|{ UserRoles : "assigned"
+    Roles ||--o{ UserRoles : "defines"
+    Users ||--o{ RefreshTokens : "owns"
+    Users ||--o{ OtpVerifications : "verifies_via"
+    Users ||--|| Students : "identifies"
+    Users ||--|| Parents : "identifies"
+    Users ||--|| Teachers : "identifies"
+    Users ||--|| AcademicManagers : "identifies"
+    Users ||--|| AcademicDirectors : "identifies"
+    Users ||--|| Administrators : "identifies"
+    Campuses ||--o{ Students : "located_at"
+    Campuses ||--o{ Teachers : "assigned_to"
+    Campuses ||--o{ AcademicManagers : "manages"
+    Parents ||--|{ ParentStudentRelations : "supervises"
+    Students ||--o{ ParentStudentRelations : "supervised_by"
 
-    %% ASSESSMENT DOMAIN (v_eval_practice)
-    STUDENT_PROFILES ||--o{ LEARNING_PATHS : "follows"
-    LEARNING_PATHS ||--o{ PATH_MILESTONES : "divided_into"
-    STUDENT_PROFILES ||--o{ EXAM_ATTEMPTS : "takes"
-    MOCK_EXAMS ||--o{ EXAM_ATTEMPTS : "attempted_as"
-    EXAM_ATTEMPTS ||--o{ STUDENT_ANSWERS : "records"
-    STUDENT_PROFILES ||--o{ STUDENT_BKT_STATES : "tracks"
-    SKILLS ||--o{ STUDENT_BKT_STATES : "evaluated_on"
+    %% BOUNDED CONTEXT 2: V_EVAL_CONTENT (8 ENTITIES)
+    CompetencyDomains ||--o{ Skills : "contains"
+    Skills ||--o{ Skills : "sub_skill_of"
+    Skills ||--o{ SkillPrerequisites : "requires"
+    Skills ||--o{ SkillPrerequisites : "is_prerequisite_for"
+    Skills ||--o{ Materials : "has_materials"
+    Skills ||--o{ Questions : "evaluates"
+    Passages ||--o{ Questions : "contextualizes"
+    MockExams ||--o{ ExamQuestions : "comprises"
+    Questions ||--o{ ExamQuestions : "included_in"
 
-    %% AI & VECTOR DOMAIN (v_eval_ai)
-    SKILLS ||--o{ KNOWLEDGE_VECTOR_CHUNKS : "embedded_in"
+    %% BOUNDED CONTEXT 3: V_EVAL_PRACTICE (19 ENTITIES)
+    Classes ||--o{ ExamSubmissions : "class_exams"
+    ExamSubmissions ||--o{ SubmissionAnswers : "records"
+    ExamSubmissions ||--o{ ProctoringSnapshots : "monitors"
+    Classes ||--o{ ClassEnrollments : "enrolls"
+    ExamSubmissions ||--o{ ClassEnrollments : "places"
+    Classes ||--o{ ClassGroups : "clusters_into"
+    ClassGroups ||--|{ ClassGroupMembers : "consists_of"
+    ExamSubmissions ||--o{ LearningRoadmaps : "initializes"
+    LearningRoadmaps ||--|{ RoadmapNodes : "composed_of"
+    RoadmapNodes ||--o{ StageProgress : "tracks"
+    StageProgress ||--o{ AdaptiveQuizAttempts : "executes"
+    Classes ||--o{ ClassSkillHeatmaps : "measures"
+    Classes ||--o{ ClassHeatmapSummaries : "summarizes"
+
+    %% BOUNDED CONTEXT 4: V_EVAL_AI (7 ENTITIES)
+    KnowledgeSources ||--o{ KnowledgeVectorChunks : "chunked_into"
+    archetype_patterns ||--o{ pattern_exemplars : "exemplified_by"
+    archetype_patterns ||--o{ pattern_traps : "traps"
+    archetype_patterns ||--o{ novel_pattern_proposals : "nearest_to"
+    archetype_patterns ||--o{ ai_tutor_interaction_logs : "activates"
+    pattern_traps ||--o{ ai_tutor_interaction_logs : "triggers"
+
+    %% CROSS-SERVICE LOGICAL REFERENCES (32 RELATIONS VIA gRPC & ASYNC BUS)
+    Campuses ||--o{ Classes : "hosts"
+    Teachers ||--o{ Classes : "teaches"
+    AcademicManagers ||--o{ Classes : "assigned_by"
+    Students ||--o{ ClassEnrollments : "enrolled_student"
+    Students ||--o{ ClassGroupMembers : "group_member"
+    Students ||--o{ ExamSubmissions : "takes_exam"
+    MockExams ||--o{ ExamSubmissions : "submitted_for"
+    Questions ||--o{ SubmissionAnswers : "answers_question"
+    Students ||--o{ LearningRoadmaps : "follows_roadmap"
+    Skills ||--o{ RoadmapNodes : "learns_skill"
+    Materials ||--o{ RoadmapNodes : "watches_lecture"
+    MockExams ||--o{ RoadmapNodes : "milestone_quiz"
+    Students ||--o{ StageProgress : "progress_of"
+    Students ||--o{ LearningProfiles : "has_bkt_profile"
+    Skills ||--o{ LearningProfiles : "bkt_skill"
+    Students ||--o{ AdaptiveQuizAttempts : "attempted_by"
+    Questions ||--o{ AdaptiveQuizAttempts : "attempt_question"
+    Students ||--o{ MistakeNotebooks : "logs_mistake"
+    Questions ||--o{ MistakeNotebooks : "mistake_question"
+    Skills ||--o{ MistakeNotebooks : "mistake_skill"
+    Students ||--o{ ScorePredictions : "predicts_score"
+    Students ||--o{ SystemAlerts : "receives_alert"
+    Students ||--o{ ClassSkillHeatmaps : "student_heatmap"
+    Skills ||--o{ ClassSkillHeatmaps : "skill_heatmap"
+    Skills ||--o{ ClassHeatmapSummaries : "summary_skill"
+    Students ||--o{ StudentDailyActivities : "logs_daily_activity"
+    Students ||--o{ StudentReadinessMetrics : "calculates_readiness"
+    Skills ||--o{ archetype_patterns : "mapped_skill"
+    Students ||--o{ ai_tutor_interaction_logs : "student_dialogue"
+    Questions ||--o{ ai_tutor_interaction_logs : "question_dialogue"
 ```
 
 ---

@@ -1,0 +1,99 @@
+erDiagram
+    %% =========================================================================
+    %% V-EVAL UNIFIED MASTER DATABASE SCHEMA (SCHEMA V4.1)
+    %% 47 Entities & 74 Relationships (42 Physical FKs + 32 Logical Cross-Service Refs)
+    %% Reference: docs/SQL/SQL.sql & docs/SQL/Tong_Quan_Chi_Tiet_Moi_Quan_He_Entities.md
+    %% =========================================================================
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 1: V_EVAL_IDENTITY (13 ENTITIES)
+    %% =========================================================================
+    Users ||--|{ UserRoles : "assigned"
+    Roles ||--o{ UserRoles : "defines"
+    Users ||--o{ RefreshTokens : "owns"
+    Users ||--o{ OtpVerifications : "verifies_via"
+    Users ||--|| Students : "identifies"
+    Users ||--|| Parents : "identifies"
+    Users ||--|| Teachers : "identifies"
+    Users ||--|| AcademicManagers : "identifies"
+    Users ||--|| AcademicDirectors : "identifies"
+    Users ||--|| Administrators : "identifies"
+    Campuses ||--o{ Students : "located_at"
+    Campuses ||--o{ Teachers : "assigned_to"
+    Campuses ||--o{ AcademicManagers : "manages"
+    Parents ||--|{ ParentStudentRelations : "supervises"
+    Students ||--o{ ParentStudentRelations : "supervised_by"
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 2: V_EVAL_CONTENT (8 ENTITIES)
+    %% =========================================================================
+    CompetencyDomains ||--o{ Skills : "contains"
+    Skills ||--o{ Skills : "sub_skill_of"
+    Skills ||--o{ SkillPrerequisites : "requires"
+    Skills ||--o{ SkillPrerequisites : "is_prerequisite_for"
+    Skills ||--o{ Materials : "has_materials"
+    Skills ||--o{ Questions : "evaluates"
+    Passages ||--o{ Questions : "contextualizes"
+    MockExams ||--o{ ExamQuestions : "comprises"
+    Questions ||--o{ ExamQuestions : "included_in"
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 3: V_EVAL_PRACTICE (19 ENTITIES)
+    %% =========================================================================
+    Classes ||--o{ ExamSubmissions : "class_exams"
+    ExamSubmissions ||--o{ SubmissionAnswers : "records"
+    ExamSubmissions ||--o{ ProctoringSnapshots : "monitors"
+    Classes ||--o{ ClassEnrollments : "enrolls"
+    ExamSubmissions ||--o{ ClassEnrollments : "places"
+    Classes ||--o{ ClassGroups : "clusters_into"
+    ClassGroups ||--|{ ClassGroupMembers : "consists_of"
+    ExamSubmissions ||--o{ LearningRoadmaps : "initializes"
+    LearningRoadmaps ||--|{ RoadmapNodes : "composed_of"
+    RoadmapNodes ||--o{ StageProgress : "tracks"
+    StageProgress ||--o{ AdaptiveQuizAttempts : "executes"
+    Classes ||--o{ ClassSkillHeatmaps : "measures"
+    Classes ||--o{ ClassHeatmapSummaries : "summarizes"
+
+    %% =========================================================================
+    %% BOUNDED CONTEXT 4: V_EVAL_AI (7 ENTITIES)
+    %% =========================================================================
+    KnowledgeSources ||--o{ KnowledgeVectorChunks : "chunked_into"
+    archetype_patterns ||--o{ pattern_exemplars : "exemplified_by"
+    archetype_patterns ||--o{ pattern_traps : "traps"
+    archetype_patterns ||--o{ novel_pattern_proposals : "nearest_to"
+    archetype_patterns ||--o{ ai_tutor_interaction_logs : "activates"
+    pattern_traps ||--o{ ai_tutor_interaction_logs : "triggers"
+
+    %% =========================================================================
+    %% CROSS-SERVICE LOGICAL REFERENCES (32 RELATIONS VIA gRPC & ASYNC BUS)
+    %% =========================================================================
+    Campuses ||--o{ Classes : "hosts"
+    Teachers ||--o{ Classes : "teaches"
+    AcademicManagers ||--o{ Classes : "assigned_by"
+    Students ||--o{ ClassEnrollments : "enrolled_student"
+    Students ||--o{ ClassGroupMembers : "group_member"
+    Students ||--o{ ExamSubmissions : "takes_exam"
+    MockExams ||--o{ ExamSubmissions : "submitted_for"
+    Questions ||--o{ SubmissionAnswers : "answers_question"
+    Students ||--o{ LearningRoadmaps : "follows_roadmap"
+    Skills ||--o{ RoadmapNodes : "learns_skill"
+    Materials ||--o{ RoadmapNodes : "watches_lecture"
+    MockExams ||--o{ RoadmapNodes : "milestone_quiz"
+    Students ||--o{ StageProgress : "progress_of"
+    Students ||--o{ LearningProfiles : "has_bkt_profile"
+    Skills ||--o{ LearningProfiles : "bkt_skill"
+    Students ||--o{ AdaptiveQuizAttempts : "attempted_by"
+    Questions ||--o{ AdaptiveQuizAttempts : "attempt_question"
+    Students ||--o{ MistakeNotebooks : "logs_mistake"
+    Questions ||--o{ MistakeNotebooks : "mistake_question"
+    Skills ||--o{ MistakeNotebooks : "mistake_skill"
+    Students ||--o{ ScorePredictions : "predicts_score"
+    Students ||--o{ SystemAlerts : "receives_alert"
+    Students ||--o{ ClassSkillHeatmaps : "student_heatmap"
+    Skills ||--o{ ClassSkillHeatmaps : "skill_heatmap"
+    Skills ||--o{ ClassHeatmapSummaries : "summary_skill"
+    Students ||--o{ StudentDailyActivities : "logs_daily_activity"
+    Students ||--o{ StudentReadinessMetrics : "calculates_readiness"
+    Skills ||--o{ archetype_patterns : "mapped_skill"
+    Students ||--o{ ai_tutor_interaction_logs : "student_dialogue"
+    Questions ||--o{ ai_tutor_interaction_logs : "question_dialogue"
