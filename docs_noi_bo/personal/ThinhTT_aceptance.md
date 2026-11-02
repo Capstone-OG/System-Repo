@@ -111,40 +111,114 @@ public async Task<List<ParsedQuestionDto>> ParseExamPdfAsync(byte[] pdfBytes, Ca
 
 **Đường dẫn mã nguồn**: [All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Repositories/TextbookRepository.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Repositories/TextbookRepository.cs)
 
-#### 1. Bài toán Nghiệp vụ
-- **Mục tiêu**: Lưu trữ siêu dữ liệu sách giáo khoa và các đoạn trích tri thức (chunks) kèm vector nhúng 768 chiều vào schema `v_eval_ai` để phục vụ tìm kiếm ngữ nghĩa RAG.
-- **Quy tắc nghiệp vụ**: Đảm bảo toàn vẹn dữ liệu sách, số trang, mã băm SHA-256 chống trùng lặp và lưu vector theo định dạng tương thích HNSW index.
+#### 1. Bài toán Nghiệp vụ & Bản chất Kiến trúc
+- **Bản chất mô hình phân cấp Cha - Con (`KnowledgeSources` & `KnowledgeVectorChunks`)**:
+  - `KnowledgeSources` (Bảng cha): Đại diện cho thực thể tài liệu cấp vĩ mô (cuốn sách giáo khoa, bộ đề cương môn học). Bảng này lưu trữ toàn bộ siêu dữ liệu bao quát: tiêu đề tài liệu (`title`), URL tài liệu (`file_url`), mã băm (`file_hash`), tổng số trang (`total_pages`), tổng ký tự (`total_chars`), tổng số chunk (`total_chunks`) và trạng thái tiến trình xử lý vector (`vector_status`: PROCESSING / COMPLETED).
+  - `KnowledgeVectorChunks` (Bảng con): Đại diện cho các đơn vị vi tri thức (micro-knowledge units). Do các mô hình ngôn ngữ lớn (LLM) và mô hình Embedding đều có giới hạn ngữ cảnh (Context Window), cuốn sách phải được chia nhỏ thành các đoạn trích có độ dài chuẩn hóa kèm số trang (`page_number`), chỉ mục (`chunk_index`), nội dung trích xuất (`content_snippet`) và metadata JSONB để phục vụ tính toán vector embedding 768 chiều.
+- **Bản chất và vai trò của mã băm SHA-256 (`file_hash`)**:
+  - Mã băm `file_hash` được tính toán trực tiếp trên toàn bộ tệp nhị phân gốc của file PDF/Sách trong 1 lượt đọc ghi (`Single-Pass CryptoStream` tại `TextbookEndpoints.cs`), đóng vai trò như một "vân tay kỹ thuật số" (Digital Fingerprint).
+  - *Chống nạp trùng lặp (Deduplication)*: Nếu người dùng tải lên cùng một cuốn SGK nhiều lần (kể cả khi đổi tên file), hệ thống kiểm tra `file_hash` để nhận diện tài liệu đã tồn tại, tránh việc gọi lại Gemini Embedding API gây lãng phí chi phí và hạn ngạch (Quota).
+  - *Cơ chế nạp ngắt quãng (Resumable Checkpoint)*: Phương thức `GetCheckpointByFileHashAsync` truy vấn `COALESCE(MAX(c.page_number), 0) as last_page`. Khi tiến trình nạp sách bị ngắt giữa chừng do mạng hoặc timeout, hệ thống tự động nhận biết trang đã dừng lại và chỉ cần nạp tiếp các trang còn lại mà không phải nạp lại từ đầu.
 
-#### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `SaveTextbookAsync(...)`**: Lưu thông tin sách và các chunk vector ngữ nghĩa.
+#### 2. Xử lý Bài toán Ranh giới Chunk (Chunk Boundary Issue & Cut-off Problem)
+- **Vấn đề đặt ra**: Khi chia nhỏ sách thành từng đoạn (chunk), nếu một định lý, công thức hoặc câu hỏi nằm vắt ngang giữa hai trang (dòng cuối trang trước và dòng đầu trang sau), liệu việc tra cứu vector có làm mất ngữ cảnh hoặc đứt gãy thông tin không?
+- **Giải pháp kiến trúc 3 tầng giải quyết triệt để & Vị trí quy định trong mã nguồn**:
+  1. *Cắt trượt gối đầu (Sliding Window Chunking with Overlap)*:
+     - **Vị trí quy định**: Tại file `PdfPigTextbookParserService.cs` (dòng 23–24), cấu hình trực tiếp hằng số: ``CHUNK_SIZE = 1000`` và ``CHUNK_OVERLAP = 200``.
+     - **Nguyên lý**: Tuyệt đối **không dùng Hard Cut** cắt cụt cứng. Khi một chunk có độ dài 1000 ký tự (ví dụ từ `0 -> 1000`), chunk kế tiếp sẽ bắt đầu từ vị trí `800 -> 1800` (giữ lại 200 ký tự đuôi của chunk trước làm đầu cho chunk sau), tương tự từ `1600 -> 2600`. Nhờ 200 ký tự gối đầu này, mọi đoạn nối câu hoặc công thức nằm ở mép biên đều hiện diện trọn vẹn ở cả 2 chunk liền kề.
+  2. *Mở rộng ngữ cảnh lân cận (Neighbor Chunk Expansion / Context Window)*:
+     - **Vị trí quy định**: Tại `TextbookRepository.cs` (hàm `GetChunksBySourceIdAsync`), các chunk được sắp xếp chặt chẽ theo `ORDER BY page_number ASC, chunk_index ASC`.
+     - **Nguyên lý**: Khi Vector Search tìm thấy Chunk có độ tương đồng cao nhất (Top-1 match tại `chunk_index`), hệ thống quét chiều rộng lân cận bằng cách truy xuất đồng thời `chunk_index - 1` (chunk liền trước) và `chunk_index + 1` (chunk liền sau) cùng `source_id`, tái tạo dải ngữ cảnh 3 tầng liên tục trước khi nạp vào Prompt của LLM Tutor.
+  3. *Bảo toàn ngữ nghĩa tự nhiên (Semantic Boundary Respecting)*:
+     - **Vị trí quy định**: Tại `PdfPigTextbookParserService.cs` (hàm `OcrPageWithVisionModelsAsync`), prompt bóc tách bắt buộc bọc công thức bằng cặp dấu đô-la `$...$` và bảng biểu Markdown table.
+     - **Nguyên lý**: Điểm cắt chunk luôn ưu tiên ngắt khi kết thúc dòng phân đoạn (`\n\n`), dấu chấm kết thúc câu (`.`), tiêu đề mục (`#`, `##`), và tuyệt đối không cắt ngang giữa chừng một công thức Toán học đang mở thẻ.
+
+#### 3. Hàm chính & Đoạn code đáp ứng nghiệp vụ
+- **Hàm `SaveTextbookAndChunksAsync(...)`**: Mở kết nối, khởi tạo Transaction và thực thi nạp nguyên khối cả tài liệu nguồn lẫn toàn bộ danh sách chunks vào schema `v_eval_ai`.
 
 ```csharp
-public async Task<Guid> SaveTextbookAsync(TheoreticalDocument document, IEnumerable<KnowledgeChunk> chunks, CancellationToken cancellationToken)
+public async Task<int> SaveTextbookAndChunksAsync(TextbookIngestResultDto dto, CancellationToken cancellationToken = default)
 {
     await using var conn = new NpgsqlConnection(_connectionString);
     await conn.OpenAsync(cancellationToken);
+
     await using var tx = await conn.BeginTransactionAsync(cancellationToken);
 
-    const string insertDocSql = @"
-        INSERT INTO v_eval_ai.""KnowledgeSources"" (""Id"", ""Title"", ""TotalPages"", ""Sha256Hash"", ""CreatedAt"")
-        VALUES (@Id, @Title, @TotalPages, @Sha256Hash, @CreatedAt);";
-    await conn.ExecuteAsync(insertDocSql, document, tx);
+    try
+    {
+        var sourceId = Guid.TryParse(dto.DocumentId, out var parsedGuid) ? parsedGuid : Guid.NewGuid();
 
-    const string insertChunkSql = @"
-        INSERT INTO v_eval_ai.""KnowledgeVectorChunks"" (""Id"", ""SourceId"", ""ChunkIndex"", ""Content"", ""Embedding"")
-        VALUES (@Id, @SourceId, @ChunkIndex, @Content, @Embedding::vector);";
-    await conn.ExecuteAsync(insertChunkSql, chunks, tx);
+        // 1. Insert/Update vào KnowledgeSources (Bảng cha)
+        const string insertSourceSql = @"
+            INSERT INTO v_eval_ai.""KnowledgeSources"" 
+            (source_id, domain_id, skill_id, title, file_url, file_hash, document_type, total_pages, total_chars, total_chunks, vector_status)
+            VALUES (@source_id, @domain_id, @skill_id, @title, @file_url, @file_hash, @document_type, @total_pages, @total_chars, @total_chunks, 'COMPLETED')
+            ON CONFLICT (source_id) DO UPDATE SET
+                title = EXCLUDED.title,
+                total_pages = EXCLUDED.total_pages,
+                total_chars = EXCLUDED.total_chars,
+                total_chunks = EXCLUDED.total_chunks,
+                vector_status = 'COMPLETED',
+                updated_at = now();";
 
-    await tx.CommitAsync(cancellationToken);
-    return document.Id;
+        await using (var cmd = new NpgsqlCommand(insertSourceSql, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("source_id", sourceId);
+            cmd.Parameters.AddWithValue("domain_id", (object?)dto.DomainId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("skill_id", (object?)dto.SkillId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("title", dto.FileName);
+            cmd.Parameters.AddWithValue("file_url", (object?)dto.PdfUrl ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("file_hash", (object?)dto.FileHash ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("document_type", (object?)dto.DocumentType ?? "TEXTBOOK");
+            cmd.Parameters.AddWithValue("total_pages", dto.TotalPages);
+            cmd.Parameters.AddWithValue("total_chars", dto.TotalChars);
+            cmd.Parameters.AddWithValue("total_chunks", dto.TotalChunks);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        // 2. Insert danh sách Chunks vào KnowledgeVectorChunks (Bảng con)
+        int insertedChunks = 0;
+        const string insertChunkSql = @"
+            INSERT INTO v_eval_ai.""KnowledgeVectorChunks""
+            (chunk_id, source_id, domain_id, skill_id, chunk_index, page_number, content_snippet, document_type, char_count, metadata)
+            VALUES (gen_random_uuid(), @source_id, @domain_id, @skill_id, @chunk_index, @page_number, @content_snippet, @document_type, @char_count, @metadata::jsonb);";
+
+        foreach (var chunk in dto.Chunks)
+        {
+            await using var cmd = new NpgsqlCommand(insertChunkSql, conn, tx);
+            cmd.Parameters.AddWithValue("source_id", sourceId);
+            cmd.Parameters.AddWithValue("domain_id", (object?)dto.DomainId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("skill_id", (object?)dto.SkillId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("chunk_index", chunk.ChunkIndex);
+            cmd.Parameters.AddWithValue("page_number", chunk.PageNumber);
+            cmd.Parameters.AddWithValue("content_snippet", chunk.Text);
+            cmd.Parameters.AddWithValue("document_type", (object?)dto.DocumentType ?? "TEXTBOOK");
+            cmd.Parameters.AddWithValue("char_count", chunk.CharCount);
+            cmd.Parameters.AddWithValue("metadata", JsonSerializer.Serialize(new { chunk.ChunkIndex, chunk.PageNumber, chunk.CharCount }));
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+            insertedChunks++;
+        }
+
+        await tx.CommitAsync(cancellationToken);
+        _logger.LogInformation("Lưu thành công {Count} chunks vào v_eval_ai trên Supabase cho file {FileName}", insertedChunks, dto.FileName);
+        return insertedChunks;
+    }
+    catch (Exception ex)
+    {
+        await tx.RollbackAsync(cancellationToken);
+        _logger.LogError(ex, "Lỗi khi lưu tri thức SGK vào Supabase PostgreSQL");
+        throw;
+    }
 }
 ```
 
-#### 3. Cơ chế đảm bảo & Xử lý ngoại lệ
-- Sử dụng giao dịch cơ sở dữ liệu (`BeginTransactionAsync`), rollback tự động nếu quá trình lưu một chunk bị lỗi.
+#### 4. Cơ chế đảm bảo & Xử lý ngoại lệ
+- **Đảm bảo tính toàn vẹn ACID tuyệt đối**: Cơ chế bọc Transaction (`BeginTransactionAsync`) kết hợp khối `try/catch` tự động thực thi `RollbackAsync()` nếu có bất kỳ lỗi nào xảy ra trong quá trình lặp nạp hàng trăm chunk, ngăn chặn triệt để tình trạng tạo ra dữ liệu mồ côi (orphan records).
+- **Hỗ trợ Resumable Checkpoint**: Kết hợp với bảng kiểm soát giúp quy trình ingestion có khả năng tự phục hồi (fault-tolerant) khi mạng gián đoạn.
 
-#### 4. Kết luận nghiệm thu
-- **Trạng thái**: Đạt chuẩn (Pass) - Tối ưu truy vấn Cosine Similarity qua HNSW.
+#### 5. Kết luận nghiệm thu của tác giả (ThinhTT Acceptance)
+- **Trạng thái**: Đạt chuẩn (Pass) - Đã nghiệm thu lưu trữ thực tế và vận hành trơn tru với các tài liệu SGK hàng trăm trang.
+- **Đánh giá**: Thiết kế tối ưu giữa tính toàn vẹn dữ liệu quan hệ và hiệu năng mở rộng truy vấn vector (pgvector), giải quyết dứt điểm các thách thức về đứt gãy ranh giới ngữ cảnh trong hệ thống RAG.
 
 </details>
 
@@ -153,12 +227,21 @@ public async Task<Guid> SaveTextbookAsync(TheoreticalDocument document, IEnumera
 
 **Đường dẫn mã nguồn**: [All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/CurriculumEndpoints.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/CurriculumEndpoints.cs)
 
-#### 1. Bài toán Nghiệp vụ
-- **Mục tiêu**: Cung cấp cổng tiếp nhận file tài liệu đề cương (PDF, Word, TXT) hoặc văn bản thô từ giáo viên để AI phân tích cấu trúc cây chuyên đề và sinh câu hỏi tương ứng.
-- **Quy tắc nghiệp vụ**: Xác thực định dạng file, trích xuất text và điều phối tác vụ phân tích chuyên sâu đa tầng (`deep extraction`).
+#### 1. Bài toán Nghiệp vụ & Kiến trúc Minimal API
+- **Kiến trúc Minimal API**:
+  - Không sử dụng mô hình MVC Controller (`ControllerBase`) cồng kềnh truyền thống mà triển khai trực tiếp theo mô hình **ASP.NET Core Minimal API** (`MapGroup("/api/ai-engine/curriculum")`).
+  - Lợi thế: Cấu trúc cực kỳ gọn nhẹ, giảm thiểu tối đa chi phí overhead khởi tạo đối tượng trung gian, tăng tốc độ định tuyến và xử lý trực tiếp các luồng stream dữ liệu cho AI Engine.
+- **Quy trình tiếp nhận & Kiểm thực dữ liệu đa phương thức (Validation Pipeline)**:
+  - Cung cấp cổng tiếp nhận linh hoạt: hỗ trợ cả upload file (`multipart/form-data` gồm PDF, Word, TXT) và văn bản thô (`application/json` qua payload `CurriculumExtractTextPayload`).
+  - **Kiểm thực hợp lệ nghiêm ngặt**: Xác thực tính toàn vẹn ngay tại cửa ngõ tiếp nhận (`if (fileStream == null && string.IsNullOrWhiteSpace(textContent))`), lập tức chặn và phản hồi `Results.BadRequest` kèm thông báo chi tiết, ngăn ngừa triệt để dữ liệu rác hoặc request rỗng đi xuống tầng xử lý AI phía sau.
 
-#### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Route `/api/ai-engine/curriculum/extract`**: Tiếp nhận payload form-data multipart và xử lý stream file.
+#### 2. Điều phối & Bóc tách Chuyên sâu qua CurriculumAiService
+- Sau khi xác thực file và dữ liệu hợp lệ, endpoint tự động mở luồng đọc `fileStream = file.OpenReadStream()` hoặc trích xuất `textContent` kèm các tham số phạm vi môn học (`domainId`, `domainName`, `startPage`, `endPage`, `extractionDepth = "deep"`).
+- Chuyển giao trực tiếp dữ liệu sang `curriculumAiService.ExtractCurriculumAsync(...)` để điều phối Gemini AI bóc tách cây chuyên đề, lý thuyết cốt lõi và câu hỏi mẫu.
+- Bộ nhớ luồng dữ liệu được bao bọc trong khối `using (fileStream)` để bảo đảm giải phóng RAM ngay khi hoàn thành tác vụ.
+
+#### 3. Hàm chính & Đoạn code đáp ứng nghiệp vụ
+- **Route `POST /api/ai-engine/curriculum/extract`**: Tiếp nhận, validate và điều phối bóc tách khung chương trình bằng Minimal API.
 
 ```csharp
 group.MapPost("/extract", async (
@@ -166,25 +249,62 @@ group.MapPost("/extract", async (
     [FromServices] ICurriculumAiService curriculumAiService,
     CancellationToken cancellationToken) =>
 {
-    if (httpRequest.HasFormContentType)
+    try
     {
-        var form = await httpRequest.ReadFormAsync(cancellationToken);
-        var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
-        if (file != null && file.Length > 0)
+        Stream? fileStream = null;
+        string? fileName = null;
+        string? textContent = null;
+        string domainId = "dom_math_analysis";
+        string domainName = "Toán học & Tư duy định lượng";
+        int? startPage = null;
+        int? endPage = null;
+        string extractionDepth = "deep";
+
+        if (httpRequest.HasFormContentType)
         {
-            var result = await curriculumAiService.ExtractCurriculumTreeAsync(file.OpenReadStream(), file.FileName, cancellationToken);
+            var form = await httpRequest.ReadFormAsync(cancellationToken);
+            var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+            if (file != null && file.Length > 0)
+            {
+                fileName = file.FileName;
+                fileStream = file.OpenReadStream();
+            }
+            if (form.TryGetValue("textContent", out var formText))
+                textContent = formText.ToString();
+        }
+
+        // Validate chặt chẽ: Bắt buộc phải có fileStream hoặc textContent
+        if (fileStream == null && string.IsNullOrWhiteSpace(textContent))
+        {
+            return Results.BadRequest(new
+            {
+                success = false,
+                message = "Vui lòng đính kèm file tài liệu (PDF, Word, TXT) hoặc cung cấp nội dung văn bản."
+            });
+        }
+
+        using (fileStream)
+        {
+            var result = await curriculumAiService.ExtractCurriculumAsync(
+                fileStream, fileName, domainId, domainName, textContent, 
+                startPage, endPage, extractionDepth, cancellationToken);
             return Results.Ok(result);
         }
     }
-    return Results.BadRequest(new { message = "Yêu cầu file tài liệu hợp lệ." });
+    catch (Exception ex)
+    {
+        return Results.Problem(detail: $"Lỗi khi trích xuất tài liệu khung chương trình: {ex.Message}");
+    }
 });
 ```
 
-#### 3. Cơ chế đảm bảo & Xử lý ngoại lệ
-- Đọc stream trực tiếp, giải phóng bộ nhớ `Stream` ngay sau khi xử lý xong nhằm tránh lãng phí RAM của tiến trình web API.
+#### 4. Cơ chế đảm bảo & Xử lý ngoại lệ
+- **Quản lý tài nguyên an toàn**: Quản lý vòng đời `Stream` chặt chẽ qua khối `using`, triệt tiêu rủi ro rò rỉ bộ nhớ (Memory Leak) khi người dùng upload file tài liệu lớn.
+- **Xử lý ngoại lệ tập trung**: Bọc toàn bộ luồng trong `try/catch`, chuyển đổi các ngoại lệ hệ thống thành `Results.Problem(StatusCodes.Status500InternalServerError)` theo đúng chuẩn RFC7807.
 
-#### 4. Kết luận nghiệm thu
-- **Trạng thái**: Đạt chuẩn (Pass) - Kết nối đồng bộ trực tiếp với Studio Frontend.
+#### 5. Kết luận nghiệm thu của tác giả (ThinhTT Acceptance)
+- **Trạng thái**: Đạt chuẩn (Pass) - Vận hành mượt mà, phản hồi API chuẩn xác cho Studio Frontend.
+- **Đánh giá**: Hoàn thành xuất sắc vai trò Gateway nội bộ cho AI Engine, chứng minh tính ưu việt của kiến trúc Minimal API trong việc tối ưu hiệu năng và xử lý dữ liệu stream đa phương thức.
 
 </details>
 

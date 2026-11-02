@@ -8,3 +8,8 @@ All Services/
 *.suo
 bin/
 obj/
+
+# Test results and Coverage reports
+TestResults/
+[Tt]est[Rr]esults/
+*.cobertura.xml
