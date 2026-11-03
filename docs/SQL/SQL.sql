@@ -7,7 +7,7 @@
 -- Kiến trúc: Microservices Database-per-Service
 --   - Khóa ngoại VẬT LÝ (Physical FK): CHỈ tạo khi bảng cha và con CÙNG schema.
 --   - Khóa ngoại LOGIC (Logical FK*): Tham chiếu liên schema được quản lý qua tầng ứng dụng / Event Bus.
--- Tổng số Schema: 5 Bounded Contexts (identity, content, enrollment, practice, outcome).
+-- Tổng số: 51 bảng, 5 Bounded Context Schemas (identity 12, content 8, enrollment 5, practice 19, outcome 7).
 -- =====================================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;  -- gen_random_uuid() cho PostgreSQL < 13
@@ -823,4 +823,5 @@ CREATE INDEX IF NOT EXISTS "idx_admissionresults_aspiration_id" ON v_eval_outcom
 CREATE INDEX IF NOT EXISTS "idx_admissionresults_exam_result_id" ON v_eval_outcome."AdmissionResults"("exam_result_id");
 CREATE INDEX IF NOT EXISTS "idx_admissionresults_registration_id" ON v_eval_outcome."AdmissionResults"("registration_id");
 CREATE INDEX IF NOT EXISTS "idx_cohortoutcomesummaries_course_id" ON v_eval_outcome."CohortOutcomeSummaries"("course_id");
-CREATE INDEX IF NOT EXISTS "idx_cohortoutcomesummaries_program_id" ON v_eval_outcome."CohortOutcomeSummaries"("program_id");
+CREATE INDEX IF NOT EXISTS "idx_cohortoutcomesummaries_program_id" ON v_eval_outcome."CohortOutcomeSummaries"("program_id");
+
