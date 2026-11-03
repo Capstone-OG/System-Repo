@@ -1,15 +1,18 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [02/11/2026] - Thiết Lập Kiến Trúc Test Nền Tảng & Script Test Tương Tác (`test.bat`)
+## [03/11/2026] - Nâng Cấp Master Database Schema V5.0 & Bản Kế Hoạch Kỹ Thuật Core Flow Thanh Toán PayOS - PLAR
 
-- **Thiết lập nền tảng kiểm thử Microservices (.NET 9 SDK Host)**:
-  - Đồng bộ và hoàn thiện cấu trúc dự án kiểm thử `.Tests.csproj` cho cả 5 service (`Identity_Service`, `Content_Service`, `Practice_Service`, `Ai_Engine`, `Gateway`) dựa trên chuẩn kiến trúc tham chiếu `G:\OJT\Deploy\OJT_Laboratory_Project\IAM_Service`.
-  - Tích hợp bộ công cụ chuẩn: `xUnit 2.9.2`, `Moq 4.20.72`, `FluentAssertions 7.2.0`, `coverlet.collector 6.0.2` kèm `Global Usings`.
-  - Khởi tạo `.config/dotnet-tools.json` và khôi phục thành công công cụ báo cáo độ bao phủ mã nguồn `dotnet-reportgenerator-globaltool 5.4.18`.
-  - Thiết lập sẵn cấu trúc thư mục kiểm thử khung (`Commands/`, `Queries/`, `Validators/`, `Common/`) sẵn sàng cho việc viết test nghiệp vụ.
-- **Tạo Script kiểm thử thủ công tương tác (`Scripts/test/test.bat`)**:
-  - Xóa bỏ script tự động `test_all.bat` cũ theo yêu cầu người dùng.
-  - Xây dựng `Scripts/test/test.bat` với menu tương tác số `[1-7]` cho phép lựa chọn chạy toàn bộ 5 dịch vụ hoặc từng dịch vụ đơn lẻ.
-  - Tự động nhận diện đường dẫn SDK .NET 9 trên máy Host (`%USERPROFILE%\.dotnet\dotnet.exe`), tương thích 100% chuẩn Windows Batch CRLF, xuất báo cáo Coverage HTML và dừng màn hình (`pause`) để người dùng tự chạy và kiểm tra kết quả trực quan.
-- **Tài liệu hướng dẫn nội bộ**:
-  - Khởi tạo tài liệu [`docs_noi_bo/testing_architecture_guide.md`](./docs_noi_bo/testing_architecture_guide.md) mô tả chi tiết kiến trúc test, cấu trúc thư mục, quy tắc viết Unit Test AAA và hướng dẫn sử dụng script.
+- **Cập Nhật Toàn Diện Master DDL (`docs/SQL/SQL.sql`)**:
+  - Hợp nhất và chuẩn hóa 51 bảng dữ liệu trên 5 Bounded Context Schemas theo chuẩn kiến trúc Microservices Database-per-Service:
+    1. `v_eval_identity` (12 bảng): Chuẩn hóa định danh, phân quyền RBAC và phân công môn giảng dạy (`TeacherSubjects`).
+    2. `v_eval_content` (8 bảng): Khung năng lực, kỹ năng vi mô (`exam_weight_pct`), học liệu và ngân hàng đề thi.
+    3. `v_eval_enrollment` (5 bảng): Quản lý khóa học, chuẩn đầu ra, ghi danh và hạ tầng thanh toán PayOS (VietQR) với `order_code`, `checkout_url` cùng bảng nhật ký giao dịch `PaymentTransactions`.
+    4. `v_eval_practice` (19 bảng): Vận hành lớp học offline, nhóm vi mô 3–5 HS, liên kết đề thi chốt chặng `daily_exam_id` vào `RoadmapNodes`, phân tách riêng tiến trình chu trình 4 bước PLAR (`StageProgress`), mô hình BKT/SM-2 và bộ đếm chuyên cần streak (`StudentDailyActivities`).
+    5. `v_eval_outcome` (7 bảng): Quản lý toàn diện nguyện vọng đại học, điểm thi ĐGNL thật, kết quả xét tuyển và báo cáo tăng điểm `CohortOutcomeSummaries`.
+  - Thực thi triệt để nguyên tắc phân rã Microservices: Chỉ tạo ràng buộc khóa ngoại vật lý (Physical FK) trong nội bộ từng schema; toàn bộ liên kết xuyên schema được định nghĩa dưới dạng khóa ngoại logic (`FK*`).
+  - Phủ kín 60+ chỉ mục Index tối ưu hóa truy vấn hiệu năng cao và bổ sung 15+ mệnh đề CHECK bảo vệ toàn vẹn miền dữ liệu tại tầng DB engine.
+- **Hoàn Thiện Bản Kế Hoạch Kỹ Thuật Core Flow Nội Bộ (`docs_noi_bo/core_flow/ke_hoach_trien_khai_payment_payos_va_kich_hoat_lo_trinh_plar.md`)**:
+  - Thực thể hóa sơ đồ ERD tinh gọn 21 thực thể trung tâm xoay quanh `User`, phân định tường minh vai trò của `RoadmapNode`, `StageProgress` và `DailyActivity`.
+  - Đặc tả chi tiết luồng thanh toán PayOS học tập từ dự án mẫu `F:\EXE101\ShootMatch`: cấu hình `appsettings.json`, sinh `orderCode` an toàn, kiểm soát `description <= 25 ký tự`.
+  - Thiết kế khối Database Transaction nguyên khối (ACID) cho Webhook IPN: xác thực chữ ký HMAC ➔ Idempotency Guard ➔ Kích hoạt đơn đăng ký ➔ Tự động sinh `LearningRoadmaps` và mở khóa chặng 1 `RoadmapNodes`.
+  - Đặc tả 4 bài kiểm thử trọng tâm (Happy Path, Idempotency, Rollback Safety, Tampered Signature) với bộ thư viện chuẩn `xUnit 2.9.2`, `Moq 4.20.72` và `FluentAssertions 7.2.0`.
