@@ -1,13 +1,19 @@
-# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
+# NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [31/10/2026] - Triển Khai Phân Hệ Lịch Sử Làm Bài & Sổ Tay Lỗi Sai Socratic (`SubmissionHistoryView`), Chuẩn Hóa Xem Lại Đáp Án & Hỏi Gia Sư AI
+## [04/11/2026] - Phân Tách Lời Chào / Hội Thoại Tự Do Khỏi Luồng Đề Bài Thi Của Gia Sư AI Socratic & Tối Ưu Hóa Số Liệu Dashboard
 
-- **Web Client (`All Services/V-Eval-Web_Client`)**:
-  - **Triển khai phân hệ Lịch sử làm bài & Sổ tay lỗi sai (`SubmissionHistoryView.jsx`, `Sidebar.jsx`, `App.jsx`)**: Lưu trữ và đồng bộ danh sách các bài khảo sát ĐGNL 30 câu, phiếu luyện tập thích ứng ZPD và bài kiểm tra chuyên đề đã hoàn thành; cho phép học sinh bấm vào bất kỳ bài thi cũ nào để xem lại bảng đáp án chi tiết, lọc sổ tay câu sai và bấm hỏi Gia sư AI Socratic cho từng câu.
-  - **Tự động lưu lịch sử ở cả 3 luồng làm bài (`practiceService.js`, `DiagnosticAssessmentPage.jsx`, `AdaptiveQuizModal.jsx`, `CurriculumExplorerView.jsx`)**: Đấu nối API lịch sử bài làm của Practice Service kết hợp lưu trữ đồng bộ, hiển thị danh sách lịch sử làm bài ngay tại trang Khảo thí và Sidebar.
-  - **Khắc phục triệt để lỗi chữ tối trên nền tối (`MathText.jsx`)**: Gỡ bỏ màu chữ tối cố định (`text-slate-700/800/900`) để nội dung phản hồi của Gia sư AI Socratic hiển thị chữ trắng sắc nét (`text-white`) trên nền tối.
-- **Practice Service (`All Services/V-Eval-Practice_Service`)**:
-  - **Chuẩn hóa `JsonNamingPolicy.SnakeCaseLower` (`AiTutorClient.cs`)**: Đồng bộ định dạng JSON `snake_case` khi gọi sang Python FastAPI RAG (`:8000/api/v1/socratic/ask-stream`).
-- **Kiểm Thử & Xác Thực (Verification)**:
-  - `V-Eval-Web_Client`: `npm test` (3/3 pass) & `npm run build` thành công 100%.
-  - `V-Eval-Practice_Service`: `dotnet test` (4/4 pass) thành công 100%.
+- **Web Client (`V-Eval-Web_Client`)**:
+  - Phân tách rõ ràng giữa chế độ hỏi đề thi (`In-Exam Question Mode`) và trò chuyện tự do (`General Freeform Mode`): khi mở chat từ icon nổi, đặt `options = null`, `studentWrongOption = null`, `correctOption = null`, tránh tự ý tiêm phương án A/B giả lập.
+  - Gỡ bỏ widget `AISocraticTutorWidget` cồng kềnh trên dashboard; thay bằng nút nổi Floating Action Button (FAB) góc dưới bên phải (`fixed bottom-6 right-6 z-40`), có hiệu ứng aura phát sáng và chấm xanh trực tuyến 24/7.
+  - Sửa API `getMyRoadmap` gửi kèm `studentId` và header `X-User-Id` để lấy trực tiếp lộ trình học thích ứng 470 mốc từ database, loại bỏ lỗi bắt làm lại bài thi chẩn đoán 30 câu.
+  - Lọc bỏ các bài thi hết hạn/bị hủy dở dang và ưu tiên điểm số thực tế từ Backend (320/1200 điểm, dải dự báo `275 - 365`), chấm dứt triệt để hiện tượng điểm bị hạ về 0 trên các thẻ chỉ số Metrics.
+  - Kiểm thử: `npm test` đạt 6/6 tests pass (100%), `npm run build` thành công trong 1.08s.
+- **Practice Service (`V-Eval-Practice_Service`)**:
+  - Mở rộng `AskTutorRequest` cho phép `StudentWrongOption` và `CorrectOption` là nullable (`string?`), mặc định gán `null`.
+  - Tự động chuẩn hóa phương án rỗng thành `"NONE"` khi gọi sang FastAPI RAG, giúp học sinh trò chuyện tự do không bị ép buộc gửi phương án trắc nghiệm.
+  - Bổ sung bộ chặn lời chào tức thì trong `GenerateStreamFallback` của `AiTutorClient.cs`.
+  - Kiểm thử: `dotnet test` đạt 4/4 tests pass (100%).
+- **AI Engine (`V-Eval-Ai_Engine`)**:
+  - Tích hợp nhận diện lời chào `is_greeting`: bỏ qua truy vấn pgvector khi học sinh chỉ chào hỏi, gán `subgraph_status = "GENERAL_CHAT"`, chấm dứt triệt để lỗi vô tình gán ghép chữ "hi" vào bài toán tam thức bậc hai và bẫy xét dấu.
+  - Xây dựng prompt sư phạm linh hoạt cho hội thoại tự do khi `student_selected_option == "NONE"`: hướng dẫn học sinh đặt câu hỏi mà không quy chụp chọn sai phương án A; tự động pass LLM-as-a-Judge đối với lời chào.
+  - Kiểm thử: Endpoint `/api/v1/socratic/ask` và SSE `/api/v1/socratic/ask-stream` trả về 200 OK với lời chào thân thiện, tự nhiên.

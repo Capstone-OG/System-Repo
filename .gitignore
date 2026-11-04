@@ -8,3 +8,5 @@ All Services/
 *.suo
 bin/
 obj/
+
+scratch/
