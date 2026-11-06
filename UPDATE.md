@@ -1,6 +1,14 @@
 # NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [06/11/2026] - Phân Chia Cổng Giao Diện 5 Vai Trò, Đồng Bộ Template Màu Sắc Chuẩn Trang Chủ (`#FDFBF7`), Kiểm Tra Đa Tầng Email Đăng Ký (DNS MX), Liên Kết Phụ Huynh - Học Sinh 3 Phương Thức & Đấu Nối 100% Dữ Liệu Thực Từ Backend API
+## [06/11/2026] - Phân Chia Cổng Giao Diện 5 Vai Trò, Đồng Bộ Theme Học Thuật (`#FDFBF7`), Kiểm Tra Đa Tầng Email Đăng Ký (DNS MX), Liên Kết Phụ Huynh - Học Sinh 3 Phương Thức, Background Worker Quét Cảnh Báo Sớm BR-04 & Bộ Điều Phối Thông Báo Đa Kênh Email / Mobile Push FCM (Khớp 100% SDD Figure 56 & 57, Checklist Mục 07)
+
+- **Triển Khai Hoàn Chỉnh Phân Hệ Cảnh Báo Sớm Ngầm & Bắn Thông Báo Đa Kênh (`V-Eval-Practice_Service` - Figure 56 & 57, Checklist Mục 07)**:
+  - **Background Worker Quét Cảnh Báo Sớm BR-04 (`EarlyWarningSweepWorker.cs`)**: Kế thừa `BackgroundService` chạy ngầm định kỳ 30 phút/lần, tự động quét toàn bộ học sinh hoạt động, đánh giá quy tắc cảnh báo sớm 3 cấp BR-04 (`UNREALISTIC_GOAL`, `RED`, `YELLOW`), chống trùng lặp 24h, ghi nhận `SystemAlert` vào PostgreSQL `v_eval_practice."SystemAlerts"` và kích hoạt bắn thông báo ra bên ngoài.
+  - **Bộ Điều Phối Thông Báo Đa Kênh Ra Bên Ngoài (`NotificationDispatcher.cs`)**:
+    - **Email HTML Chuẩn Nhận Diện (MailKit / MimeKit 4.17.0)**: Soạn thảo email HTML responsive, hiển thị thẻ màu phân cấp rủi ro (Đỏ/Vàng/Tím), thông số điểm mục tiêu/dự báo/sẵn sàng, lời khuyên sư phạm và nút CTA dẫn thẳng vào Cổng Phụ Huynh / Học Viên. Gửi đồng thời tới Email học sinh và Email tất cả phụ huynh liên kết.
+    - **Mobile Push (Firebase Cloud Messaging - FCM)**: Chuẩn bị payload thông báo di động chuẩn gửi tới topic `/topics/student_{id}` kèm deep link `/parent/dashboard`.
+    - **Cơ Chế Phục Hồi Cao (Resilient Fallback Audit)**: Tự động ghi log kiểm toán có cấu trúc `[NOTIFICATION DISPATCHER - EMAIL AUDIT]` & `[NOTIFICATION DISPATCHER - FCM AUDIT]` khi chưa cấu hình máy chủ SMTP hoặc khóa FCM, triệt tiêu 100% nguy cơ crash worker.
+  - **Endpoint API Quét Theo Yêu Cầu (`EarlyWarningsController.cs`)**: Bổ sung `POST /api/practice/early-warnings/sweep?classId={guid}` cho phép Quản trị viên/Mentor kích hoạt quy trình quét tức thì.
 
 - **Hệ Thống Liên Kết Phụ Huynh - Học Sinh 3 Phương Thức Trực Tiếp Trên CSDL (`V-Eval-Identity_Service` & `V-Eval-Web_Client` - UC 41)**:
   - **Phương thức 1 (Mã Tài Khoản Học Sinh `VE-XXXXXX` & Mã PIN 6 Số)**: Cấp mã định danh cố định `VE-XXXXXX` cùng mã PIN 6 số động hạn 30 phút (`PARENT_LINK_CODE`) trên Cổng Học Viên (`StudentParentLinkCard.jsx`); Phụ huynh nhập mã tại `ParentDashboardView.jsx` (`POST /api/v1/users/parent-link/connect`) để liên kết tức thì vào bảng `v_eval_identity.ParentStudentRelations`.
