@@ -1,13 +1,11 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - SYSTEM REPO
 
-## [31/10/2026] - Triển Khai Phân Hệ Lịch Sử Làm Bài & Sổ Tay Lỗi Sai Socratic (`SubmissionHistoryView`), Chuẩn Hóa Xem Lại Đáp Án & Hỏi Gia Sư AI
+## [07/11/2026] - Hoàn Tất Chuẩn Hóa 40 Sơ Đồ Chi Tiết (Figure 18 - Figure 57) Phần IV SDD & Rà Soát Phân Hệ 3.7
 
-- **Web Client (`All Services/V-Eval-Web_Client`)**:
-  - **Triển khai phân hệ Lịch sử làm bài & Sổ tay lỗi sai (`SubmissionHistoryView.jsx`, `Sidebar.jsx`, `App.jsx`)**: Lưu trữ và đồng bộ danh sách các bài khảo sát ĐGNL 30 câu, phiếu luyện tập thích ứng ZPD và bài kiểm tra chuyên đề đã hoàn thành; cho phép học sinh bấm vào bất kỳ bài thi cũ nào để xem lại bảng đáp án chi tiết, lọc sổ tay câu sai và bấm hỏi Gia sư AI Socratic cho từng câu.
-  - **Tự động lưu lịch sử ở cả 3 luồng làm bài (`practiceService.js`, `DiagnosticAssessmentPage.jsx`, `AdaptiveQuizModal.jsx`, `CurriculumExplorerView.jsx`)**: Đấu nối API lịch sử bài làm của Practice Service kết hợp lưu trữ đồng bộ, hiển thị danh sách lịch sử làm bài ngay tại trang Khảo thí và Sidebar.
-  - **Khắc phục triệt để lỗi chữ tối trên nền tối (`MathText.jsx`)**: Gỡ bỏ màu chữ tối cố định (`text-slate-700/800/900`) để nội dung phản hồi của Gia sư AI Socratic hiển thị chữ trắng sắc nét (`text-white`) trên nền tối.
-- **Practice Service (`All Services/V-Eval-Practice_Service`)**:
-  - **Chuẩn hóa `JsonNamingPolicy.SnakeCaseLower` (`AiTutorClient.cs`)**: Đồng bộ định dạng JSON `snake_case` khi gọi sang Python FastAPI RAG (`:8000/api/v1/socratic/ask-stream`).
-- **Kiểm Thử & Xác Thực (Verification)**:
-  - `V-Eval-Web_Client`: `npm test` (3/3 pass) & `npm run build` thành công 100%.
-  - `V-Eval-Practice_Service`: `dotnet test` (4/4 pass) thành công 100%.
+- **Chuẩn hóa toàn bộ mục `IV.3 Detailed Design` trong [`docs/report_tong_chuan_hoa.md`](./docs/report_tong_chuan_hoa.md) khớp 100% quy chuẩn 1-đối-1 báo cáo mẫu Đồ án Tốt nghiệp FPTU (`6819_HCM_FA25SE208_GFA67_Final_Report.docx`)**:
+  - Tách 7 Phân hệ quản lý (`3.1 -> 3.7`) thành **20 chức năng cốt lõi độc lập = 40 sơ đồ (`20 Class Diagrams` số lẻ + `20 Sequence Diagrams` số chẵn từ `Figure 18` đến `Figure 57`)**, bóc tách chi tiết từng hộp/thuộc tính/phương thức từ code C# thực tế.
+  - **Rà soát & đối chiếu toàn bộ Phân hệ 3.7 (Multi-Campus Cohort, Heatmap & Early Warning Management)**:
+    - `3.7.1 & 3.7.2` (Figure 52 & 53): Tự động phân lớp theo cụm năng lực đầu vào (`StudentKMeansClusterer` - Constrained K-Means phân tầng `FOUNDATIONAL`, `STANDARD`, `INTENSIVE`).
+    - `3.7.3 & 3.7.4` (Figure 54 & 55): Khảo sát ma trận nhiệt năng lực lớp học theo mô hình Cache-Aside (`IClassHeatmapCacheService` với `IMemoryCache` nội bộ và chuẩn phân tán Redis 7).
+    - `3.7.5 & 3.7.6` (Figure 56 & 57): Hệ thống cảnh báo sớm 3 cấp độ (`TIER_1 / 2 / 3`), phân định rõ luồng chạy ngầm của Worker định kỳ (`EarlyWarningSweepWorker`) và API giao diện của Mentor (`EarlyWarningsController`).
+  - **Đối chiếu mã nguồn toàn hệ thống & hoàn thiện Checklist 7 hạng mục hoàn thiện code** ở cuối Phần IV (`Companion Mobile App`, `Thanh toán gói học`, `LinkParentStudentCommand`, `Email OTP`, `Duyệt câu hỏi Academic Director`, `Webcam Proctoring`, và `Dispatcher cảnh báo sớm đa kênh`), bảo toàn 100% văn bản Tiếng Anh chuẩn SDD sẵn sàng nộp.
