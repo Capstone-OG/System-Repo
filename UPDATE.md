@@ -1,22 +1,18 @@
 # NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [06/11/2026] - Triển Khai Kiến Trúc 2 Luồng Phân Tách (Decoupled Dual-Track Architecture) & Ma Trận 5 Intent Cho Gia Sư Socratic
+## [07/11/2026] - Triển Khai Toàn Diện Core Flow 6 Lên Web Client: Dự Báo Điểm SEM 95%, Toa Thuốc Bù Điểm Knapsack ROI, Cảnh Báo Sớm 3 Tầng BR-04 & Sổ Tay Lỗi Sai SM-2
 
-- **AI Engine (`V-Eval-Ai_Engine`)**:
-  - **Triển khai kiến trúc 2 luồng phân tách (Decoupled Dual-Track Architecture)**:
-    - *Track 1 (Task Grounding)*: Chỉ embed `question_latex + options` vào Knowledge Graph pgvector, triệt tiêu hoàn toàn ô nhiễm vector (Semantic Contamination) từ lời chat học sinh.
-    - *Track 2 (Dynamic Intent & Tone Router)*: Module `socratic/intent_router.py` bóc tách `student_query` thành Ma trận 5 tình huống (C1: Persona/Chit-chat, C2: Thái độ + Bài toán, C3: Nghi ngờ tính hợp lệ đề bài, C4: Thắc mắc chuyên môn trong KG, C5: Đề bài ngoài hệ thống) kèm nhận diện tâm trạng (`NEUTRAL`, `SKEPTICAL`, `FRUSTRATED`, `CURIOUS`).
-    - *Song song hóa*: Kích hoạt đồng thời Track 1 và Track 2 qua `asyncio.gather`. Bỏ qua vector search khi học sinh chào hỏi C1 (0ms KG latency).
-  - **Hệ thống Prompt Modular 2 khối**: Khối 1 Persona Core (người thầy ấm áp, khiêm tốn, sắc sảo, không máy móc, cấm giải thay, cấm lộ đáp án) + Khối 2 Dynamic Case Injection (tiêm chỉ thị sư phạm theo mã Case C1–C5).
-  - **Hội đồng Thẩm định Thích ứng (Adaptive LLM-as-a-Judge)**: Tiêu chí thẩm định linh hoạt theo Category (`validator_judge.py`), không đánh trượt oan lời chào xã giao C1.
-  - **SSE Status Hydration**: Phát sự kiện `event: status` và `intent_category` trong `event: metadata` cho giao diện người dùng.
-  - **Khắc phục lỗi Quota 429 & Tối ưu tốc độ**: Nạp API key mới, cấu hình `max_retries=1` loại bỏ treo 25s Tenacity retry, ưu tiên `gemini-3.5-flash-lite` phản hồi nhanh trong ~1.5 - 2.5s.
-  - **Kiểm thử**: 50/50 unit tests `pytest` đạt 100%.
-- **Practice Service (`V-Eval-Practice_Service`)**:
-  - **Bảo vệ luồng SSE bằng kênh bất đồng bộ Channel**: Tái cấu trúc `StreamSocraticGuidanceAsync` với `System.Threading.Channels.Channel.CreateUnbounded<string>()`, tách biệt an toàn việc đọc mạng khỏi `yield return`.
-  - **Cơ chế phòng thủ Zero-Empty-Token**: Tự động phát sinh fallback sư phạm chuẩn khi mạng gián đoạn, đảm bảo học sinh không bao giờ nhận stream rỗng.
-  - **Kiểm thử**: Biên dịch .NET 9 SDK sạch sẽ 100% (0 Warning, 0 Error).
 - **Web Client (`V-Eval-Web_Client`)**:
-  - **Sửa lỗi nuốt Exception SSE trong `practiceService.js`**: Tách riêng `JSON.parse`, kích hoạt `onError` khi nhận `parsed.error`.
-  - **Triệt tiêu hoàn toàn dấu ba chấm `...` vĩnh viễn trên UI**: Trong `AISocraticTutorModal.jsx`, nếu stream hoàn tất mà token rỗng, tự động điền thông điệp gợi mở sư phạm thân thiện; nếu gặp mã 429, hiển thị cảnh báo giới hạn rõ ràng trong bong bóng chat.
-  - **Kiểm thử & Đóng gói**: `npm run build` hoàn thành sạch sẽ 100%.
+  - **Tầng Dịch Vụ Core Flow 6 (`apiClient.js`, `practiceService.js`, `tests/practiceService.flow6.test.js`)**:
+    - Bổ sung phương thức `apiClient.patch` và giải mã lỗi chi tiết từ cấu trúc `Result<T>` của ASP.NET Core.
+    - Đấu nối trọn bộ **13 API Core Flow 6** qua cổng YARP Gateway (`:5212`), chuẩn hóa song ngữ `snake_case` / `camelCase`, tự động kích hoạt `recalculatePrediction` khi học sinh chưa có bản ghi dự báo (`404`), lưu trữ bền vững trạng thái fallback ngoại tuyến và phát sự kiện đồng bộ `veval:flow6-updated` (`8/8 unit tests pass`).
+  - **Dự Báo Điểm SEM 95% & Toa Thuốc Bù Điểm Knapsack ROI (`ScorePredictionPanel.jsx`, `PrescriptionPracticeModal.jsx`, `LearningAnalyticsView.jsx`, `App.jsx`)**:
+    - Hiển thị trực quan thang 1200 điểm ĐGNL kèm khoảng tin cậy 95% (`Predicted ± 1.96 × SEM`), bảng cân đối thiếu hụt mục tiêu (`ON_TRACK`, `AT_RISK`, `CRITICAL`), nút tái tính toán dự báo SEM và xếp hạng dạng bài tối ưu `ROI = ΔScore / Số giờ ôn`.
+    - Xây dựng modal làm 3-5 câu hỏi biến thể đồng cấu (render công thức KaTeX qua `MathText`), tự động cập nhật xác suất làm chủ BKT `P(L_t)`, gạch nợ điểm thiếu hụt khi đạt độ chính xác `>= 67%` và đối chiếu cùng Gia sư AI Socratic sau khi nộp bài.
+  - **Cảnh Báo Sớm 3 Tầng BR-04 & Trung Tâm Can Thiệp Sư Phạm Đa Vai Trò (`NotificationBellPopover.jsx`, `StudentEarlyWarningsCard.jsx`, `EarlyWarningsMentorPanel.jsx`)**:
+    - Thay thế chuông thông báo tĩnh trên `Navbar.jsx` bằng trung tâm thông báo thời gian thực theo vai trò (Học sinh/Phụ huynh vs Giáo viên/Quản lý cơ sở).
+    - Tích hợp hộp thư cảnh báo cá nhân trên Cổng Học sinh & Phụ huynh, cùng bảng điều phối 6 KPI trên Cổng Giáo viên & Quản lý cơ sở kèm **Modal Ghi nhận Can thiệp (`resolve`)** và **Modal Đặt lịch Tư vấn Mục tiêu 3 bên (`schedule-counseling`)**.
+  - **Sổ Tay Lỗi Sai Phản Tư & Lặp Lại Ngắt Quãng SuperMemo-2 (`MistakeNotebookSM2View.jsx`, `Sidebar.jsx`)**:
+    - Triển khai phân hệ Sổ tay lỗi sai hỗ trợ lọc & gắn nhãn siêu nhận thức (`MISSING_CONCEPT`, `CARELESS`, `MISREAD_QUESTION`), chạy phiên ôn tập câu hỏi đồng cấu đến hạn hôm nay theo thuật toán SM-2 (`EF >= 1.3`, `3 lần đúng liên tiếp -> Thành thạo`) và kết nối trực tiếp trên thanh điều hướng `Sidebar.jsx`.
+  - **Kiểm Thử & Đóng Gói**:
+    - `npm test` đạt `8/8 tests pass` (`3 suites`), `vite build` hoàn thành sạch sẽ 100% (`0 errors`).
