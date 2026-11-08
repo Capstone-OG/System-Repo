@@ -20,3 +20,7 @@
     - **9.2. Practice Service**: `EarlyWarningSweepWorker` quét tự động 6h sáng và `NotificationDispatcher` đa kênh (`322d73d`), Dashboard phụ huynh DB thật (`6ad262c`).
     - **9.3. Content, Gateway & AI Engine**: Bộ test suites `xUnit`, `Moq`, `FluentAssertions`, Result Pattern, `CorrelationIdMiddleware`.
     - **9.4. Web Client**: Không gian làm việc `w-full` sát Sidebar & bảng IAM 1 dòng (`815c1f6`), tab quản lý tài khoản ngừng hoạt động Soft delete (`d4d023e`), thanh điều hướng Segmented Control & Cổng Giám đốc Học thuật (`444b73c`), thẻ liên kết 3-trong-1 & 5 cổng vai trò (`1da817d`), modal OTP 6 ô Fintech (`dc30a70`) và cổng thanh toán học phí VietQR PayOS (`389d856`).
+
+- **Bổ Sung Cấu Hình SMTP Brevo Vào Bộ Cấu Hình Tập Trung ([`Configs/V-Eval-Identity_Service/appsettings.json`](./Configs/V-Eval-Identity_Service/appsettings.json))**:
+  - Tích hợp schema cấu hình `Email` chuẩn vào bộ nạp tập trung (`Configs/`) phục vụ công cụ `sync_config.bat` / `sync_config.sh`.
+  - Thiết lập giá trị mật khẩu dạng placeholder an toàn (`YOUR_BREVO_SMTP_KEY_OR_ENV_VAR`) ngăn chặn triệt để cơ chế quét mã bí mật (Secret Scanning) của GitHub, hỗ trợ lập trình viên chủ động điền key thực tế khi chạy môi trường cục bộ.
