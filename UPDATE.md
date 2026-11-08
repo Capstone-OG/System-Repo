@@ -1,18 +1,11 @@
 # NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [07/11/2026] - Triển Khai Toàn Diện Core Flow 6 Lên Web Client: Dự Báo Điểm SEM 95%, Toa Thuốc Bù Điểm Knapsack ROI, Cảnh Báo Sớm 3 Tầng BR-04 & Sổ Tay Lỗi Sai SM-2
+## [08/11/2026] - Khắc Phục Toàn Diện Core Flow 6 Trên Backend (`Practice Service`) & `API Gateway`: Đồng Bộ Cột `status` MistakeNotebooks, Xác Thực Kép JWT + `X-User-Id`, Auto-Init Dự Báo Điểm SEM & Unified Swagger Portal
 
-- **Web Client (`V-Eval-Web_Client`)**:
-  - **Tầng Dịch Vụ Core Flow 6 (`apiClient.js`, `practiceService.js`, `tests/practiceService.flow6.test.js`)**:
-    - Bổ sung phương thức `apiClient.patch` và giải mã lỗi chi tiết từ cấu trúc `Result<T>` của ASP.NET Core.
-    - Đấu nối trọn bộ **13 API Core Flow 6** qua cổng YARP Gateway (`:5212`), chuẩn hóa song ngữ `snake_case` / `camelCase`, tự động kích hoạt `recalculatePrediction` khi học sinh chưa có bản ghi dự báo (`404`), lưu trữ bền vững trạng thái fallback ngoại tuyến và phát sự kiện đồng bộ `veval:flow6-updated` (`8/8 unit tests pass`).
-  - **Dự Báo Điểm SEM 95% & Toa Thuốc Bù Điểm Knapsack ROI (`ScorePredictionPanel.jsx`, `PrescriptionPracticeModal.jsx`, `LearningAnalyticsView.jsx`, `App.jsx`)**:
-    - Hiển thị trực quan thang 1200 điểm ĐGNL kèm khoảng tin cậy 95% (`Predicted ± 1.96 × SEM`), bảng cân đối thiếu hụt mục tiêu (`ON_TRACK`, `AT_RISK`, `CRITICAL`), nút tái tính toán dự báo SEM và xếp hạng dạng bài tối ưu `ROI = ΔScore / Số giờ ôn`.
-    - Xây dựng modal làm 3-5 câu hỏi biến thể đồng cấu (render công thức KaTeX qua `MathText`), tự động cập nhật xác suất làm chủ BKT `P(L_t)`, gạch nợ điểm thiếu hụt khi đạt độ chính xác `>= 67%` và đối chiếu cùng Gia sư AI Socratic sau khi nộp bài.
-  - **Cảnh Báo Sớm 3 Tầng BR-04 & Trung Tâm Can Thiệp Sư Phạm Đa Vai Trò (`NotificationBellPopover.jsx`, `StudentEarlyWarningsCard.jsx`, `EarlyWarningsMentorPanel.jsx`)**:
-    - Thay thế chuông thông báo tĩnh trên `Navbar.jsx` bằng trung tâm thông báo thời gian thực theo vai trò (Học sinh/Phụ huynh vs Giáo viên/Quản lý cơ sở).
-    - Tích hợp hộp thư cảnh báo cá nhân trên Cổng Học sinh & Phụ huynh, cùng bảng điều phối 6 KPI trên Cổng Giáo viên & Quản lý cơ sở kèm **Modal Ghi nhận Can thiệp (`resolve`)** và **Modal Đặt lịch Tư vấn Mục tiêu 3 bên (`schedule-counseling`)**.
-  - **Sổ Tay Lỗi Sai Phản Tư & Lặp Lại Ngắt Quãng SuperMemo-2 (`MistakeNotebookSM2View.jsx`, `Sidebar.jsx`)**:
-    - Triển khai phân hệ Sổ tay lỗi sai hỗ trợ lọc & gắn nhãn siêu nhận thức (`MISSING_CONCEPT`, `CARELESS`, `MISREAD_QUESTION`), chạy phiên ôn tập câu hỏi đồng cấu đến hạn hôm nay theo thuật toán SM-2 (`EF >= 1.3`, `3 lần đúng liên tiếp -> Thành thạo`) và kết nối trực tiếp trên thanh điều hướng `Sidebar.jsx`.
-  - **Kiểm Thử & Đóng Gói**:
-    - `npm test` đạt `8/8 tests pass` (`3 suites`), `vite build` hoàn thành sạch sẽ 100% (`0 errors`).
+- **Practice Service (`All Services/V-Eval-Practice_Service` & `Configs/V-Eval-Practice_Service`)**:
+  - **Khắc Phục Triệt Để Lỗi `500 (42703: column m.Status does not exist)`**: Ánh xạ cột `status` (`VARCHAR(50) DEFAULT 'NEW_MISTAKE'`) trong `PracticeDbContext.cs`, bổ sung `ALTER TABLE v_eval_practice."MistakeNotebooks" ADD COLUMN IF NOT EXISTS status` kèm seed dữ liệu mẫu SM-2 trong `Program.cs` và đồng bộ `MistakeLifecycleState` tại các handler `Mistakes`, khôi phục `200 OK` cho `POST /predictions/recalculate` cùng 4 API Sổ tay lỗi sai.
+  - **Xác Thực Kép JWT Bearer + `X-User-Id` & Swagger `Authorize`**: Tích hợp `JwtBearer` đồng bộ `JwtSettings` với `Identity Service` & `Gateway`, mở nút `Authorize` (`Bearer` & `X-User-Id`) trên `:5261/swagger`, chuẩn hóa `ApiControllerBase.ResolveUserId` xuyên suốt `PredictionsController`, `EarlyWarningsController`, `MistakesController` và gán giá trị mẫu hợp lệ cho các DTO Swagger.
+  - **Tự Động Khởi Tạo Dự Báo Điểm SEM Lần Đầu (`AUTO_INIT`)**: Tự động kích hoạt `RecalculatePredictionCommand` từ `GetMyForecastQueryHandler` khi học sinh hợp lệ chưa có bản ghi `ScorePredictions`, ước lượng điểm cơ sở thang 1200 từ `ExamSubmission` gần nhất thay vì trả `404 NotFound` (`14/14 unit tests pass`).
+- **API Gateway (`All Services/V-Eval-Gateway`, `Configs/V-Eval-Gateway` & [`docker-compose.yml`](./docker-compose.yml))**:
+  - **Unified Swagger Portal (`:5212/swagger`)**: Tích hợp `Swashbuckle.AspNetCore` gom tài liệu OpenAPI của `Practice`, `Identity`, `Content` và `AI Engine` qua các route `/swagger-docs/{service}/{**catch-all}` để kiểm thử tập trung với `Bearer` JWT qua đúng luồng `ClaimsHeaderTransform`.
+  - **Định Tuyến & Docker Networking**: Bật `MapInboundClaims = false` trong `GatewayAuthExtensions.cs`, bổ sung route `/api/v1/ai-tutor/{**catch-all}`, nâng `ActivityTimeout = 00:05:00` cho `practice-service-cluster` và cấu hình biến môi trường ánh xạ cổng nội bộ container (`:5001`, `:5002`, `:5249`, `:5104`) cho `v-eval-gateway` trong [`docker-compose.yml`](./docker-compose.yml) (`3/3 unit tests pass`, `docker compose config` hợp lệ 100%).
