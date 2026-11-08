@@ -9,6 +9,10 @@ services:
       - "5212:5212"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ReverseProxy__Clusters__ai-engine-cluster__Destinations__destination1__Address=http://v-eval-ai-engine:5104
+      - ReverseProxy__Clusters__content-service-cluster__Destinations__destination1__Address=http://v-eval-content-service:5249
+      - ReverseProxy__Clusters__identity-service-cluster__Destinations__destination1__Address=http://v-eval-identity-service:5001
+      - ReverseProxy__Clusters__practice-service-cluster__Destinations__destination1__Address=http://v-eval-practice-service:5002
     restart: unless-stopped
     networks:
       - veval_network

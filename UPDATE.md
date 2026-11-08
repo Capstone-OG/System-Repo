@@ -1,20 +1,13 @@
 # NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [07/11/2026] - Hợp Nhất Nhánh `develop` Toàn Hệ Thống & Hoàn Tất Chuẩn Hóa 40 Sơ Đồ Chi Tiết (Figure 18 - Figure 57) Phần IV SDD
+## [08/11/2026] - Triển Khai & Khắc Phục Toàn Diện Core Flow 6 (`Practice Service`, `API Gateway`, `Web Client`) Và Chuẩn Hóa Giao Diện Học Tập Thân Thiện Cho Học Sinh
 
-- **Hợp Nhất Toàn Diện Nhánh `develop` Với Phân Hệ Curriculum Studio, PayOS & Xác Thực OTP**:
-  - Hợp nhất thành công các tính năng từ nhánh `ThinhTT/feature-curriculum-studio-formula-editor`:
-    - **Curriculum Studio & Formula Editor**: Soạn thảo công thức dạng Word (JSXGraph 2D/3D, Bảng Biến Thiên Vector `2N-1`, AI sinh câu hỏi).
-    - **Thanh toán học phí trực tuyến PayOS VietQR**: Tích hợp `PaymentsController.cs`, `PayOsService.cs`, `TuitionPaymentView.jsx`, `PayOsCheckoutModal.jsx`, webhook kích hoạt lộ trình PLAR tự động.
-    - **Xác thực OTP 6 chữ số chuẩn Fintech**: Gửi email thật qua Brevo SMTP (`SmtpEmailService.cs`), xác thực OTP khôi phục mật khẩu (`VerifyResetOtpCommandHandler.cs`, `ForgotPasswordModal.jsx`).
-    - **Socratic Dual-Track AI Engine**: Triển khai phân tách 2 luồng (Track 1 Task Grounding triệt tiêu ô nhiễm vector; Track 2 Dynamic Intent Router 5 tình huống kết hợp tâm trạng).
-    - **Bảo vệ luồng SSE**: Dùng kênh bất đồng bộ `System.Threading.Channels` chống rớt token và tối ưu trải nghiệm giao diện.
-  - Kiểm thử toàn diện sau hợp nhất: Cả 5 Backend Solutions (`V-Eval-Identity_Service`, `V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Gateway`) build đạt **0 Error(s)**; Frontend `V-Eval-Web_Client` test pass 9/9, build thành công; Docker Compose hợp lệ 100%.
-
-- **Chuẩn Hóa Toàn Bộ Mục `IV.3 Detailed Design` Trong [`docs/report_tong_chuan_hoa.md`](./docs/report_tong_chuan_hoa.md) Khớp 100% Đồ Án Mẫu FPTU (`GFA67`)**:
-  - Tách 7 Phân hệ quản lý (`3.1 -> 3.7`) thành **20 chức năng cốt lõi độc lập = 40 sơ đồ (`20 Class Diagrams` số lẻ + `20 Sequence Diagrams` số chẵn từ `Figure 18` đến `Figure 57`)**, bóc tách chi tiết từng hộp/thuộc tính/phương thức từ code C# thực tế.
-  - **Rà soát & đối chiếu toàn bộ Phân hệ 3.7 (Multi-Campus Cohort, Heatmap & Early Warning Management)**:
-    - `3.7.1 & 3.7.2` (Figure 52 & 53): Tự động phân lớp theo cụm năng lực đầu vào (`StudentKMeansClusterer` - Constrained K-Means phân tầng `FOUNDATIONAL`, `STANDARD`, `INTENSIVE`).
-    - `3.7.3 & 3.7.4` (Figure 54 & 55): Khảo sát ma trận nhiệt năng lực lớp học theo mô hình Cache-Aside (`IClassHeatmapCacheService` với `IMemoryCache` nội bộ và chuẩn phân tán Redis 7).
-    - `3.7.5 & 3.7.6` (Figure 56 & 57): Hệ thống cảnh báo sớm 3 cấp độ (`TIER_1 / 2 / 3`), phân định rõ luồng chạy ngầm của Worker định kỳ (`EarlyWarningSweepWorker`) và API giao diện của Mentor (`EarlyWarningsController`).
-  - **Đối chiếu mã nguồn toàn hệ thống & hoàn thiện Checklist 7 hạng mục hoàn thiện code** ở cuối Phần IV, bảo toàn 100% văn bản Tiếng Anh chuẩn SDD sẵn sàng nộp.
+- **Practice Service (`All Services/V-Eval-Practice_Service` & `Configs/V-Eval-Practice_Service`)**:
+  - **Khắc Phục Triệt Để Lỗi `500 (42703: column m.Status / c.CourseId does not exist)`**: Ánh xạ cột `status` (`MistakeNotebook`) và `course_id` (`Class`) trong `PracticeDbContext.cs`, bổ sung `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` kèm seed dữ liệu mẫu SM-2 trong `Program.cs` và đồng bộ `MistakeLifecycleState` tại các handler `Mistakes`, xóa sạch lỗi đỏ lúc khởi động và khôi phục `200 OK` cho `POST /predictions/recalculate`, 4 API Sổ tay lỗi sai cùng các truy vấn lọc theo lớp.
+  - **Xác Thực Kép JWT Bearer + `X-User-Id` & Swagger `Authorize`**: Tích hợp `JwtBearer` đồng bộ `JwtSettings` với `Identity Service` & `Gateway`, mở nút `Authorize` (`Bearer` & `X-User-Id`) trên `:5261/swagger`, chuẩn hóa `ApiControllerBase.ResolveUserId` xuyên suốt `PredictionsController`, `EarlyWarningsController`, `MistakesController` và gán giá trị mẫu hợp lệ cho các DTO Swagger.
+  - **Tự Động Khởi Tạo Dự Báo Điểm SEM Lần Đầu (`AUTO_INIT`)**: Tự động kích hoạt `RecalculatePredictionCommand` từ `GetMyForecastQueryHandler` khi học sinh hợp lệ chưa có bản ghi `ScorePredictions`, ước lượng điểm cơ sở thang 1200 từ `ExamSubmission` gần nhất thay vì trả `404 NotFound` (`14/14 unit tests pass`).
+- **API Gateway (`All Services/V-Eval-Gateway`, `Configs/V-Eval-Gateway` & [`docker-compose.yml`](./docker-compose.yml))**:
+  - **Unified Swagger Portal (`:5212/swagger`)**: Tích hợp `Swashbuckle.AspNetCore` gom tài liệu OpenAPI của `Practice`, `Identity`, `Content` và `AI Engine` qua các route `/swagger-docs/{service}/{**catch-all}` để kiểm thử tập trung với `Bearer` JWT qua đúng luồng `ClaimsHeaderTransform`.
+  - **Định Tuyến & Docker Networking**: Bật `MapInboundClaims = false` trong `GatewayAuthExtensions.cs`, bổ sung route `/api/v1/ai-tutor/{**catch-all}`, nâng `ActivityTimeout = 00:05:00` cho `practice-service-cluster` và cấu hình biến môi trường ánh xạ cổng nội bộ container (`:5001`, `:5002`, `:5249`, `:5104`) cho `v-eval-gateway` trong [`docker-compose.yml`](./docker-compose.yml) (`3/3 unit tests pass`, `docker compose config` hợp lệ 100%).
+- **Web Client (`All Services/V-Eval-Web_Client`)**:
+  - **Triển Khai Core Flow 6 & Chuẩn Hóa Ngôn Ngữ Học Tập Thân Thiện Cho Học Sinh**: Đấu nối 13 API Core Flow 6 qua Gateway (`:5212`), hợp nhất liền mạch với cổng PayOS VietQR trên `develop`, đồng thời lược bỏ toàn bộ nhãn thuật toán/kỹ thuật nội bộ (`Core Flow 1..6`, `Live Gateway API (:5212)`, `Ghost Onboarding`, `Gia sư AI Socratic`, `IRT 2PL`, `BKT P(Lt)`, `SEM 95%`, `Knapsack ROI`, `SM-2`, `BR-04`, `PAT_SKILL_*`, `AUTO_INIT`) trên trang Kết quả & Dự báo điểm, Modal luyện tập bù điểm, Hộp thư nhắc nhở, Sổ tay câu làm sai, Chuông thông báo, Sidebar và Gia sư AI Đồng hành (`11/11 unit tests pass`, `vite build` sạch 100%).
