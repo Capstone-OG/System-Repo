@@ -1,6 +1,6 @@
 # NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [08/11/2026] - Khắc Phục Toàn Diện Core Flow 6 Trên Backend (`Practice Service`) & `API Gateway`: Đồng Bộ Cột `status` MistakeNotebooks, Xác Thực Kép JWT + `X-User-Id`, Auto-Init Dự Báo Điểm SEM & Unified Swagger Portal
+## [08/11/2026] - Khắc Phục Toàn Diện Core Flow 6 Trên Backend (`Practice Service`), `API Gateway` & Chuẩn Hóa Giao Diện Học Tập Thân Thiện Trên `Web Client`
 
 - **Practice Service (`All Services/V-Eval-Practice_Service` & `Configs/V-Eval-Practice_Service`)**:
   - **Khắc Phục Triệt Để Lỗi `500 (42703: column m.Status / c.CourseId does not exist)`**: Ánh xạ cột `status` (`MistakeNotebook`) và `course_id` (`Class`) trong `PracticeDbContext.cs`, bổ sung `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` kèm seed dữ liệu mẫu SM-2 trong `Program.cs` và đồng bộ `MistakeLifecycleState` tại các handler `Mistakes`, xóa sạch lỗi đỏ lúc khởi động và khôi phục `200 OK` cho `POST /predictions/recalculate`, 4 API Sổ tay lỗi sai cùng các truy vấn lọc theo lớp.
@@ -9,3 +9,5 @@
 - **API Gateway (`All Services/V-Eval-Gateway`, `Configs/V-Eval-Gateway` & [`docker-compose.yml`](./docker-compose.yml))**:
   - **Unified Swagger Portal (`:5212/swagger`)**: Tích hợp `Swashbuckle.AspNetCore` gom tài liệu OpenAPI của `Practice`, `Identity`, `Content` và `AI Engine` qua các route `/swagger-docs/{service}/{**catch-all}` để kiểm thử tập trung với `Bearer` JWT qua đúng luồng `ClaimsHeaderTransform`.
   - **Định Tuyến & Docker Networking**: Bật `MapInboundClaims = false` trong `GatewayAuthExtensions.cs`, bổ sung route `/api/v1/ai-tutor/{**catch-all}`, nâng `ActivityTimeout = 00:05:00` cho `practice-service-cluster` và cấu hình biến môi trường ánh xạ cổng nội bộ container (`:5001`, `:5002`, `:5249`, `:5104`) cho `v-eval-gateway` trong [`docker-compose.yml`](./docker-compose.yml) (`3/3 unit tests pass`, `docker compose config` hợp lệ 100%).
+- **Web Client (`All Services/V-Eval-Web_Client`)**:
+  - **Chuẩn Hóa Ngôn Ngữ Học Tập Thân Thiện Cho Học Sinh**: Lược bỏ toàn bộ nhãn thuật toán/kỹ thuật nội bộ (`Core Flow 1..6`, `Live Gateway API (:5212)`, `Ghost Onboarding`, `Gia sư AI Socratic`, `IRT 2PL`, `BKT P(Lt)`, `SEM 95%`, `Knapsack ROI`, `SM-2`, `BR-04`, `PAT_SKILL_*`, `AUTO_INIT`) trên trang Kết quả & Dự báo điểm, Modal luyện tập bù điểm, Hộp thư nhắc nhở, Sổ tay câu làm sai, Chuông thông báo, Sidebar và Gia sư AI Đồng hành (`8/8 unit tests pass`, `vite build` sạch 100%).
