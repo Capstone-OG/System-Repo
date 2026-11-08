@@ -24,3 +24,6 @@
 - **Bổ Sung Cấu Hình SMTP Brevo Vào Bộ Cấu Hình Tập Trung ([`Configs/V-Eval-Identity_Service/appsettings.json`](./Configs/V-Eval-Identity_Service/appsettings.json))**:
   - Tích hợp schema cấu hình `Email` chuẩn vào bộ nạp tập trung (`Configs/`) phục vụ công cụ `sync_config.bat` / `sync_config.sh`.
   - Thiết lập giá trị mật khẩu dạng placeholder an toàn (`YOUR_BREVO_SMTP_KEY_OR_ENV_VAR`) ngăn chặn triệt để cơ chế quét mã bí mật (Secret Scanning) của GitHub, hỗ trợ lập trình viên chủ động điền key thực tế khi chạy môi trường cục bộ.
+
+- **Hợp Nhất Core Flow 6 & Chuẩn Hóa Giao Diện Học Tập Thân Thiện**:
+  - Đồng bộ tài liệu và cấu hình Core Flow 6 (`Practice Service`, `API Gateway`, `Web Client`), khôi phục kiểm thử tự động và hoàn thiện hệ thống.
