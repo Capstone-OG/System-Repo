@@ -1,21 +1,22 @@
 # NHẬT KÝ CẬP NHẬT HỆ THỐNG (SYSTEM-REPO UPDATE LOG)
 
-## [07/11/2026] - Mở Rộng Không Gian Làm Việc Toàn Màn Hình (`w-full`), Tinh Chỉnh Bảng Tài Khoản IAM 1 Dòng Không Cuộn Ngang & Hoàn Thiện Phân Hệ Quản Lý Tài Khoản Ngừng Hoạt Động (Soft Delete / Inactive)
+## [08/11/2026] - Chuẩn Hóa Cấu Trúc Báo Cáo Nghiệm Thu Cá Nhân ThinhTT (Cặp Nhãn Checkbox & Clean Toggle), Hoàn Thiện Kiến Trúc Ingestion Textbook AI & Đồng Bộ Toàn Bộ Commit Phát Triển Vào Danh Mục Kiểm Duyệt
 
-- **Mở Rộng Không Gian Làm Việc Toàn Chiều Ngang (`w-full`) Sát Sidebar & Tinh Chỉnh Giao Diện Bảng Tài Khoản IAM (`V-Eval-Web_Client`)**:
-  - **Đồng Bộ Bố Cục `w-full` Không Khoảng Trống Thừa ([`App.jsx`](./All%20Services/V-Eval-Web_Client/src/App.jsx), [`AccountProvisioningView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx), [`CampusManagerDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/CampusManagerDashboardView.jsx), [`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx), [`TuitionPaymentView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx))**: Thay thế `max-w-7xl mx-auto` bằng `w-full` kèm `px-4 sm:px-6` thẳng hàng với `Navbar` và `Sidebar`, xóa bỏ khoảng trống thừa cạnh `Sidebar` và loại bỏ hoàn toàn thanh cuộn ngang trên bảng danh sách tài khoản.
-  - **Chuẩn Hóa Bảng Tài Khoản 1 Dòng Duy Nhất (`whitespace-nowrap`) & Command Toolbar ([`AccountProvisioningView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx))**: Gộp bộ chuyển đổi trạng thái Segmented Switcher, ô tìm kiếm và bộ lọc vai trò vào một thanh công cụ hợp nhất; cố định 1 dòng duy nhất cho toàn bộ huy hiệu vai trò, trạng thái và nút *"Ngừng hoạt động"* / *"Khôi phục"*; bổ sung avatar 2 chữ cái theo màu vai trò và hiển thị đơn vị/chuyên môn thông minh.
-  - **Nâng Cấp `apiClient.js` Hỗ Trợ Query Params & `PATCH` ([`apiClient.js`](./All%20Services/V-Eval-Web_Client/src/services/apiClient.js))**: Bổ sung tuần tự hóa `options.params` bằng `URLSearchParams` và phương thức `apiClient.patch()`, đảm bảo lọc chính xác tài khoản theo trạng thái `isActive` từ Backend.
+- **Chuẩn Hóa Cấu Trúc Báo Cáo Nghiệm Thu Mã Nguồn Cá Nhân ([`ThinhTT_aceptance.md`](./docs_noi_bo/personal/ThinhTT_aceptance.md))**:
+  - **Gỡ Bỏ Bảng Ma Trận Section 0**: Loại bỏ hoàn toàn bảng tóm tắt rườm rà ở đầu tài liệu, tối ưu hóa bố cục tài liệu tập trung trực tiếp vào các phân hệ cốt lõi.
+  - **Thiết Kế Cặp Nhãn Checkbox & Clean Toggle 100% Tương Thích MD Editor Plus**:
+    - Chuẩn hóa toàn bộ 34 file thành định dạng cặp: Nhãn trạng thái kiểm duyệt (`- [x] **Đã duyệt**` hoặc `- [ ] **Chưa duyệt**`) đặt độc lập ở dòng ngay phía trên thẻ `<details>`.
+    - Trả thẻ `<summary>` về tên file thuần túy (loại bỏ hoàn toàn icon, text trạng thái bên trong `<summary>`), ngăn ngừa lỗi vỡ giao diện trên các trình duyệt Markdown và CSS tùy biến.
+    - Duyệt hoàn tất 5 file hạt nhân Phân hệ 1 AI Engine: [`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs), [`GeminiExamParserService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/GeminiExamParserService.cs), [`TextbookRepository.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Repositories/TextbookRepository.cs), [`CurriculumEndpoints.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/CurriculumEndpoints.cs) và [`TextbookEndpoints.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/TextbookEndpoints.cs).
+    - 29 file cốt lõi còn lại (Content, Practice, Gateway, IAM, Web Client, DevOps) được đặt ở trạng thái chờ `- [ ] **Chưa duyệt**`.
 
-- **Phân Hệ Quản Lý Tài Khoản Ngừng Hoạt Động (Soft Delete / Inactive) Toàn Diện (`V-Eval-Identity_Service` & `V-Eval-Web_Client`)**:
-  - **Bảo Toàn Dữ Liệu Sư Phạm Tuyệt Đối (No Hard Delete)**: Không xóa cứng (`DELETE FROM "Users"`), bảo toàn 100% lịch sử bài thi chẩn đoán IRT, phiên luyện tập thích ứng, giao dịch học phí PayOS và liên kết Phụ huynh - Học sinh.
-  - **Bộ Lọc Trạng Thái & Thống Kê Realtime (`V-Eval-Identity_Service`)**: Nâng cấp `GetUsersQuery` (`GET /api/v1/users?isActive=...`), `PagedUsersResult` (`ActiveCount`, `InactiveCount`) và `ToggleUserStatusCommand` (`PATCH /api/v1/users/{id}/toggle-status?targetStatus=...`).
-  - **Giao Diện Dual-View & Modals Xác Nhận (`V-Eval-Web_Client`)**: Tách biệt tab *"Đang hoạt động"* (ẩn tự động các tài khoản bị vô hiệu hóa) và tab *"Đã ngừng hoạt động (Ẩn)"* kèm Modal xác nhận Ngừng hoạt động / Khôi phục.
+- **Hoàn Thiện Giải Trình Kiến Trúc Chuyên Sâu Cho `TextbookEndpoints.cs` ([`ThinhTT_aceptance.md`](./docs_noi_bo/personal/ThinhTT_aceptance.md))**:
+  - Làm rõ cơ chế điều phối Job chạy ngầm bất đồng bộ qua `Task.Run` kết hợp `IServiceScopeFactory`, giải phóng HTTP request ngay lập tức với mã HTTP 202 Accepted (`{ JobId, Status: "Processing" }`).
+  - Trình bày chi tiết cơ chế Single-Pass SHA-256 CryptoStream chống bóc tách trùng lặp tài liệu, Dual-OCR pipeline kết hợp `PdfPig` và `VietOCR`, cơ chế checkpointing phục hồi trạng thái và trích xuất vector 768 chiều vào PostgreSQL `pgvector`.
 
-- **Tái Thiết Kế Thanh Điều Hướng Segmented Control, Nhận Diện Giám Đốc Học Thuật & Kiểm Tra Email Đa Tầng (`V-Eval-Identity_Service` & `V-Eval-Web_Client`)**:
-  - Thiết kế thanh điều hướng Subpage dạng Segmented Control hiện đại trên 1 hàng ngang duy nhất và nhận diện động vai trò Giám đốc Học thuật (`ACADEMIC_DIRECTOR`).
-  - Tích hợp kiểm tra email đa tầng DNS MX (`EmailValidationHelper` & `validateEmailComprehensive`) phát hiện lỗi gõ nhầm `@mail.com` -> `@gmail.com`, và chuyển `Student.CampusId` sang `Guid?` khắc phục triệt để lỗi Null `campus_id`.
-
-- **Kiểm Thử & Vận Hành Toàn Hệ Thống**:
-  - `V-Eval-Identity_Service`: .NET 9 SDK build sạch 100% (0 Error), 5/5 xUnit unit tests đạt Passed 100%.
-  - `V-Eval-Web_Client`: `npm run build` hoàn thành sạch sẽ 100% (`3008 modules transformed`, 0 Error).
+- **Đồng Bộ Toàn Bộ Commit Mã Nguồn Chưa Kiểm Duyệt Vào Mục 9 ([`ThinhTT_aceptance.md`](./docs_noi_bo/personal/ThinhTT_aceptance.md))**:
+  - Ghi nhận đầy đủ mã commit, ngày tháng, trạng thái thay đổi (`A`/`M`) và mô tả kỹ thuật chi tiết của tất cả các file do ThinhTT commit trực tiếp trên nhánh `ThinhTT/feature-role-portals-and-home-theme-sync` và `develop`:
+    - **9.1. Identity Service**: Soft delete toggle status (`84a97dd`), Email validation DNS MX & Student nullable `campus_id` (`6a039ce`), Liên kết Phụ huynh - Học sinh 2 chiều (`1be554b`), Brevo SMTP Relay gửi OTP thực tế (`352b06a`).
+    - **9.2. Practice Service**: `EarlyWarningSweepWorker` quét tự động 6h sáng và `NotificationDispatcher` đa kênh (`322d73d`), Dashboard phụ huynh DB thật (`6ad262c`).
+    - **9.3. Content, Gateway & AI Engine**: Bộ test suites `xUnit`, `Moq`, `FluentAssertions`, Result Pattern, `CorrelationIdMiddleware`.
+    - **9.4. Web Client**: Không gian làm việc `w-full` sát Sidebar & bảng IAM 1 dòng (`815c1f6`), tab quản lý tài khoản ngừng hoạt động Soft delete (`d4d023e`), thanh điều hướng Segmented Control & Cổng Giám đốc Học thuật (`444b73c`), thẻ liên kết 3-trong-1 & 5 cổng vai trò (`1da817d`), modal OTP 6 ô Fintech (`dc30a70`) và cổng thanh toán học phí VietQR PayOS (`389d856`).

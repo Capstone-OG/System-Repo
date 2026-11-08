@@ -3,12 +3,13 @@
 > [!IMPORTANT]
 > **Kỹ sư nghiệm thu**: Trần Thái Thịnh (`ThinhTT` / `Thinhtran2412`)  
 > **Phạm vi cá nhân**: Chỉ nghiệm thu các thành phần mã nguồn cốt lõi (Core Flow, FE React 19, CI/CD) do ThinhTT trực tiếp thiết kế, hiện thực và commit trong toàn bộ hệ sinh thái **V-Eval Capstone System** (hoàn toàn loại trừ `rag-service`).  
-> **Quy cách trình bày**: Tên toggle là tên file thuần túy (không chứa icon/chữ phụ). Bên trong mỗi toggle gồm: Link file mã nguồn -> Bài toán nghiệp vụ & Luồng xử lý -> Hàm & Đoạn code đáp ứng -> Cơ chế bảo vệ & Xử lý ngoại lệ -> Kết luận nghiệm thu.
+> **Quy cách trình bày**: Mỗi thành phần file mã nguồn được tổ chức thành một cặp gồm: Nhãn trạng thái kiểm duyệt (`- [x] **Đã duyệt**` hoặc `- [ ] **Chưa duyệt**`) đặt ngay phía trên thẻ toggle (`<details>`), còn tiêu đề toggle (`<summary>`) giữ tên file thuần túy. Bên trong mỗi toggle gồm: Link file mã nguồn -> Bài toán nghiệp vụ & Thay đổi chính -> Hàm chính & Đoạn code đáp ứng -> Cơ chế bảo vệ & Xử lý ngoại lệ -> Kết luận nghiệm thu.
 
 ---
 
 ## 1. PHÂN HỆ V-EVAL AI ENGINE (INGESTION, OCR & CURRICULUM AI)
 
+- [x] **Đã duyệt**
 <details>
 <summary>CurriculumAiService.cs</summary>
 
@@ -58,6 +59,7 @@ public async Task<TheoryRecapDto> ExtractTheoryRecapAsync(string content, string
 
 </details>
 
+- [x] **Đã duyệt**
 <details>
 <summary>GeminiExamParserService.cs</summary>
 
@@ -106,6 +108,7 @@ public async Task<List<ParsedQuestionDto>> ParseExamPdfAsync(byte[] pdfBytes, Ca
 
 </details>
 
+- [x] **Đã duyệt**
 <details>
 <summary>TextbookRepository.cs</summary>
 
@@ -222,6 +225,7 @@ public async Task<int> SaveTextbookAndChunksAsync(TextbookIngestResultDto dto, C
 
 </details>
 
+- [x] **Đã duyệt**
 <details>
 <summary>CurriculumEndpoints.cs</summary>
 
@@ -308,34 +312,146 @@ group.MapPost("/extract", async (
 
 </details>
 
+- [x] **Đã duyệt**
 <details>
 <summary>TextbookEndpoints.cs</summary>
 
 **Đường dẫn mã nguồn**: [All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/TextbookEndpoints.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/TextbookEndpoints.cs)
 
-#### 1. Bài toán Nghiệp vụ
-- **Mục tiêu**: Cho phép tải sách giáo khoa lên để hệ thống bóc tách chạy nền (background job) và có thể tiếp tục xử lý trang tiếp theo nếu bị ngắt quãng mạng.
-- **Quy tắc nghiệp vụ**: Lưu trạng thái `last_processed_page` vào database; không xử lý lại các trang đã nhúng vector thành công.
+#### 1. Bài toán Nghiệp vụ & Kiến trúc Bất Đồng Bộ (Asynchronous Background Job & HTTP 202 Accepted)
+- **Thách thức bài toán thực tế**:
+  - Sách giáo khoa (SGK) và tài liệu chuyên đề THPT thường có dung lượng lớn (từ 50MB lên tới 250MB) với hàng trăm trang chứa dày đặc công thức Toán - Lý - Hóa và hình vẽ.
+  - Nếu tiếp nhận và phân tích đồng bộ (synchronous) trong cùng một chu kỳ HTTP Request, hệ thống chắc chắn sẽ bị sập vì timeout mạng (YARP Gateway mặc định 30s/60s, trình duyệt đóng kết nối, connection pool của server bị cạn kiệt).
+- **Mô hình tiếp nhận bất đồng bộ chuẩn RESTful (HTTP 202 Accepted Pattern)**:
+  - Áp dụng mô hình **Asynchronous Request-Reply Pattern**: Endpoint `POST /upload-pdf` tiếp nhận luồng file, ghi tạm xuống đĩa, kiểm tra chống trùng lặp (Deduplication) và tạo `jobId` trong `ITextbookJobManager` với trạng thái ban đầu `PROCESSING`.
+  - Endpoint lập tức trả về `Results.Accepted($"/api/ai-engine/textbooks/jobs/{job.JobId}", job)` (mã trạng thái HTTP 202 Accepted) chỉ sau vài mili-giây, giải phóng luồng HTTP của Web Client ngay lập tức.
+  - Web Client (Studio Frontend) nhận `jobId` và bắt đầu chu kỳ polling liên tục qua endpoint `GET /jobs/{jobId}` (hoặc khôi phục trạng thái khi người dùng tải lại trang F5 qua `GET /active-job`) để hiển thị thanh phần trăm tiến trình mượt mà.
+- **Tối ưu Disk I/O bằng Single-Pass CryptoStream (SHA-256)**:
+  - Thay vì ghi toàn bộ file xuống đĩa rồi mở lại từ đĩa để tính mã băm (tốn 2 lượt Disk I/O cho file 200MB), hệ thống lồng trực tiếp `CryptoStream` với thuật toán SHA-256 bọc lấy `FileStream`:
+  ```csharp
+  using var sha = System.Security.Cryptography.SHA256.Create();
+  await using var fileStream = new FileStream(savedFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+  await using var cryptoStream = new System.Security.Cryptography.CryptoStream(fileStream, sha, CryptoStreamMode.Write, leaveOpen: true);
+  await file.CopyToAsync(cryptoStream);
+  await cryptoStream.FlushFinalBlockAsync();
+  string fileHash = Convert.ToHexStringLower(sha.Hash!);
+  ```
+  - Cơ chế này giảm 50% chi phí Disk I/O, tạo ra "vân tay kỹ thuật số" (`fileHash`) ngay trong lượt đọc-ghi đầu tiên để kiểm tra trùng lặp và tra cứu checkpoint.
 
-#### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `MapTextbookEndpoints(app)`**: Đăng ký các route Minimal API upload, polling tiến độ và resume job.
+#### 2. Vị Trí Phân Tích Ở Đâu & Quy Trình Bóc Tách (Parsing Pipeline) Diễn Ra Như Thế Nào?
+- **Vị trí kích hoạt luồng phân tích**:
+  - Không nằm trong luồng HTTP chính mà nằm trong tác vụ nền độc lập được tách riêng bằng `_ = Task.Run(async () => ...)`:
+    - Sử dụng `IServiceScopeFactory.CreateScope()` để tạo một DI Scope độc lập hoàn toàn với request gốc, giải quyết triệt để lỗi `ObjectDisposedException` khi truy cập các service scoped (`ITextbookParserService`, `ITextbookRepository`).
+    - Gọi hàm phân tích nghiệp vụ chính: `parserService.ParseAndIngestTextbookAsync(...)`.
+- **Quy trình phân tích 6 bước chuyên sâu bên trong `PdfPigTextbookParserService`**:
+  1. *Bước 1 - Khởi tạo & Đếm tổng số trang*: Mở tệp PDF bằng thư viện `PdfPig` (`PdfDocument.Open(pdfBytes)`) để xác định chính xác tổng số trang của cuốn sách (`totalPages`).
+  2. *Bước 2 - Kiểm tra Checkpoint & Khôi phục vị trí gián đoạn (Resumable Ingestion)*:
+     - Dùng mã băm `fileHash` tra cứu trong CSDL Supabase PostgreSQL (`v_eval_ai.knowledge_sources`).
+     - **Nếu sách đã nạp 100% trước đó**: Lập tức trả về kết quả có sẵn trong DB, không tốn thêm token AI.
+     - **Nếu sách nạp dở dang (ví dụ ngắt ở trang 45/200)**: Tự động thiết lập `startPage = 46`, chỉ phân tích các trang còn lại mà không phải nạp lại từ đầu.
+  3. *Bước 3 - Chiến lược Dual-OCR theo từng trang (Text Layer vs. Vision AI)*:
+     - **Ưu tiên 1 (Lớp chữ số có sẵn - PDF Searchable)**: Dùng `PdfPig` đọc nhanh text vector. Đồng thời kích hoạt bộ lọc kiểm tra lỗi mã hóa font InDesign / CID subset (`IsCorruptedFontEncoding(rawText)`). Nếu phát hiện font lỗi (mojibake), hệ thống tự động hủy lớp text lỗi và kích hoạt Vision AI.
+     - **Ưu tiên 2 (Vision AI Fallback với ảnh tối ưu Low-DPI 96)**: Đối với trang scan ảnh 100%, trang bị lỗi font, hoặc khi chế độ yêu cầu bóc tách công thức Toán/Lý/Hóa (`STEM_FORMULAS`, `VISION_AI`), hệ thống kết xuất trang thành ảnh với độ phân giải tối ưu `DPI = 96` (tiết kiệm token tối đa) và gửi sang Google Gemini Flash/Flash-Lite để bóc tách chuẩn xác công thức LaTeX `$...$` và bảng Markdown.
+  4. *Bước 4 - Cắt đoạn vi tri thức trượt gối đầu (Sliding Window Chunking)*:
+     - Chia nhỏ văn bản mỗi trang thành các khối chunk chuẩn `CHUNK_SIZE = 1000` ký tự với `CHUNK_OVERLAP = 200` ký tự gối đầu (dòng 23–24 `PdfPigTextbookParserService.cs`), bảo đảm không bị đứt gãy công thức hoặc ý văn nằm ở ranh giới trang.
+  5. *Bước 5 - Lưu Checkpoint tức thời từng trang & Bắn tiến độ thời gian thực*:
+     - Mỗi trang sau khi phân tích xong được ghi ngay vào Supabase DB (`SavePageChunkAsync` và `UpdateSourceProgressAsync`), không đợi phân tích xong cả cuốn sách mới lưu.
+     - Bắn callback `onProgress(step, percent)` về `ITextbookJobManager` để cập nhật `job.Percent`, `job.CurrentPage`. Khi Frontend polling endpoint `GET /jobs/{jobId}`, người dùng thấy tiến trình tăng dần theo từng trang thực tế.
+  6. *Bước 6 - Hoàn tất tác vụ*: Cập nhật trạng thái Job sang `COMPLETED` (`jobManager.CompleteJob(job.JobId, result)`) hoặc bắt lỗi `jobManager.FailJob(...)` nếu phát sinh sự cố.
+
+#### 3. Danh Sách Các Endpoint Bổ Trợ Trong `TextbookEndpoints.cs`
+- `POST /api/ai-engine/textbooks/upload-pdf`: Tiếp nhận file SGK (tối đa 250MB), tính SHA-256 Single-Pass, kiểm tra trùng lặp và kích hoạt Background Job (trả về HTTP 202 Accepted).
+- `GET /api/ai-engine/textbooks/active-job`: Kiểm tra xem có tác vụ nào đang chạy hay không (phục vụ đồng bộ trạng thái khi người dùng F5 hoặc chuyển trang).
+- `GET /api/ai-engine/textbooks/checkpoint/{fileHash}`: Tra cứu trạng thái checkpoint nạp dở dang của tệp theo mã băm SHA-256.
+- `GET /api/ai-engine/textbooks/jobs/{jobId}`: Polling tiến độ theo thời gian thực (trả về `Status`, `Percent`, `CurrentPage`, `TotalPages`, `Result`).
+- `GET /api/ai-engine/textbooks/chunks/{sourceId}` & `/chunks-by-hash/{fileHash}`: Tra cứu danh sách toàn bộ các Vector Chunks đã bóc tách của tài liệu.
+- `POST /api/ai-engine/textbooks/save-db`: Lưu hàng loạt (Batch Save) các Vector Chunks vào Supabase Database (Schema `v_eval_ai`).
+- `GET /api/ai-engine/textbooks/ping-vision`: Kiểm tra kết nối và đo độ trễ mạng thực tế của các mô hình Vision AI (Gemini Flash-Lite, Gemini Flash) trước khi nạp sách.
+
+#### 4. Hàm chính & Đoạn code đáp ứng nghiệp vụ
+- **Hàm `MapTextbookEndpoints(app)` - Tuyến tiếp nhận và điều phối Background Job**:
 
 ```csharp
-app.MapPost("/api/ai/textbook/ingest", async (IFormFile file, ITextbookJobManager jobManager) =>
+// 1. Endpoint Upload SGK PDF và khởi tạo tiến trình nạp ngầm (Background Job)
+group.MapPost("/upload-pdf", async (
+    HttpRequest request,
+    [FromServices] ITextbookJobManager jobManager,
+    [FromServices] IServiceScopeFactory scopeFactory,
+    IWebHostEnvironment env) =>
 {
-    var jobId = await jobManager.StartIngestionJobAsync(file.OpenReadStream(), file.FileName);
-    return Results.Accepted($"/api/ai/textbook/jobs/{jobId}", new { JobId = jobId, Status = "Processing" });
-});
+    // ... Validate multipart/form-data, đuôi file .pdf và dung lượng ...
+    
+    // Lưu file lên đĩa và tính mã băm SHA-256 trong 1 lượt đọc (Single-Pass CryptoStream)
+    // Giảm 50% Disk I/O cho file lớn (100MB-250MB)
+    string fileHash = await SaveFileAndComputeSha256Async(file, savedFilePath);
+
+    // Kiểm tra chống trùng lặp: Nếu file đang được xử lý ngầm thì trả về Job hiện tại
+    var existingJob = jobManager.GetJobByFileHash(fileHash);
+    if (!forceReingest && existingJob != null && existingJob.Status == "PROCESSING")
+    {
+        return Results.Accepted($"/api/ai-engine/textbooks/jobs/{existingJob.JobId}", existingJob);
+    }
+
+    // Tra cứu Checkpoint từ Supabase DB để biết trang bắt đầu
+    int startPage = await ResolveStartPageFromCheckpointAsync(scopeFactory, fileHash, forceReingest);
+
+    // Khởi tạo Background Job với trạng thái Checkpoint
+    var job = jobManager.CreateJob(file.FileName, fileHash, totalPages, startPage);
+
+    // Khởi chạy tác vụ phân tích ngầm độc lập với HTTP Request
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            var parserService = scope.ServiceProvider.GetRequiredService<ITextbookParserService>();
+
+            await using var readStream = new FileStream(savedFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            
+            var result = await parserService.ParseAndIngestTextbookAsync(
+                readStream,
+                file.FileName,
+                domainId,
+                skillId,
+                docType,
+                ocrMode,
+                forceReingest,
+                onProgress: (step, percent) =>
+                {
+                    int curPage = (int)((float)percent / 100 * (job.TotalPages > 0 ? job.TotalPages : 100));
+                    jobManager.UpdateJobProgress(job.JobId, step, percent, curPage);
+                }
+            );
+
+            result.PdfUrl = $"/uploads/textbooks/{uniqueFileName}";
+            jobManager.CompleteJob(job.JobId, result);
+        }
+        catch (Exception ex)
+        {
+            jobManager.FailJob(job.JobId, ex.Message);
+        }
+    });
+
+    // Trả về HTTP 202 Accepted ngay lập tức để giải phóng luồng HTTP Client
+    return Results.Accepted($"/api/ai-engine/textbooks/jobs/{job.JobId}", job);
+})
+.WithName("UploadAndIngestTextbookPdf")
+.WithMetadata(new RequestSizeLimitAttribute(262_144_000)) // Hỗ trợ tài liệu SGK lên tới 250MB
+.DisableAntiforgery();
 ```
 
-#### 3. Cơ chế đảm bảo & Xử lý ngoại lệ
-- Trả về HTTP 202 Accepted ngay lập tức, giải phóng luồng HTTP và tránh timeout cho file PDF dung lượng lớn.
+#### 5. Cơ chế đảm bảo & Xử lý ngoại lệ
+- **Hỗ trợ tệp dung lượng lớn (Large File Handling)**: Gắn thuộc tính `RequestSizeLimit(262_144_000)` cho phép nhận file lên tới 250MB mà không bị Kestrel Web Server ngắt kết nối.
+- **Cách ly DI Scope trong Background Thread**: Sử dụng `IServiceScopeFactory.CreateScope()` bên trong `Task.Run` giúp giải phóng tài nguyên database connection và context ngay khi tác vụ hoàn thành, triệt tiêu nguy cơ rò rỉ bộ nhớ hoặc lỗi `DbContext disposed`.
+- **Bắt lỗi & Cập nhật trạng thái an toàn (Fail-Safe State Transition)**: Mọi ngoại lệ trong quá trình đọc file hay gọi Gemini API đều được bọc trong khối `try/catch` của `Task.Run`, tự động kích hoạt `jobManager.FailJob(job.JobId, ex.Message)` để client nhận được thông báo lỗi chi tiết thay vì bị treo trạng thái `PROCESSING` vĩnh viễn.
 
-#### 4. Kết luận nghiệm thu
-- **Trạng thái**: Đạt chuẩn (Pass) - Giao diện Web Studio theo dõi tiến trình trực quan.
+#### 6. Kết luận nghiệm thu của tác giả (ThinhTT Acceptance)
+- **Trạng thái**: Đạt chuẩn (Pass) - Đã kiểm tra thực tế, chịu tải ổn định với các file SGK và chuyên đề nặng trên 200MB.
+- **Đánh giá**: Kiến trúc Asynchronous Background Processing kết hợp Single-Pass CryptoStream và Resumable Checkpointing là giải pháp xuất sắc giải quyết triệt để bài toán xử lý tài liệu lớn trong hệ sinh thái AI Engine, đảm bảo trải nghiệm người dùng liền mạch 100%.
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>TutorSession.cs</summary>
 
@@ -378,6 +494,7 @@ public class TutorSession
 
 ## 2. PHÂN HỆ V-EVAL CONTENT SERVICE (CURRICULUM & ADAPTIVE QUIZ)
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>CreateQuizExamCommandHandler.cs</summary>
 
@@ -425,6 +542,7 @@ public async Task<Result<QuizExamResponseDto>> Handle(CreateQuizExamCommand requ
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>QuestionsController.cs</summary>
 
@@ -457,6 +575,7 @@ public async Task<IActionResult> CreateQuestion([FromBody] CreateQuestionCommand
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>FlexibleCharJsonConverter.cs</summary>
 
@@ -493,6 +612,7 @@ public override char Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSer
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>content.proto</summary>
 
@@ -528,6 +648,7 @@ message SkillNode {
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>ContentDbContext.cs</summary>
 
@@ -566,6 +687,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ## 3. PHÂN HỆ V-EVAL PRACTICE SERVICE (CORE FLOW 2 & GRADING)
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>ClassMicroClusterer.cs</summary>
 
@@ -608,6 +730,7 @@ public List<MicroGroupResult> Partition(List<StudentSkillProfileItem> students, 
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>SubmitDiagnosticCommandHandler.cs</summary>
 
@@ -652,6 +775,7 @@ public async Task<Result<DiagnosticSubmissionResponseDto>> Handle(SubmitDiagnost
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>AssignGroupWorksheetCommandHandler.cs</summary>
 
@@ -685,6 +809,7 @@ public async Task<Result<bool>> Handle(AssignGroupWorksheetCommand request, Canc
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>MistakeNotebook.cs</summary>
 
@@ -726,6 +851,7 @@ public void RecordReviewResult(bool isCorrect, int qualityRating)
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>BktEngineTests.cs</summary>
 
@@ -762,6 +888,7 @@ public void UpdateMastery_CorrectAnswer_ShouldIncreaseProbability()
 
 ## 4. PHÂN HỆ V-EVAL GATEWAY (SECURITY & ROUTING)
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>ClaimsHeaderTransform.cs</summary>
 
@@ -801,6 +928,7 @@ if (user.Identity?.IsAuthenticated == true)
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>RateLimiterExtensions.cs</summary>
 
@@ -830,6 +958,7 @@ options.AddFixedWindowLimiter("fixed-policy", opt =>
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>CorrelationIdMiddleware.cs</summary>
 
@@ -865,6 +994,7 @@ public async Task InvokeAsync(HttpContext context)
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>GatewayTransformProvider.cs</summary>
 
@@ -902,6 +1032,7 @@ public void Apply(TransformBuilderContext context)
 
 ## 5. PHÂN HỆ V-EVAL IDENTITY SERVICE (IAM & PROFILE)
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>Result.cs</summary>
 
@@ -936,6 +1067,7 @@ public class Result
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>ProvisionUserCommand.cs</summary>
 
@@ -973,6 +1105,7 @@ public async Task<Result<UserDto>> Handle(ProvisionUserCommand request, Cancella
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>AppDbContext.cs</summary>
 
@@ -1005,6 +1138,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>IdentityGrpcService.cs</summary>
 
@@ -1048,6 +1182,7 @@ public override async Task<ValidateTokenResponse> ValidateToken(ValidateTokenReq
 
 ## 6. PHÂN HỆ V-EVAL WEB CLIENT (FRONTEND REACT 19 & STUDIO)
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>CurriculumExplorerView.jsx</summary>
 
@@ -1088,6 +1223,7 @@ return (
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>HierarchicalMathPalette.jsx</summary>
 
@@ -1128,6 +1264,7 @@ return (
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>VariationTable.jsx</summary>
 
@@ -1175,6 +1312,7 @@ export default function VariationTable({ data }) {
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>DiagnosticAssessmentPage.jsx</summary>
 
@@ -1206,6 +1344,7 @@ const handleSelectOption = (questionId, optionKey) => {
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>ClassMicroGroupsModal.jsx</summary>
 
@@ -1239,6 +1378,7 @@ const handleAutoAssignWorksheet = async (groupId, weakSkillIds) => {
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>apiClient.js</summary>
 
@@ -1286,6 +1426,7 @@ apiClient.interceptors.response.use(
 
 ## 7. PHÂN HỆ CI/CD, DEVOPS & SYSTEM SCRIPTS
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>docker-compose.yml</summary>
 
@@ -1327,6 +1468,7 @@ services:
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>pull.bat</summary>
 
@@ -1362,6 +1504,7 @@ echo [COMPLETED] All 6 services synchronized successfully.
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>push.bat</summary>
 
@@ -1391,6 +1534,7 @@ git push origin HEAD
 
 </details>
 
+- [ ] **Chưa duyệt**
 <details>
 <summary>run_local.bat</summary>
 
@@ -1437,17 +1581,25 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 
 ---
 
-## 9. DANH SÁCH TỔNG HỢP CÁC FILE DO THINHTT ĐẨY TRỰC TIẾP LÊN NHÁNH DEVELOP (CẦN KIỂM TRA & NGHIỆM THU BỔ SUNG)
+## 9. DANH SÁCH TỔNG HỢP CÁC FILE DO THINHTT ĐẨY TRỰC TIẾP LÊN CÁC NHÁNH PHÁT TRIỂN & DEVELOP (CẦN KIỂM TRA & NGHIỆM THU BỔ SUNG)
 
 > [!NOTE]
-> Danh sách dưới đây ghi nhận toàn bộ các file mã nguồn Backend & Unit Tests do `ThinhTT` (`Thinhtran2412`) đã commit và push trực tiếp lên nhánh `develop` (giai đoạn `27/10/2026` – `05/11/2026`) kèm mã commit tương ứng để phục vụ rà soát, đối chiếu và tổng hợp nghiệm thu sau này.
+> Danh sách dưới đây ghi nhận toàn bộ các file mã nguồn Backend, Frontend & Unit Tests do `ThinhTT` (`Thinhtran2412`) đã commit và push trực tiếp (giai đoạn `27/10/2026` – `08/11/2026` trên nhánh `develop` và `ThinhTT/feature-role-portals-and-home-theme-sync`) kèm mã commit tương ứng để phục vụ rà soát, đối chiếu và nghiệm thu theo thứ tự.
 
 ---
 
-### 9.1. V-Eval-Identity_Service (Brevo SMTP Relay, Verify Reset OTP, Parent Registration & Unit Tests)
+### 9.1. V-Eval-Identity_Service (Brevo SMTP Relay, Verify Reset OTP, Soft Delete & Parent Registration)
 
 | Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
 | :--- | :---: | :---: | :--- | :--- |
+| `84a97dd` | `07/11/2026` | **Cập nhật (`M`)** | [GetUsersQuery.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Queries/GetUsers/GetUsersQuery.cs) | Thêm bộ lọc `bool? isActive` và tính toán đồng thời `ActiveCount` và `InactiveCount` theo thời gian thực từ PostgreSQL. |
+| `84a97dd` | `07/11/2026` | **Cập nhật (`M`)** | [ToggleUserStatusCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ToggleUserStatus/ToggleUserStatusCommand.cs) | Bổ sung tham số `targetStatus` tùy chọn hỗ trợ bật/tắt trạng thái kích hoạt tài khoản có kiểm soát (Soft Delete an toàn). |
+| `84a97dd` | `07/11/2026` | **Cập nhật (`M`)** | [UsersController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/UsersController.cs) | Cập nhật endpoint `GET /api/v1/users` (nhận `isActive`) và `PATCH /api/v1/users/{id}/toggle-status`. |
+| `6a039ce` | `07/11/2026` | **Tạo mới (`A`)** | [EmailValidationHelper.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Common/Helpers/EmailValidationHelper.cs) | Tiện ích kiểm tra email đa tầng: cú pháp RFC 5322, phát hiện typo `@mail.com` -> `@gmail.com` và tra cứu bản ghi DNS MX trực tuyến. |
+| `6a039ce` | `07/11/2026` | **Cập nhật (`M`)** | [Student.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Domain/Entities/Student.cs) | Chuyển trường `CampusId` sang dạng nullable `Guid?`, khắc phục triệt để ngoại lệ `InvalidCastException: Column 'campus_id' is null`. |
+| `1be554b` | `06/11/2026` | **Tạo mới (`A`)** | [ConnectParentStudentCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ParentLink/ConnectParentStudentCommand.cs) | Command kết nối tài khoản Phụ huynh - Học sinh qua Mã học sinh `VE-XXXXXX` hoặc mã PIN 6 số động. |
+| `1be554b` | `06/11/2026` | **Tạo mới (`A`)** | [RequestParentLinkCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ParentLink/RequestParentLinkCommand.cs) | Command gửi yêu cầu liên kết 2 chiều từ Phụ huynh tới Học sinh theo Email/SĐT. |
+| `1be554b` | `06/11/2026` | **Tạo mới (`A`)** | [RespondParentLinkRequestCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ParentLink/RespondParentLinkRequestCommand.cs) | Command phê duyệt (`APPROVED`) hoặc từ chối yêu cầu liên kết từ màn hình Dashboard của Học sinh. |
 | `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [BrevoSmtpEmailService.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Services/BrevoSmtpEmailService.cs) | Dịch vụ gửi email OTP thực tế qua Brevo SMTP Relay (`MailKit` & `MimeKit`, STARTTLS port 587, template HTML chuẩn ĐHQG-HCM). |
 | `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [IEmailService.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Common/Interfaces/IEmailService.cs) | Hợp đồng giao diện gửi email xác thực và khôi phục mật khẩu tại tầng Application. |
 | `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [VerifyResetOtpCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Auth/Commands/VerifyResetOtp/VerifyResetOtpCommand.cs) | CQRS Command & Handler đối soát mã OTP `RESET_PASSWORD` ngay tại Bước 2 trước khi cho phép đặt lại mật khẩu mới. |
@@ -1460,10 +1612,13 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 
 ---
 
-### 9.2. V-Eval-Practice_Service (PayOS Payment Integration, ACID Transaction, PLAR Activation & Unit Tests)
+### 9.2. V-Eval-Practice_Service (Early Warning Worker, PayOS Payment & Unit Tests)
 
 | Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
 | :--- | :---: | :---: | :--- | :--- |
+| `322d73d` | `06/11/2026` | **Tạo mới (`A`)** | [EarlyWarningSweepWorker.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/BackgroundJobs/EarlyWarningSweepWorker.cs) | Background Service chạy ngầm định kỳ 6h sáng quét toàn bộ học sinh có nguy cơ trượt / suy giảm năng lực học tập (SDD Figure 56). |
+| `322d73d` | `06/11/2026` | **Tạo mới (`A`)** | [NotificationDispatcher.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/NotificationDispatcher.cs) | Dịch vụ điều phối cảnh báo đa kênh (In-app, Email, SMS/Zalo) tới học sinh, phụ huynh và giáo viên (SDD Figure 57). |
+| `6ad262c` | `06/11/2026` | **Cập nhật (`M`)** | [GetParentDashboardQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Dashboard/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs) | Xóa bỏ 100% dữ liệu mock con mẫu (`Phạm Minh Hoàng`), truy vấn dữ liệu thực tế từ PostgreSQL Supabase cho Cổng Phụ huynh. |
 | `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PaymentsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/PaymentsController.cs) | REST Controller cung cấp các API tạo link thanh toán PayOS, nhận Webhook tự động và tra cứu trạng thái/lịch sử giao dịch học phí. |
 | `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PayOsPaymentService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/PayOsPaymentService.cs) | Dịch vụ tích hợp cổng thanh toán VietQR PayOS: ký số HMAC-SHA256 tạo payment link và xác thực chữ ký Webhook chống giả mạo. |
 | `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PaymentRepository.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/PaymentRepository.cs) | Repository quản lý truy vấn đơn thanh toán, giao dịch, khóa học và quản lý giao dịch ACID (`IExecutionTransaction`). |
@@ -1490,5 +1645,24 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 | **V-Eval-Content_Service** | `778fb75`, `a5e3301`, `7b72105` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [CreateQuizExamCommandValidatorTests.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Tests/Validators/CreateQuizExamCommandValidatorTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Content_Service/Scripts/test.bat) | Unit Tests kiểm thử FluentValidation cho `CreateQuizExamCommand` và kịch bản chạy test tự động. |
 | **V-Eval-Gateway** | `f73a456`, `08491e3` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [CorrelationIdMiddlewareTests.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.Tests/Middlewares/CorrelationIdMiddlewareTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Gateway/Scripts/test.bat) | Unit Tests kiểm thử middleware sinh & truyền `X-Correlation-Id` qua YARP Gateway. |
 | **V-Eval-Ai_Engine** | `54ade07`, `9b1d177` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [TutorSessionTests.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Tests/Domain/TutorSessionTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Ai_Engine/Scripts/test.bat) | Unit Tests kiểm thử tính bất biến và quản lý trạng thái của Domain Entity `TutorSession`. |
+
+---
+
+### 9.4. V-Eval-Web_Client (Role Portals, Soft Delete IAM, Segmented Navigation, Email Validator & PayOS VietQR)
+
+| Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
+| :--- | :---: | :---: | :--- | :--- |
+| `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Mở rộng không gian làm việc cổng vai trò sang `w-full` sát Sidebar, xóa bỏ hoàn toàn lề trống thừa `max-w-7xl mx-auto`. |
+| `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [AccountProvisioningView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx) | Tái thiết kế bảng quản trị tài khoản 1 dòng duy nhất (`whitespace-nowrap`), avatar 2 chữ cái theo vai trò và thanh công cụ Command Toolbar hợp nhất. |
+| `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [apiClient.js](../../All%20Services/V-Eval-Web_Client/src/services/apiClient.js) | Tuần tự hóa `options.params` qua `URLSearchParams` cho phương thức GET và bổ sung phương thức `apiClient.patch()`. |
+| `d4d023e` | `07/11/2026` | **Cập nhật (`M`)** | [AccountProvisioningView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx) | Triển khai phân hệ quản lý tài khoản ngừng hoạt động (Soft delete), tách biệt 2 tab Đang hoạt động vs Đã ngừng hoạt động kèm 2 modal xác nhận an toàn. |
+| `444b73c` | `07/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Tái cấu trúc thanh điều hướng Subpage sang Segmented Control hiện đại (`bg-slate-100/90`, tab nổi trắng `bg-white`) và nhận diện Cổng Giám đốc Học thuật `ACADEMIC_DIRECTOR`. |
+| `444b73c` | `07/11/2026` | **Cập nhật (`M`)** | [emailValidator.js](../../All%20Services/V-Eval-Web_Client/src/utils/emailValidator.js) | Bổ sung ánh xạ sửa lỗi typo `@mail.com` -> `@gmail.com` và tích hợp kiểm tra trực tuyến DNS MX vào modal cấp phát tài khoản. |
+| `1da817d` | `06/11/2026` | **Tạo mới (`A`)** | [StudentParentLinkCard.jsx](../../All%20Services/V-Eval-Web_Client/src/components/dashboard/StudentParentLinkCard.jsx) | Thẻ liên kết tài khoản học sinh 3 phương thức: Mã `VE-XXXXXX`, PIN 6 số động, Link mời 1-Click, QR Code và banner duyệt yêu cầu 2 chiều. |
+| `1da817d` | `06/11/2026` | **Cập nhật (`M`)** | [ParentDashboardView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx) | Tích hợp Trung tâm Liên kết Tài khoản Học sinh 3 tab và tự động bắt tham số `?parentLinkCode=` từ link mời. |
+| `1da817d` | `06/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Định nghĩa `ROLE_PORTAL_DEFINITIONS` phân tách cổng làm việc độc lập cho đủ 5 vai trò và đồng bộ bảng màu chuẩn Trang chủ (`#FDFBF7`). |
+| `dc30a70` | `05/11/2026` | **Cập nhật (`M`)** | [ForgotPasswordModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/auth/ForgotPasswordModal.jsx) | Nâng cấp lưới 6 ô OTP chuẩn Fintech, đếm ngược 60s, kiểm tra độ mạnh mật khẩu và đối soát OTP đặt lại mật khẩu. |
+| `389d856` | `04/11/2026` | **Tạo mới (`A`)** | [PayOsCheckoutModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/modals/PayOsCheckoutModal.jsx) | Modal thanh toán học phí VietQR PayOS, tự động polling kiểm tra trạng thái 3s và hiệu ứng mở khóa chặng 1 PLAR. |
+| `389d856` | `04/11/2026` | **Tạo mới (`A`)** | [TuitionPaymentView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx) | Màn hình đóng học phí trực tuyến 3 gói đào tạo chuẩn ĐGNL kết nối trực tiếp Cổng Practice. |
 
 
