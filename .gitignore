@@ -10,6 +10,7 @@ bin/
 obj/
 
 scratch/
+.local_logs/
 
 # Test results and Coverage reports
 TestResults/
