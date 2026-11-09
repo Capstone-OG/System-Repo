@@ -30,6 +30,12 @@
   - Toàn bộ 12/12 tests trong `V-Eval-Ai_Engine.Tests` chạy thành công 100%.
   - Biên dịch toàn bộ solution `V-Eval-Ai_Engine.sln` đạt 100% Succeeded trên .NET 9.0 (0 Warning, 0 Error).
 
+- **Nâng Cấp Multimodal Vision Ingestion Cho PDF Scan & Tối Đa Hóa Số Lượng Dạng Bài (6 - 12+ Patterns) ([`V-Eval-Ai_Engine`](./All%20Services/V-Eval-Ai_Engine/))**:
+  - **Khắc phục triệt để hiện tượng PDF scan thiếu dạng bài**: Phân tích file Hóa học mẫu 55 trang (`Bài 1 - ĐA.pdf`), phát hiện file chứa 100% ảnh scan độ phân giải cao (`4260x6021`) và 0 ký tự text số hóa, khiến trước đây AI chỉ nhận câu placeholder và sinh ra 2 dạng sơ sài.
+  - **Tự động kích hoạt Multimodal Vision Ingestion**: Khi phát hiện tài liệu ảnh scan (`actualTextChars < 300`), tự động trích xuất và tối ưu hóa các trang scan đại diện (chiều dài tối đa 960px, JPEG quality 65) truyền trực tiếp qua kênh Multimodal `inlineData` của Google Gemini và `image_url` của OpenAI GPT-4o.
+  - **Tối đa hóa số lượng Dạng bài**: Nâng cấp `depthDirective` và template `CurriculumIngestion.prompt.txt` ép buộc AI bóc tách đầy đủ từ 6 đến 12+ dạng bài cho tài liệu chuyên đề lớn; phân định rõ thẻ hình học MathLab 3D cho Toán học và công thức phản ứng LaTeX chuẩn cho môn Hóa học/Khoa học tự nhiên.
+  - Bộ kiểm thử `V-Eval-Ai_Engine.Tests` đạt 13/13 tests vượt qua 100%.
+
 - **Khắc Phục Lỗi HTTP 413 Payload Too Large & Nâng Giới Hạn Tải Tệp Lên 250 MB ([`V-Eval-Gateway`](./All%20Services/V-Eval-Gateway/), [`V-Eval-Content_Service`](./All%20Services/V-Eval-Content_Service/))**:
   - **Xử lý nguyên nhân gốc rễ**: Khi tải tệp SGK hoặc đề thi PDF kích thước lớn (>28.6MB), Kestrel tại Gateway mặc định từ chối với lỗi `BadHttpRequestException: Request body too large. The max request body size is 30000000 bytes` (HTTP 413) khiến Web Client báo lỗi mất kết nối Gateway.
   - **Mở rộng Kestrel & FormOptions**: Nâng cấu hình `Limits.MaxRequestBodySize = 262_144_000` (250 MB) và `FormOptions.MultipartBodyLengthLimit = 262_144_000` tại cả `V-Eval-Gateway` và `V-Eval-Content_Service`, đồng bộ 100% với `V-Eval-Ai_Engine`.
