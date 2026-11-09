@@ -142,3 +142,4 @@ flowchart LR
 | **GĐ 4.1** | Đóng gói Docker Compose & Script Offline | Hạ tầng Docker, Scripts | `🟡 Chờ triển khai` | `P1 - Quan trọng` |
 | **GĐ 4.2** | Soạn Slide Deck & Video Demo 3 Phút | Slide, Media | `🟡 Chờ triển khai` | `P1 - Quan trọng` |
 | **GĐ 4.3** | Phân vai thuyết trình & Tổng duyệt Q&A | Toàn đội Capstone | `🟡 Chờ triển khai` | `P0 - Bắt buộc` |
+

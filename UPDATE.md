@@ -29,3 +29,8 @@
   - Bổ sung bộ test unit mới [`PromptTemplateServiceTests.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Tests/Infrastructure/PromptTemplateServiceTests.cs) (6/6 tests).
   - Toàn bộ 12/12 tests trong `V-Eval-Ai_Engine.Tests` chạy thành công 100%.
   - Biên dịch toàn bộ solution `V-Eval-Ai_Engine.sln` đạt 100% Succeeded trên .NET 9.0 (0 Warning, 0 Error).
+
+- **Khắc Phục Lỗi HTTP 413 Payload Too Large & Nâng Giới Hạn Tải Tệp Lên 250 MB ([`V-Eval-Gateway`](./All%20Services/V-Eval-Gateway/), [`V-Eval-Content_Service`](./All%20Services/V-Eval-Content_Service/))**:
+  - **Xử lý nguyên nhân gốc rễ**: Khi tải tệp SGK hoặc đề thi PDF kích thước lớn (>28.6MB), Kestrel tại Gateway mặc định từ chối với lỗi `BadHttpRequestException: Request body too large. The max request body size is 30000000 bytes` (HTTP 413) khiến Web Client báo lỗi mất kết nối Gateway.
+  - **Mở rộng Kestrel & FormOptions**: Nâng cấu hình `Limits.MaxRequestBodySize = 262_144_000` (250 MB) và `FormOptions.MultipartBodyLengthLimit = 262_144_000` tại cả `V-Eval-Gateway` và `V-Eval-Content_Service`, đồng bộ 100% với `V-Eval-Ai_Engine`.
+  - Biên dịch sạch `0 Warning, 0 Error` trên toàn bộ các dịch vụ liên quan.
