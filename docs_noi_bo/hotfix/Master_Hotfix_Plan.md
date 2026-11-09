@@ -45,7 +45,9 @@ flowchart LR
   - Triển khai `IPromptTemplateService` / `PromptTemplateService` với bộ nhớ đệm RAM In-Memory Caching (`ConcurrentDictionary`), token substitution Mustache `{{var}}`, và safe defense-in-depth fallback.
   - Xây dựng cơ chế Failover 2 tầng đa đám mây (Google Gemini <-> OpenAI Chat Completions `gpt-4o-mini`, `gpt-4o`, `o3-mini`) kèm kiểm soát ngưỡng an toàn `minChaptersThreshold >= 1` và `maxAttempts = 5`.
   - Đổi tên `GeminiExamParserService` thành `MultiCloudExamParserService` loại bỏ Naming Smell.
-  - Vượt qua 12/12 unit tests đạt 100%.
+  - Bổ sung pipeline Multimodal Vision bóc tách tài liệu PDF scan 100% ảnh (tự động trích xuất và tối ưu hóa 18 trang scan tiêu biểu).
+  - Đang giải quyết thẻ [`HF-AI-05`](./AI_Engine_Hotfix.md): Khắc phục lỗi JSON Deserialization do unescaped quotes trong văn bản Hóa học và chuyển toàn bộ chú thích ra ngoài schema prompt.
+  - Vượt qua 13/13 unit tests đạt 100%.
 
 ---
 
