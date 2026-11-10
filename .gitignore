@@ -11,6 +11,9 @@ obj/
 
 scratch/
 .local_logs/
+.env
+.env.local
+.env.*.local
 
 # Test results and Coverage reports
 TestResults/
