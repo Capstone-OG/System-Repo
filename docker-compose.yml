@@ -14,6 +14,7 @@ services:
       - ReverseProxy__Clusters__content-service-cluster__Destinations__destination1__Address=http://v-eval-content-service:5249
       - ReverseProxy__Clusters__identity-service-cluster__Destinations__destination1__Address=http://v-eval-identity-service:5155
       - ReverseProxy__Clusters__practice-service-cluster__Destinations__destination1__Address=http://v-eval-practice-service:5002
+      - ReverseProxy__Clusters__ai-rag-cluster__Destinations__destination1__Address=http://v-eval-ai-rag:8000
     restart: unless-stopped
     networks:
       - veval_network
@@ -32,6 +33,35 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - AiSettings__GeminiApiKey=${GEMINI_API_KEY}
+      - AiSettings__GeminiApiKeys__0=${GEMINI_KEY_1}
+      - AiSettings__GeminiApiKeys__1=${GEMINI_KEY_2}
+      - AiSettings__GeminiApiKeys__2=${GEMINI_KEY_3}
+      - AiSettings__GeminiApiKeys__3=${GEMINI_KEY_4}
+      - GEMINI_API_KEYS=${GEMINI_API_KEYS}
+      - GOOGLE_API_KEYS=${GOOGLE_API_KEYS}
+    restart: unless-stopped
+    networks:
+      - veval_network
+
+  # 2.5. AI RAG Service (Python FastAPI, Socratic Tutor, IRT 2PL, Diagnostic Exam Generation)
+  v-eval-ai-rag:
+    image: capstone-v-eval-ai-rag:latest
+    build:
+      context: ./All Services/V-Eval-Ai_Engine/rag-service
+      dockerfile: Dockerfile
+    container_name: v_eval_ai_rag
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEYS=${GOOGLE_API_KEYS}
+      - GEMINI_API_KEYS=${GEMINI_API_KEYS}
+      - DATABASE_URL=postgresql+psycopg://postgres.zwxavhoszodmagisoiqu:ThinhTran2412@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
     restart: unless-stopped
     networks:
       - veval_network

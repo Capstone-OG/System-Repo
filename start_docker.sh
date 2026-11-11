@@ -23,7 +23,7 @@ fi
 # 2. Giải phóng các port nếu đang bị chiếm dụng bởi tiến trình local
 echo "🔍 [1/4] Kiểm tra và giải phóng các port nếu bị chiếm dụng bởi tiến trình local..."
 if command -v fuser &> /dev/null; then
-    fuser -k 5212/tcp 5104/tcp 5249/tcp 5250/tcp 5155/tcp 5156/tcp 5002/tcp 5173/tcp 2>/dev/null || true
+    fuser -k 5212/tcp 5104/tcp 5249/tcp 5250/tcp 5155/tcp 5156/tcp 5002/tcp 5173/tcp 8000/tcp 2>/dev/null || true
 fi
 
 # 3. Đồng bộ file cấu hình nếu còn thiếu
@@ -58,6 +58,7 @@ echo "  * 🔐 Identity Service   : http://localhost:5155 | gRPC: 5156"
 echo "  * 📚 Content Service    : http://localhost:5249 | gRPC: 5250"
 echo "  * 🎯 Practice Service   : http://localhost:5002"
 echo "  * 🧠 AI Engine API      : http://localhost:5104"
+echo "  * 🤖 AI Python RAG      : http://localhost:8000"
 echo "  * ☁️  Cloudflare Tunnel  : pickic.io.vn (Đã kết nối 4 Edge Server Cloudflare)"
 echo "====================================================================="
 echo ""
