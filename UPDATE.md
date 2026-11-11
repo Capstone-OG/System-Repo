@@ -1,24 +1,30 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [12/11/2026] - Khảo Sát Bể 4 Khóa Gemini, Cập Nhật Gemini-3.6-Flash Triệt Tiêu 503, Khắc Phục Hoàn Toàn Lỗi KaTeX Đa Dòng & Đồng Bộ Triển Khai Docker
+## [12/11/2026] - Khắc Phục Triệt Để Vòng Lặp Retry 503 (Key-First Smart Failover), Tinh Gọn Prompt Bóc Tách Đa Bài Học & Khắc Phục 4 Lỗi Render KaTeX Hóa Học
 
-- **Khảo Sát Thực Tế Bể 4 Khóa Gemini & Cập Nhật Mô Hình Ưu Tiên Chống Lỗi 503 ([`appsettings.json`](./Configs/V-Eval-Ai_Engine/appsettings.json), [`docker-compose.yml`](./docker-compose.yml))**:
-  - Thực hiện ping kiểm tra trực tiếp 4 API keys Gemini trong hệ thống với các dòng mô hình:
-    - `gemini-3.6-flash`: **HTTP 200 OK** trên cả 4/4 keys (phản hồi siêu tốc, độ ổn định tuyệt đối).
-    - `gemini-3.5-flash-lite`: **HTTP 200 OK** trên cả 4/4 keys (~1.0s).
-    - `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-flash-lite-latest`: **HTTP 200 OK**.
-    - `gemini-3.8-flash`: **HTTP 503 Service Unavailable / Timeout** trên cả 4 keys (xác nhận chính xác nguyên nhân gây nghẽn và timeout như log người dùng cung cấp).
-  - Tái cấu trúc `GeminiModels`: Đưa `gemini-3.6-flash` lên làm mô hình chủ lực số 1, tiếp nối bởi `gemini-3.5-flash-lite`, `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-flash-lite-latest`; gỡ bỏ hoàn toàn `gemini-3.8-flash`.
+- **Khắc Phục Triệt Để Cơ Chế Vòng Lặp Thử Lại (Smart Key-First & Model-Inner Failover) ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs), [`MultiCloudExamParserService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/MultiCloudExamParserService.cs))**:
+  - Đảo ngược thứ tự vòng lặp: Key-outer duyệt trước, Model-inner duyệt sau.
+  - Phân loại lỗi chính xác:
+    - Khi gặp lỗi Key/Quota (`HTTP 401 Unauthorized`, `HTTP 403 Forbidden`, `HTTP 429 Too Many Requests`): Đánh dấu `keyInvalidOrQuotaExceeded = true` và `break` model loop để chuyển sang API Key tiếp theo.
+    - Khi gặp lỗi Model/Server quá tải (`HTTP 503 Service Unavailable`, `HTTP 500`, `HTTP 504`, `HTTP 404`, `HTTP 400`): Giữ nguyên API Key và `continue` model loop để thử ngay Model tiếp theo với cùng key. Triệt tiêu hoàn toàn hiện tượng thử lại 4 lần cùng 1 model bị 503.
+  - Hạ timeout từng request xuống `35 giây` (`TimeSpan.FromSeconds(35)`), bắt ngoại lệ `OperationCanceledException` để chuyển model tức thì.
 
-- **Khắc Phục Triệt Để Lỗi Render KaTeX Math & Cân Bằng Cú Pháp Giao Diện ([`MathText.jsx`](./All%20Services/V-Eval-Web_Client/src/components/common/MathText.jsx))**:
-  - Giới hạn inline math strictly trên từng dòng (`\$[^\$\r\n]+?\$`), loại bỏ triệt để hiện tượng rò rỉ math mode nuốt nhiều dòng văn bản tiếng Việt (`suyragốcacidlà`).
-  - Tự động nhận diện nhãn mở đầu `Phương trình: ...` hoặc `PTHH: ...`, tách nhãn và bọc phương trình phản ứng hóa học thành khối display math `$$...$$` độc lập.
-  - Sửa lỗi khoảng trắng sau dấu gạch dưới `(OH)_ 3` -> `(OH)_3`.
-  - Tự động chuẩn hóa và bọc công thức có chỉ số dưới `C_{15}H_{31} COOH` -> `$C_{15}H_{31}COOH$`.
-  - Ghép nối công thức ester bị gãy dòng `$C_nH_{2n}\nO_2` -> `$C_nH_{2n}O_2$`.
-  - Đóng gói SPA bằng `npm run build` (2.82s, 3015 modules transformed, 0 lỗi) và nạp lại cấu hình Nginx trong Docker container `v_eval_web_client` (`nginx -s reload`).
+- **Tinh Gọn Directive Bóc Tách & Prompt Theo Nhánh Main ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs), [`CurriculumIngestion.prompt.txt`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Templates/Prompts/CurriculumIngestion.prompt.txt))**:
+  - Giữ vững nguyên tắc đa bài học (Multi-Lesson Extraction): Chương "Ester - Lipid" bắt buộc tách thành 2 bài học riêng biệt ("Bài 1: Ester" và "Bài 2: Lipid & Chất béo").
+  - Cân bằng số lượng dạng bài: Mỗi bài học trích xuất 2-3 dạng bài cốt lõi (tổng 4-6 dạng bài), mỗi dạng có 2-3 câu hỏi trắc nghiệm kèm giải thích chi tiết, đầy đủ 4 khối sư phạm. Loại bỏ việc ép bóc tách 12+ dạng bài gây quá tải token kích hoạt lỗi 503 từ Google AI Studio.
 
-- **Chuẩn Hóa Hậu Xử Lý Chuỗi KaTeX Phía Backend ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs))**:
-  - Đồng bộ logic xử lý nhãn phương trình phản ứng hóa học, sửa khoảng trắng chỉ số dưới và bọc công thức hữu cơ phức tạp.
-  - Cân bằng dấu `$` an toàn từng dòng `EnsureBalancedDollars(s)` và bảo toàn dấu `$` trước dấu chấm câu (`$C_{17}H_{33}$.`).
-  - Toàn bộ **19/19 unit tests** trong AI Engine vượt qua thành công 100% trong 294 ms. Rebuild và triển khai container `v_eval_ai_engine` trên Docker.
+- **Cấu Hình Thứ Tự Ưu Tiên Gemini Chống 503 ([`appsettings.json`](./Configs/V-Eval-Ai_Engine/appsettings.json), [`All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json))**:
+  - Ưu tiên số 1: `gemini-3.5-flash-lite` (~1.0s latency, chịu tải cao, không bị 503).
+  - Tiếp nối: `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-flash-lite-latest`.
+  - Loại bỏ hoàn toàn `gemini-3.8-flash` (gây 503 liên tục).
+
+- **Khắc Phục Triệt Để 4 Lỗi Render KaTeX Hóa Học Trên Giao Diện ([`MathText.jsx`](./All%20Services/V-Eval-Web_Client/src/components/common/MathText.jsx))**:
+  - Triệt tiêu hộp lỗi đỏ KaTeX (#cc0000) bằng cơ chế Emergency Sanitization 2 tầng trong `renderKatexHtml`.
+  - Làm sạch dấu `$` đặt nhầm cạnh dấu bằng `\$\s*=\s*\$?|(?<=\w|\})\s*\$\s*=` biến thành `= ` (sửa lỗi `$n_{\text{triglyceride}} = \frac{...}{...}$`).
+  - Đóng dấu `$` trước dấu chấm câu có văn bản giải thích tiếng Việt: `$C_{17}H_{33}$. 1 mol`, ngăn ngừa chữ nghiêng dính chùm.
+  - Tách nhãn mở đầu `Phương trình: ...` và bọc phương trình phản ứng hóa học có mũi tên vào display math `$$...$$`.
+  - `npm run build` thành công trong **2.39 giây**, nạp bundle mới vào Nginx container `v_eval_web_client`.
+
+- **Kiểm Thử & Đảm Bảo Vận Hành**:
+  - Toàn bộ **19/19 unit tests** trong AI Engine vượt qua thành công 100% trong 309 ms.
+  - Rebuild và khởi động container `v_eval_ai_engine` và `v_eval_web_client` trên Docker.
