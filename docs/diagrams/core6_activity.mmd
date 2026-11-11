@@ -1,0 +1,79 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
+    %% =========================================================================
+    %% LANE 1: STUDENT
+    %% =========================================================================
+    subgraph StudentLane ["Student"]
+        direction TB
+        Start6(("● Start"))
+        Act_AccessNotebook["Access Mistake Notebook from dashboard"]
+        Act_SelectItem["Select mistake item from review queue"]
+        Act_SolveReview["Solve question & submit answer with self-rated quality (q: 0-5)"]
+        Act_ViewRetention["View review summary & updated retention metrics"]
+        End6(("◉ End Session"))
+    end
+
+    %% =========================================================================
+    %% LANE 2: SYSTEM (V-EVAL / GRAPH ENGINE)
+    %% =========================================================================
+    subgraph SystemLane ["V-Eval System / Graph Engine"]
+        direction TB
+        Act_QueryPending["Query pending review items where next review date is due"]
+        Dec_ItemsExist{"Pending review items exist?"}
+        Act_RenderContext["Render question with historical mistake context"]
+        Act_EvalSM2["Evaluate response & determine SM-2 quality score q (0-5)"]
+        Dec_QualityScore{"Review quality score q >= 3?"}
+        Act_ResetSM2["Reset repetition counter to 1 & set interval I = 1 day"]
+        Act_UpdateSM2["Compute updated Easiness Factor EF & expanded interval I"]
+        Act_UpdateBKT["Update mastery probability P(Lt) in BKT engine"]
+        Dec_ConsecutiveReviews{"Consecutive successful reviews reaches 3?"}
+        Act_MarkResolved["Update mistake item status to RESOLVED"]
+        Act_KeepPending["Keep item in tracking & schedule next review interval"]
+        Dec_QueueRemaining{"Remaining review items in queue?"}
+        Act_AckCompletion["Acknowledge review session completion"]
+    end
+
+    %% Sequential & Inter-lane Transitions
+    Start6 --> Act_AccessNotebook
+    Act_AccessNotebook --> Act_QueryPending
+    Act_QueryPending --> Dec_ItemsExist
+
+    Dec_ItemsExist -->|"[No items]"| Act_ViewRetention
+    Dec_ItemsExist -->|"[Items exist]"| Act_SelectItem
+
+    Act_SelectItem --> Act_RenderContext
+    Act_RenderContext --> Act_SolveReview
+    Act_SolveReview --> Act_EvalSM2
+    Act_EvalSM2 --> Dec_QualityScore
+
+    Dec_QualityScore -->|"[q < 3 (Forgotten)]"| Act_ResetSM2
+    Dec_QualityScore -->|"[q >= 3 (Recalled)]"| Act_UpdateSM2
+
+    Act_ResetSM2 --> Act_UpdateBKT
+    Act_UpdateSM2 --> Act_UpdateBKT
+
+    Act_UpdateBKT --> Dec_ConsecutiveReviews
+
+    Dec_ConsecutiveReviews -->|"[Yes (>= 3 times)]"| Act_MarkResolved
+    Dec_ConsecutiveReviews -->|"[No (< 3 times)]"| Act_KeepPending
+
+    Act_MarkResolved --> Dec_QueueRemaining
+    Act_KeepPending --> Dec_QueueRemaining
+
+    Dec_QueueRemaining -->|"[Remaining items > 0]"| Act_SelectItem
+    Dec_QueueRemaining -->|"[Queue empty]"| Act_AckCompletion
+    Act_AckCompletion --> Act_ViewRetention
+    Act_ViewRetention --> End6

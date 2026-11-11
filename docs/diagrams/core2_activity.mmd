@@ -1,0 +1,61 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
+    %% =========================================================================
+    %% LANE 1: STUDENT
+    %% =========================================================================
+    subgraph StudentLane ["Student"]
+        direction TB
+        Start2(("● Start"))
+        Act_InputGoals["Input target score, target date & daily study hours"]
+        Act_ViewRoadmap["View personalized study timeline & micro-group study partners"]
+        End2_Success(("◉ End Session"))
+    end
+
+    %% =========================================================================
+    %% LANE 2: SYSTEM (V-EVAL / GRAPH ENGINE)
+    %% =========================================================================
+    subgraph SystemLane ["V-Eval System / Graph Engine"]
+        direction TB
+        Act_EvalTime["Evaluate available time budget & prune unreachable knowledge paths"]
+        Act_ValidateDAG["Validate DAG prerequisite graph via Tarjan SCC & Kahn Topological Sort"]
+        Dec_GraphValid{"Prerequisite graph valid (Acyclic)?"}
+        Act_TriggerAlert["Trigger CRITICAL system alert & freeze roadmap generation"]
+        Act_ClusterRoadmap["Perform thematic clustering (K-Means) & initialize milestone roadmap"]
+    end
+
+    %% =========================================================================
+    %% LANE 3: ACADEMIC MANAGER
+    %% =========================================================================
+    subgraph ManagerLane ["Academic Manager"]
+        direction TB
+        Act_ResolveCircular["Review system alert & resolve circular prerequisite dependencies in DB"]
+        End2_Error(("◉ Terminated on Cycle"))
+    end
+
+    %% Sequential & Inter-lane Transitions
+    Start2 --> Act_InputGoals
+    Act_InputGoals --> Act_EvalTime
+    Act_EvalTime --> Act_ValidateDAG
+    Act_ValidateDAG --> Dec_GraphValid
+
+    Dec_GraphValid -->|"[Valid DAG (No Cycles)]"| Act_ClusterRoadmap
+    Dec_GraphValid -->|"[Cycle Detected]"| Act_TriggerAlert
+
+    Act_TriggerAlert --> Act_ResolveCircular
+    Act_ResolveCircular --> End2_Error
+
+    Act_ClusterRoadmap --> Act_ViewRoadmap
+    Act_ViewRoadmap --> End2_Success

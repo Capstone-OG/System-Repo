@@ -1,0 +1,91 @@
+flowchart TB
+    %% =========================================================================
+    %% TIER 1: CLIENTS & USER ROLES LAYER
+    %% =========================================================================
+    subgraph Tier1 ["1. CLIENTS & USERS LAYER"]
+        direction TB
+        Users["Users: Students, Teachers, Parents, Admins"]
+        WebClient["V-Eval Web Client<br/>(React 19 SPA + JSXGraph & KaTeX)"]
+        MobileClient["Mobile Client (PWA / Flutter)<br/>[Phase 2 / Planned]"]
+        Users -->|"Access via Browser"| WebClient
+        Users -.->|"Planned Access"| MobileClient
+    end
+
+    %% =========================================================================
+    %% TIER 2: API GATEWAY LAYER
+    %% =========================================================================
+    subgraph Tier2 ["2. API GATEWAY LAYER"]
+        Gateway["V-Eval API Gateway<br/>(Microsoft YARP Reverse Proxy - Port 5000)"]
+    end
+
+    %% =========================================================================
+    %% TIER 3: CORE APPLICATION MICROSERVICES (.NET 9)
+    %% =========================================================================
+    subgraph Tier3 ["3. CORE APPLICATION MICROSERVICES (.NET 9)"]
+        direction TB
+        IdentitySvc["Identity Service (:5155)<br/>(Auth, RBAC 4 Roles & Profiles)"]
+        ContentSvc["Content Service (:5249/5250)<br/>(Skill Tree DAG & Question Bank)"]
+        PracticeSvc["Practice Service (:5261)<br/>(ZPD Adaptive, IRT 2PL, BKT & K-Means)"]
+    end
+
+    %% =========================================================================
+    %% TIER 4: AI SUBSYSTEM (DUAL ENGINES)
+    %% =========================================================================
+    subgraph Tier4 ["4. AI SUBSYSTEM (DUAL SPECIALIZED ENGINES)"]
+        direction TB
+        AiCoreNet["AI Engine Core (:5104)<br/>(.NET 9 Minimal APIs / Vision OCR & Math LaTeX)"]
+        AiRagPy["AI RAG Service (:8000)<br/>(Python FastAPI / GraphRAG & Socratic Tutor)"]
+    end
+
+    %% =========================================================================
+    %% TIER 5: DATA PERSISTENCE & STORAGE (SUPABASE)
+    %% =========================================================================
+    subgraph Tier5 ["5. DATA PERSISTENCE & STORAGE (SUPABASE)"]
+        direction TB
+        PostgresDB[("Supabase PostgreSQL 15+<br/>(Schemas: identity, content, practice, ai + pgvector)")]
+        CloudStorage[("Supabase Object Storage<br/>(Buckets: exam-media, textbooks, diagrams)")]
+    end
+
+    %% =========================================================================
+    %% TIER 6: EXTERNAL CLOUD SERVICES
+    %% =========================================================================
+    subgraph Tier6 ["6. EXTERNAL CLOUD SERVICES"]
+        direction TB
+        GeminiAPI["Google Gemini API<br/>(Gemini 2.5/1.5 Flash Vision & Embeddings)"]
+        OpenAiAPI["OpenAI API<br/>(GPT-4o-mini Fallback)"]
+        GoogleOAuth["Google OAuth 2.0<br/>(Social Authentication)"]
+    end
+
+    %% Client to Gateway
+    WebClient -->|"HTTPS / REST / SSE"| Gateway
+    MobileClient -.->|"HTTPS / REST (Planned)"| Gateway
+
+    %% Gateway Routing to Services
+    Gateway -->|"REST / JSON"| IdentitySvc
+    Gateway -->|"REST / JSON"| ContentSvc
+    Gateway -->|"REST / JSON"| PracticeSvc
+    Gateway -->|"REST / Multi-part"| AiCoreNet
+    Gateway -->|"REST / SSE Stream"| AiRagPy
+
+    %% Inter-Service Communication (Server-to-Server)
+    PracticeSvc ==>|"gRPC HTTP/2 (:5250)<br/>(SkillTree, Quiz, AnswerKeys)"| ContentSvc
+    PracticeSvc ==>|"gRPC HTTP/2 (:5155)<br/>(StudentProfile, ParentStudents)"| IdentitySvc
+    PracticeSvc -->|"HTTP / SSE Stream (:8000)<br/>(Socratic Guidance Proxy)"| AiRagPy
+
+    %% AI Subsystem to External Cloud
+    AiCoreNet -->|"Vision OCR / Math LaTeX"| GeminiAPI
+    AiCoreNet -.->|"Fallback"| OpenAiAPI
+    AiRagPy -->|"GraphRAG / Socratic LLM"| GeminiAPI
+    AiRagPy -.->|"Fallback"| OpenAiAPI
+    IdentitySvc -->|"Verify OAuth Token"| GoogleOAuth
+
+    %% Database Schemas Connection (EF Core & Vector Search)
+    IdentitySvc -->|"EF Core (v_eval_identity)"| PostgresDB
+    ContentSvc -->|"EF Core (v_eval_content)"| PostgresDB
+    PracticeSvc -->|"EF Core (v_eval_practice)"| PostgresDB
+    AiCoreNet -->|"EF Core / Npgsql (v_eval_ai)"| PostgresDB
+    AiRagPy -->|"HNSW Vector Search & KG (v_eval_ai)"| PostgresDB
+
+    %% Object Storage Connection
+    ContentSvc -->|"Store Question Images"| CloudStorage
+    AiCoreNet -->|"Fetch Exam PDFs & Upload Assets"| CloudStorage

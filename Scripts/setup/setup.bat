@@ -7,7 +7,7 @@ echo =====================================================================
 echo.
 
 REM Lay duong dan tuyet doi den thu muc goc cua du an
-pushd "%~dp0..\..\"
+pushd "%~dp0..\.."
 set "ROOT_DIR=%CD%"
 popd
 
@@ -91,7 +91,15 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
         
         set "TARGET_PATH=%ALL_SERVICES_DIR%\!SERVICE_NAME!"
         
+        set "IS_VALID_REPO=0"
         if exist "!TARGET_PATH!\.git" (
+            pushd "!TARGET_PATH!"
+            git rev-parse --verify HEAD >nul 2>&1
+            if !ERRORLEVEL! equ 0 set "IS_VALID_REPO=1"
+            popd
+        )
+        
+        if "!IS_VALID_REPO!"=="1" (
             echo Folder "!TARGET_PATH!" exists. Fetching and pulling...
             pushd "!TARGET_PATH!"
             git fetch origin >nul 2>&1
@@ -99,11 +107,13 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             git pull origin !BRANCH! >nul 2>&1
             
             REM Kiem tra xem da co solution (.sln) chua, neu chua thi tu dong khoi tao
+            set "IS_NODE=0"
+            if exist "package.json" set "IS_NODE=1"
             set "SLN_EXISTS=0"
             if exist "*.sln" set "SLN_EXISTS=1"
             for /r %%f in (*.sln) do set "SLN_EXISTS=1"
             
-            if "!SLN_EXISTS!"=="0" (
+            if "!IS_NODE!"=="0" if "!SLN_EXISTS!"=="0" (
                 echo [INFO] Thu muc ton tai nhung chua co Solution. Tien hanh khoi tao C# Clean Architecture...
                 echo [INFO] Dang khoi tao Solution va cac Project C# Clean Architecture cho !SERVICE_NAME!...
                 
@@ -122,7 +132,7 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
                 dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
                 dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" >nul 2>&1
                 
-                REM Thiet la tham chieu (References) giua cac projects theo Clean Architecture
+                REM Thiet la tham chieu [References] giua cac projects theo Clean Architecture
                 dotnet add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" reference "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
                 dotnet add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
                 dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
@@ -152,63 +162,40 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             popd
             echo [SUCCESS] Updated !SERVICE_NAME!.
         ) else (
+            if exist "!TARGET_PATH!" (
+                echo [INFO] Phat hien thu muc "!TARGET_PATH!" chua phai Git repo hop le. Dang don dep de clone lai...
+                rmdir /s /q "!TARGET_PATH!" >nul 2>&1
+            )
             echo Folder "!TARGET_PATH!" does not exist. Cloning repository...
-            git clone -b !BRANCH! !REPO_URL! "!TARGET_PATH!" 2>nul
+            git clone -b !BRANCH! !REPO_URL! "!TARGET_PATH!"
             
-            if !ERRORLEVEL! neq 0 (
-                echo [WARNING] GitHub Repository !REPO_URL! not found.
-                echo [INFO] Khoi tao Git local do Repo remote chua co tren GitHub...
+            set "CLONE_SUCCESS=0"
+            if !ERRORLEVEL! equ 0 (
+                set "CLONE_SUCCESS=1"
+            ) else (
+                echo [WARNING] Lan dau clone that bai. Dang thu tu dong retry...
+                for /l %%i in (1,1,4) do (
+                    if "!CLONE_SUCCESS!"=="0" (
+                        echo [INFO] Dang thu clone lai [Lan %%i/4]...
+                        git clone -b !BRANCH! !REPO_URL! "!TARGET_PATH!"
+                        if !ERRORLEVEL! equ 0 set "CLONE_SUCCESS=1"
+                    )
+                )
+            )
+            
+            if "!CLONE_SUCCESS!"=="0" (
+                echo.
+                echo [WARNING] Khong the clone repository !SERVICE_NAME! tu remote sau 4 lan thu.
+                echo Nguyen nhan co the do mat ket noi mang [Port 443] hoac URL sai.
+                echo [INFO] Tien hanh chi khoi tao Git local [git init] va gan remote origin...
                 
                 if not exist "!TARGET_PATH!" mkdir "!TARGET_PATH!"
                 pushd "!TARGET_PATH!"
                 git init >nul 2>&1
-                git checkout -b !BRANCH! >nul 2>&1
-                git branch -M !BRANCH! >nul 2>&1
                 git remote add origin !REPO_URL! >nul 2>&1
-                
-                echo [INFO] Dang khoi tao Solution va cac Project C# Clean Architecture cho !SERVICE_NAME!...
-                REM Tao Solution .NET
-                dotnet new sln -n !SERVICE_NAME! >nul 2>&1
-                
-                REM Tao cac Project con cung cap voi Solution
-                dotnet new classlib -n !SERVICE_NAME!.Domain -o "!SERVICE_NAME!.Domain" >nul 2>&1
-                dotnet new classlib -n !SERVICE_NAME!.Application -o "!SERVICE_NAME!.Application" >nul 2>&1
-                dotnet new classlib -n !SERVICE_NAME!.Infrastructure -o "!SERVICE_NAME!.Infrastructure" >nul 2>&1
-                dotnet new webapi -n !SERVICE_NAME!.API -o "!SERVICE_NAME!.API" >nul 2>&1
-                
-                REM Add Projects vao Solution
-                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
-                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
-                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
-                dotnet sln !SERVICE_NAME!.sln add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" >nul 2>&1
-                
-                REM Thiet la tham chieu (References) giua cac projects theo Clean Architecture
-                dotnet add "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" reference "!SERVICE_NAME!.Domain\!SERVICE_NAME!.Domain.csproj" >nul 2>&1
-                dotnet add "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
-                dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Infrastructure\!SERVICE_NAME!.Infrastructure.csproj" >nul 2>&1
-                dotnet add "!SERVICE_NAME!.API\!SERVICE_NAME!.API.csproj" reference "!SERVICE_NAME!.Application\!SERVICE_NAME!.Application.csproj" >nul 2>&1
-                
-                REM Tao README.md
-                echo # !SERVICE_NAME! > README.md
-                echo. >> README.md
-                echo Giai phap C# Clean Architecture Web API cho !SERVICE_NAME! >> README.md
-                echo. >> README.md
-                echo Nhanh theo doi: !BRANCH! >> README.md
-                echo URL remote mac dinh: !REPO_URL! >> README.md
-                
-                REM Tao .gitignore
-                echo # Build results > .gitignore
-                echo [Db]in/ >> .gitignore
-                echo [Ob]j/ >> .gitignore
-                echo .vs/ >> .gitignore
-                echo .idea/ >> .gitignore
-                echo *.user >> .gitignore
-                echo *.suo >> .gitignore
-                
-                git add -A
-                git commit -m "Initial Clean Architecture setup for !SERVICE_NAME!" >nul 2>&1
+                git checkout -b !BRANCH! >nul 2>&1
                 popd
-                echo [SUCCESS] Khoi tao local Git va Solution C# Clean Architecture cho !SERVICE_NAME!.
+                echo [WARNING] Da khoi tao Git rong. Bo qua viec sinh ma nguon template de tranh lech lich su.
             ) else (
                 echo [SUCCESS] Cloned !SERVICE_NAME! from GitHub.
             )
@@ -234,6 +221,16 @@ for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%CONFIG_FILE%") do (
             popd
         )
     )
+)
+
+REM --- BƯỚC 3: Nap va dong bo cau hinh chuan tu Configs ---
+echo.
+echo =====================================================================
+echo Nap cau hinh chuan tu Configs cho tat ca cac Service...
+echo =====================================================================
+if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --force
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --check
 )
 
 echo.

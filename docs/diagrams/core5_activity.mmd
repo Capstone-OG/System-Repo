@@ -1,0 +1,82 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
+    %% =========================================================================
+    %% LANE 1: STUDENT
+    %% =========================================================================
+    subgraph StudentLane ["Student"]
+        direction TB
+        Start5(("● Start"))
+        Act_EnterClass["Log in and enter class"]
+        Act_SelectAct["Select a learning activity on Dashboard"]
+        Dec_ActType{"Activity type?"}
+        Act_DoZPD["Solve ZPD-adapted practice exercises"]
+        Act_WatchVideoShort["Watch a short concept video"]
+        Act_TakeMock["Take standardized mock examination"]
+        Act_ClickSubmitAct["Submit completed activity"]
+        Act_OpenDashboard["Open personal Analytics Dashboard"]
+        Act_ReviewRadarStrengths["Review 4-domain Radar chart, strengths/weaknesses & Streak"]
+        Act_AdjustSelfStudy["Adjust self-study plan for next day"]
+        Dec_ContinueAct{"Continue with another activity?"}
+        End5(("◉ End Session"))
+    end
+
+    %% =========================================================================
+    %% LANE 2: SYSTEM (ANALYTICS ENGINE)
+    %% =========================================================================
+    subgraph SystemLane ["System (Analytics Engine)"]
+        direction TB
+        Act_RecordBehavior["Record learning interaction events in database"]
+        Act_ComputeMastery["Compute skill mastery probability P(Lt) via BKT"]
+        Act_UpdateIRT["Update student IRT ability estimate theta"]
+        Dec_StreakCredited{"Streak already credited today?"}
+        Act_IncStreak["Increment daily Streak counter"]
+        Act_KeepStreak["Keep Streak counter unchanged"]
+        Act_PushDashboard["Save computed analytics & push live updates to personal Dashboard"]
+        Act_RenderHeatmap["Render 2D Class Competency Heatmap (Skills vs Students)"]
+    end
+
+    %% Sequential & Inter-lane Transitions
+    Start5 --> Act_EnterClass
+    Act_EnterClass --> Act_SelectAct
+    Act_SelectAct --> Dec_ActType
+
+    Dec_ActType -->|"[ZPD Exercise]"| Act_DoZPD
+    Dec_ActType -->|"[Lecture Video]"| Act_WatchVideoShort
+    Dec_ActType -->|"[Mock Exam]"| Act_TakeMock
+
+    Act_DoZPD --> Act_ClickSubmitAct
+    Act_WatchVideoShort --> Act_ClickSubmitAct
+    Act_TakeMock --> Act_ClickSubmitAct
+
+    Act_ClickSubmitAct --> Act_RecordBehavior
+    Act_RecordBehavior --> Act_ComputeMastery
+    Act_ComputeMastery --> Act_UpdateIRT
+    Act_UpdateIRT --> Dec_StreakCredited
+
+    Dec_StreakCredited -->|"[No]"| Act_IncStreak
+    Dec_StreakCredited -->|"[Yes]"| Act_KeepStreak
+
+    Act_IncStreak --> Act_PushDashboard
+    Act_KeepStreak --> Act_PushDashboard
+
+    Act_PushDashboard --> Act_RenderHeatmap
+    Act_RenderHeatmap --> Act_OpenDashboard
+    Act_OpenDashboard --> Act_ReviewRadarStrengths
+    Act_ReviewRadarStrengths --> Act_AdjustSelfStudy
+    Act_AdjustSelfStudy --> Dec_ContinueAct
+
+    Dec_ContinueAct -->|"[Yes]"| Act_SelectAct
+    Dec_ContinueAct -->|"[No]"| End5

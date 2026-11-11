@@ -1,0 +1,83 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
+    %% =========================================================================
+    %% LANE 1: STUDENT
+    %% =========================================================================
+    subgraph StudentLane ["Student"]
+        direction TB
+        Start3(("● Start"))
+        Act_SelectMode["Select learning mode on Dashboard"]
+        Act_QuickCheck["Complete 3 foundational Quick Check questions"]
+        Act_WatchVideo["Watch core micro-lecture video"]
+        Act_SubmitZPD["Solve ZPD-adapted practice item & submit answer"]
+        Act_RemedialPackage["Complete Remedial Package (Summary + 3 easy drills)"]
+        Act_SelfReflect["Rate confidence (1-5 stars) & tag mistake root cause"]
+        Act_GrantProctor["Enable webcam & enter locked Fullscreen mode"]
+        Act_TakeMockExam["Answer 120 standardized questions in 150 minutes"]
+        Act_SubmitMock["Submit mock exam (or auto-submit on timer expiry)"]
+        Act_ViewResults["View performance report, Radar chart & solutions"]
+        End3(("◉ End Session"))
+    end
+
+    %% =========================================================================
+    %% LANE 2: SYSTEM (V-EVAL / GRAPH ENGINE)
+    %% =========================================================================
+    subgraph SystemLane ["V-Eval System / Graph Engine"]
+        direction TB
+        Dec_ModeType{"Select learning mode?"}
+        Dec_QuickCheckPass{"Quick Check accuracy >= 67% (2/3 correct)?"}
+        Act_SelectZPD["Select next practice item within Zone of Proximal Development (ZPD)"]
+        Dec_ZPDResult{"Answer correct?"}
+        Act_UpdateBKT_P["Update BKT skill mastery probability P(Lt)"]
+        Dec_ConsecutiveFails{"Consecutive incorrect answers >= 3?"}
+        Act_TriggerRemedial["Trigger Scaffolded Remedial Support & pause ZPD difficulty"]
+        Act_MonitorExam["Monitor proctored environment, tab-switch violations & webcam stream"]
+        Act_GradeMock["Grade 120 questions, update IRT ability estimate & upsert mistake notebook"]
+    end
+
+    %% Sequential & Inter-lane Transitions
+    Start3 --> Act_SelectMode
+    Act_SelectMode --> Dec_ModeType
+
+    Dec_ModeType -->|"[Adaptive P-L-A-R Mode]"| Act_QuickCheck
+    Dec_ModeType -->|"[Proctored Mock Exam Mode]"| Act_GrantProctor
+
+    Act_QuickCheck --> Dec_QuickCheckPass
+    Dec_QuickCheckPass -->|"[Pass (>= 2/3)]"| Act_SelectZPD
+    Dec_QuickCheckPass -->|"[Fail (< 2/3)]"| Act_WatchVideo
+    Act_WatchVideo --> Act_SelectZPD
+
+    Act_SelectZPD --> Act_SubmitZPD
+    Act_SubmitZPD --> Dec_ZPDResult
+
+    Dec_ZPDResult -->|"[Correct]"| Act_UpdateBKT_P
+    Dec_ZPDResult -->|"[Incorrect]"| Dec_ConsecutiveFails
+
+    Dec_ConsecutiveFails -->|"[Fails < 3]"| Act_SelfReflect
+    Dec_ConsecutiveFails -->|"[Fails >= 3]"| Act_TriggerRemedial
+
+    Act_TriggerRemedial --> Act_RemedialPackage
+    Act_RemedialPackage --> Act_SelfReflect
+    Act_SelfReflect --> Act_UpdateBKT_P
+
+    Act_GrantProctor --> Act_TakeMockExam
+    Act_TakeMockExam --> Act_MonitorExam
+    Act_MonitorExam --> Act_SubmitMock
+    Act_SubmitMock --> Act_GradeMock
+
+    Act_UpdateBKT_P --> Act_ViewResults
+    Act_GradeMock --> Act_ViewResults
+    Act_ViewResults --> End3

@@ -1,0 +1,88 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
+    %% =========================================================================
+    %% LANE 1: STUDENT
+    %% =========================================================================
+    subgraph StudentLane ["Student"]
+        direction TB
+        Start4(("● Start"))
+        Act_WrongAnswer["Choose wrong answer in practice or mock exam"]
+        Act_AskTutor["Click Ask Socratic AI Tutor"]
+        Act_WaitRateLimit["Receive 429 Rate Limit message & wait 1 minute"]
+        Act_ReadStatic["Read static solution retrieved from exam database"]
+        Act_ReadSocratic["Receive Socratic scaffolding hints streamed via SSE"]
+        Dec_FlagResp{"Flag response as problematic?"}
+        Act_ClickFlag["Click Flag Report to submit teacher review"]
+        Act_RecvConfirm["Receive report confirmation"]
+        Act_SolveIsomorphic["Answer 4-option Isomorphic Question to verify mastery"]
+        Act_ContinuePractice["View explanation & continue roadmap practice"]
+        End4(("◉ End Session"))
+    end
+
+    %% =========================================================================
+    %% LANE 2: SYSTEM (AI ENGINE & GRAPHRAG)
+    %% =========================================================================
+    subgraph SystemLane ["System (AI Engine & GraphRAG)"]
+        direction TB
+        Dec_RateCheck{"Requests > 10 per minute?"}
+        Act_PackageContext["Package context (question, wrong option, skill code)"]
+        Act_GraphRAG["GraphRAG 3-Hop Traversal: Embed question & query nearest pattern in KG"]
+        Dec_SimilarityCheck{"Cosine similarity >= 0.78?"}
+        Act_HaltLLM["Halt LLM to prevent hallucination & queue novel pattern for Teacher review"]
+        Act_DraftSocratic["Retrieve golden exemplar & LLM drafts Socratic scaffolding hints"]
+        Dec_Guardrails{"Passes guardrails (No direct answer leaked & regex safe)?"}
+        Act_StreamApproved["Stream approved Socratic response via Server-Sent Events (SSE)"]
+        Act_FallbackSocratic["Replace with resilient deterministic Socratic fallback"]
+        Act_GenIsomorphic["Generate isomorphic question with 4 options"]
+        Act_RecordFlag["Record student report to Flagged Queue for Teacher review"]
+        Act_UpdateStats["Record activity to Streak and study time metrics"]
+    end
+
+    %% Sequential & Inter-lane Transitions
+    Start4 --> Act_WrongAnswer
+    Act_WrongAnswer --> Act_AskTutor
+    Act_AskTutor --> Dec_RateCheck
+
+    Dec_RateCheck -->|"[Yes (> 10 req/min)]"| Act_WaitRateLimit
+    Dec_RateCheck -->|"[No (<= 10 req/min)]"| Act_PackageContext
+
+    Act_PackageContext --> Act_GraphRAG
+    Act_GraphRAG --> Dec_SimilarityCheck
+
+    Dec_SimilarityCheck -->|"[Similarity < 0.78]"| Act_HaltLLM
+    Act_HaltLLM --> Act_ReadStatic
+
+    Dec_SimilarityCheck -->|"[Similarity >= 0.78]"| Act_DraftSocratic
+    Act_DraftSocratic --> Dec_Guardrails
+
+    Dec_Guardrails -->|"[Passes]"| Act_StreamApproved
+    Dec_Guardrails -->|"[Fails]"| Act_FallbackSocratic
+    Act_FallbackSocratic --> Act_StreamApproved
+
+    Act_StreamApproved --> Act_ReadSocratic
+    Act_ReadSocratic --> Dec_FlagResp
+
+    Dec_FlagResp -->|"[Yes - Flag]"| Act_ClickFlag
+    Dec_FlagResp -->|"[No]"| Act_GenIsomorphic
+
+    Act_ClickFlag --> Act_RecordFlag
+    Act_RecordFlag --> Act_RecvConfirm
+    Act_RecvConfirm --> Act_GenIsomorphic
+
+    Act_GenIsomorphic --> Act_SolveIsomorphic
+    Act_SolveIsomorphic --> Act_UpdateStats
+    Act_UpdateStats --> Act_ContinuePractice
+    Act_ContinuePractice --> End4

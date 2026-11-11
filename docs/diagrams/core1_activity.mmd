@@ -1,0 +1,65 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#FFFFFF",
+    "primaryTextColor": "#0F172A",
+    "primaryBorderColor": "#2563EB",
+    "lineColor": "#2563EB",
+    "textColor": "#0F172A",
+    "edgeLabelBackground": "#FFFFFF",
+    "tertiaryColor": "#F8FAFC",
+    "clusterBkg": "#F8FAFC",
+    "clusterBorder": "#94A3B8"
+  }
+}}%%
+flowchart LR
+    %% =========================================================================
+    %% LANE 1: STUDENT
+    %% =========================================================================
+    subgraph StudentLane ["Student"]
+        direction TB
+        Start1(("● Start"))
+        Act_ChooseTarget["Choose Campus and Target Score"]
+        Act_ClickStartDiag["Click Start diagnostic test"]
+        Act_AnswerQuestions["Answer 30 questions within 45 minutes"]
+        Dec_SubmitTrigger{"Submit trigger?"}
+        Act_ClickSubmit["Click Submit"]
+        Act_ClickNewDiag["Click Start a new diagnostic"]
+        Act_ReviewResult["Review diagnostic result (Radar chart & Tier)"]
+        End1(("◉ End Session"))
+    end
+
+    %% =========================================================================
+    %% LANE 2: SYSTEM (V-EVAL PLATFORM)
+    %% =========================================================================
+    subgraph SystemLane ["System (V-Eval Platform)"]
+        direction TB
+        Act_LoadExam["Load standardized 30-question exam"]
+        Act_AutoSubmit["Auto-submit answered questions (45 mins elapsed)"]
+        Dec_ExpiredCheck{"Older than 24 hours?"}
+        Act_MarkExpired["Mark exam EXPIRED"]
+        Act_ProcessSubmission["Process submission: IRT 2PL, BKT priors & placement tier"]
+        Act_DisplayRadar["Display 4-domain Radar chart & Class placement"]
+    end
+
+    %% Sequential & Inter-lane Transitions
+    Start1 --> Act_ChooseTarget
+    Act_ChooseTarget --> Act_ClickStartDiag
+    Act_ClickStartDiag --> Act_LoadExam
+    Act_LoadExam --> Act_AnswerQuestions
+    Act_AnswerQuestions --> Dec_SubmitTrigger
+
+    Dec_SubmitTrigger -->|"[Student clicks Submit]"| Act_ClickSubmit
+    Dec_SubmitTrigger -->|"[45 minutes elapsed]"| Act_AutoSubmit
+
+    Act_ClickSubmit --> Dec_ExpiredCheck
+    Act_AutoSubmit --> Dec_ExpiredCheck
+
+    Dec_ExpiredCheck -->|"[Yes (>= 24h)]"| Act_MarkExpired
+    Act_MarkExpired --> Act_ClickNewDiag
+    Act_ClickNewDiag --> Act_ClickStartDiag
+
+    Dec_ExpiredCheck -->|"[No (< 24h)]"| Act_ProcessSubmission
+    Act_ProcessSubmission --> Act_DisplayRadar
+    Act_DisplayRadar --> Act_ReviewResult
+    Act_ReviewResult --> End1
