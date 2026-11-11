@@ -1,6 +1,7 @@
 services:
   # 1. API Gateway Service (Single Entry Point / YARP Reverse Proxy)
   v-eval-gateway:
+    image: capstone-v-eval-gateway:latest
     build:
       context: .
       dockerfile: ./All Services/V-Eval-Gateway/Dockerfile
@@ -11,7 +12,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ReverseProxy__Clusters__ai-engine-cluster__Destinations__destination1__Address=http://v-eval-ai-engine:5104
       - ReverseProxy__Clusters__content-service-cluster__Destinations__destination1__Address=http://v-eval-content-service:5249
-      - ReverseProxy__Clusters__identity-service-cluster__Destinations__destination1__Address=http://v-eval-identity-service:5001
+      - ReverseProxy__Clusters__identity-service-cluster__Destinations__destination1__Address=http://v-eval-identity-service:5155
       - ReverseProxy__Clusters__practice-service-cluster__Destinations__destination1__Address=http://v-eval-practice-service:5002
     restart: unless-stopped
     networks:
@@ -19,26 +20,32 @@ services:
 
   # 2. AI Engine Service (PDF Parser, Gemini OCR, Socratic AI Tutor)
   v-eval-ai-engine:
+    image: capstone-v-eval-ai-engine:latest
     build:
       context: .
       dockerfile: ./All Services/V-Eval-Ai_Engine/Dockerfile
     container_name: v_eval_ai_engine
     ports:
       - "5104:5104"
+    env_file:
+      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - AiSettings__GeminiApiKey=${GEMINI_API_KEY}
     restart: unless-stopped
     networks:
       - veval_network
 
   # 3. Content Service (Question Bank, Exams, Materials & Supabase Storage)
   v-eval-content-service:
+    image: capstone-v-eval-content-service:latest
     build:
       context: .
       dockerfile: ./All Services/V-Eval-Content_Service/Dockerfile
     container_name: v_eval_content_service
     ports:
       - "5249:5249"
+      - "5250:5250"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
@@ -47,12 +54,14 @@ services:
 
   # 4. Identity Service (Authentication, JWT Token, User Management)
   v-eval-identity-service:
+    image: capstone-v-eval-identity-service:latest
     build:
       context: .
       dockerfile: ./All Services/V-Eval-Identity_Service/Dockerfile
     container_name: v_eval_identity_service
     ports:
-      - "5001:5001"
+      - "5155:5155"
+      - "5156:5156"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     restart: unless-stopped
@@ -61,6 +70,7 @@ services:
 
   # 5. Practice Service (Online Examination, Auto-Grading & Competency Tracking)
   v-eval-practice-service:
+    image: capstone-v-eval-practice-service:latest
     build:
       context: .
       dockerfile: ./All Services/V-Eval-Practice_Service/Dockerfile
@@ -69,21 +79,40 @@ services:
       - "5002:5002"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - GrpcSettings__IdentityServiceUrl=http://v-eval-identity-service:5156
+      - GrpcSettings__ContentServiceUrl=http://v-eval-content-service:5250
+      - ContentSettings__ServiceUrl=http://v-eval-content-service:5249
+      - AiSettings__ServiceUrl=http://v-eval-ai-engine:5104
     restart: unless-stopped
     networks:
       - veval_network
 
   # 6. Web Client Service (React 19, Vite, TailwindCSS Single Page App)
   v-eval-web-client:
+    image: capstone-v-eval-web-client:latest
     build:
       context: .
       dockerfile: ./All Services/V-Eval-Web_Client/Dockerfile
     container_name: v_eval_web_client
     ports:
       - "5173:80"
+    volumes:
+      - ./All Services/V-Eval-Web_Client/dist:/usr/share/nginx/html:ro
+      - ./All Services/V-Eval-Web_Client/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
     networks:
       - veval_network
+
+  # 7. Cloudflare Tunnel Service (Expose pickic.io.vn and api.pickic.io.vn to the Internet)
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: pickic-tunnel
+    network_mode: host
+    user: "1000:1000"
+    volumes:
+      - /home/thai-thinh/.cloudflared:/home/thai-thinh/.cloudflared
+    command: tunnel --config /home/thai-thinh/.cloudflared/config.yml run pickic
+    restart: always
 
 networks:
   veval_network:

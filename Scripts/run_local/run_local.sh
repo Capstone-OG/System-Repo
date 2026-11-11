@@ -238,28 +238,28 @@ EOF
 
         case "$TERMINAL_APP" in
             gnome-terminal)
-                gnome-terminal --title="$title" -- "$runner" &
+                gnome-terminal --title="$title" -- bash "$runner" &
                 ;;
             x-terminal-emulator)
-                x-terminal-emulator -T "$title" -e "$runner" &
+                x-terminal-emulator -T "$title" -e bash "$runner" &
                 ;;
             konsole)
-                konsole --new-tab -p tabtitle="$title" -e "$runner" &
+                konsole --new-tab -p tabtitle="$title" -e bash "$runner" &
                 ;;
             xfce4-terminal)
-                xfce4-terminal --title="$title" -e "$runner" &
+                xfce4-terminal --title="$title" -e "bash $runner" &
                 ;;
             terminator)
-                terminator -T "$title" -x "$runner" &
+                terminator -T "$title" -x bash "$runner" &
                 ;;
             alacritty)
-                alacritty --title "$title" -e "$runner" &
+                alacritty --title "$title" -e bash "$runner" &
                 ;;
             kitty)
-                kitty --title "$title" "$runner" &
+                kitty --title "$title" bash "$runner" &
                 ;;
             xterm)
-                xterm -title "$title" -e "$runner" &
+                xterm -title "$title" -e bash "$runner" &
                 ;;
             *)
                 (cd "$dir" && exec $cmd) > "$log" 2>&1 &
