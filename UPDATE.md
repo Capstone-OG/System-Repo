@@ -1,30 +1,27 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [12/11/2026] - Khắc Phục Triệt Để Vòng Lặp Retry 503 (Key-First Smart Failover), Tinh Gọn Prompt Bóc Tách Đa Bài Học & Khắc Phục 4 Lỗi Render KaTeX Hóa Học
+## [13/11/2026] - Live Ping Mô Hình Gemini, Khử Trùng Lặp Dạng Bài, Nâng Cấp Chuẩn Hóa KaTeX & Vận Hành Hệ Thống Qua Terminal (Không Dùng Docker)
 
-- **Khắc Phục Triệt Để Cơ Chế Vòng Lặp Thử Lại (Smart Key-First & Model-Inner Failover) ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs), [`MultiCloudExamParserService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/MultiCloudExamParserService.cs))**:
-  - Đảo ngược thứ tự vòng lặp: Key-outer duyệt trước, Model-inner duyệt sau.
-  - Phân loại lỗi chính xác:
-    - Khi gặp lỗi Key/Quota (`HTTP 401 Unauthorized`, `HTTP 403 Forbidden`, `HTTP 429 Too Many Requests`): Đánh dấu `keyInvalidOrQuotaExceeded = true` và `break` model loop để chuyển sang API Key tiếp theo.
-    - Khi gặp lỗi Model/Server quá tải (`HTTP 503 Service Unavailable`, `HTTP 500`, `HTTP 504`, `HTTP 404`, `HTTP 400`): Giữ nguyên API Key và `continue` model loop để thử ngay Model tiếp theo với cùng key. Triệt tiêu hoàn toàn hiện tượng thử lại 4 lần cùng 1 model bị 503.
-  - Hạ timeout từng request xuống `35 giây` (`TimeSpan.FromSeconds(35)`), bắt ngoại lệ `OperationCanceledException` để chuyển model tức thì.
+- **Live Ping Gemini (4 API Keys)**: `gemini-3.1-flash-lite` đạt 100% 200 OK, ~808ms - 882ms; đưa lên ưu tiên số 1 trong [`appsettings.json`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json) và [`Configs/V-Eval-Ai_Engine/appsettings.json`](./Configs/V-Eval-Ai_Engine/appsettings.json). Bóc tách PDF thực tế: Gemini 9.09s, tổng 12.39s.
+- **AI Engine ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs))**:
+  - Khử trùng lặp dạng bài cùng tên (lỗi duplicate `Dạng 4`), gộp câu hỏi độc bản, đánh số tuần tự `Dạng 1, 2, 3...`.
+  - Chuẩn hóa KaTeX: khôi phục `textmol`/`textgam` -> `\text{mol}`/`\text{gam}`, mở rộng `\implies`, bất đẳng thức, bọc biến đơn trước đơn vị, chuẩn hóa chỉ số dưới tiếng Việt.
+  - `CurriculumLatexNormalizationTests`: 14/14 pass; tổng 32/32 pass.
+- **Web Client ([`MathText.jsx`](./All%20Services/V-Eval-Web_Client/src/components/common/MathText.jsx))**: đồng bộ bộ chuẩn hóa KaTeX, thay `'$$$1$$'` bằng callback an toàn.
+- **Vận hành qua terminal**: AI Engine `5104`, Gateway `5212`, Web Client `5173` (AI Engine đã build lại và khởi động lại để nạp code mới).
 
-- **Tinh Gọn Directive Bóc Tách & Prompt Theo Nhánh Main ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs), [`CurriculumIngestion.prompt.txt`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Templates/Prompts/CurriculumIngestion.prompt.txt))**:
-  - Giữ vững nguyên tắc đa bài học (Multi-Lesson Extraction): Chương "Ester - Lipid" bắt buộc tách thành 2 bài học riêng biệt ("Bài 1: Ester" và "Bài 2: Lipid & Chất béo").
-  - Cân bằng số lượng dạng bài: Mỗi bài học trích xuất 2-3 dạng bài cốt lõi (tổng 4-6 dạng bài), mỗi dạng có 2-3 câu hỏi trắc nghiệm kèm giải thích chi tiết, đầy đủ 4 khối sư phạm. Loại bỏ việc ép bóc tách 12+ dạng bài gây quá tải token kích hoạt lỗi 503 từ Google AI Studio.
+- **Khắc Phục Lỗi KaTeX Còn Sót (Mũ `^`, Ngoặc Đơn, Chỉ Số Dưới Tiếng Việt) ([`CurriculumAiService.cs`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs), [`MathText.jsx`](../All%20Services/V-Eval-Ai_Engine/V-Eval-Web_Client/src/components/common/MathText.jsx))**:
+  - `fullEqPattern` hỗ trợ số mũ (`2^2`, `3^{2}`) và ngoặc đơn (`\times (3 \times 40 - 92)`), không còn tách `2^$2`; ngoặc không cân bằng/bao trọn biểu thức được đưa ra ngoài `$...$`.
+  - Không còn can thiệp vào bên trong cặp `$...$` đã có; bước giải phóng văn bản tiếng Việt bỏ qua nội dung `_{...}` / `^{...}` nên `m_{chất béo}` không còn bị gỡ `$`.
+  - Thêm test hồi quy `Regression_NoBareOrBrokenMath` (8 ca từ ảnh lỗi thực tế); tổng **42/42 tests pass**.
 
-- **Cấu Hình Thứ Tự Ưu Tiên Gemini Chống 503 ([`appsettings.json`](./Configs/V-Eval-Ai_Engine/appsettings.json), [`All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json`](./All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json))**:
-  - Ưu tiên số 1: `gemini-3.5-flash-lite` (~1.0s latency, chịu tải cao, không bị 503).
-  - Tiếp nối: `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-flash-lite-latest`.
-  - Loại bỏ hoàn toàn `gemini-3.8-flash` (gây 503 liên tục).
+- **Khắc Phục Lỗi KaTeX Trần Do Web Client Gỡ `$` Nhầm (Lần 2)**:
+  - Nguyên nhân gốc: bộ phục hồi trong [`MathText.jsx`](./All%20Services/V-Eval-Web_Client/src/components/common/MathText.jsx) dò từ tiếng Việt (`chất`, `muối`...) ngay cả bên trong `\text{...}` và `_{...}`, nên gỡ `$` của các công thức hợp lệ như `$n_{\text{NaOH}} = 3 \times n_{\text{chất béo}}$`. Nay chỉ dò phần ngoài `\text{}`/`_{}`/`^{}`.
+  - Bộ nhận diện phương trình không còn nuốt xuống dòng kế tiếp (chỉ `[ \t]` giữa các vế); chỉ số dưới cho phép ngoặc đơn (`m_{muối (xà phòng)}`).
+  - Kiểm chứng JS bằng Node trên các ca ảnh lỗi và 49/49 unit tests C# pass.
 
-- **Khắc Phục Triệt Để 4 Lỗi Render KaTeX Hóa Học Trên Giao Diện ([`MathText.jsx`](./All%20Services/V-Eval-Web_Client/src/components/common/MathText.jsx))**:
-  - Triệt tiêu hộp lỗi đỏ KaTeX (#cc0000) bằng cơ chế Emergency Sanitization 2 tầng trong `renderKatexHtml`.
-  - Làm sạch dấu `$` đặt nhầm cạnh dấu bằng `\$\s*=\s*\$?|(?<=\w|\})\s*\$\s*=` biến thành `= ` (sửa lỗi `$n_{\text{triglyceride}} = \frac{...}{...}$`).
-  - Đóng dấu `$` trước dấu chấm câu có văn bản giải thích tiếng Việt: `$C_{17}H_{33}$. 1 mol`, ngăn ngừa chữ nghiêng dính chùm.
-  - Tách nhãn mở đầu `Phương trình: ...` và bọc phương trình phản ứng hóa học có mũi tên vào display math `$$...$$`.
-  - `npm run build` thành công trong **2.39 giây**, nạp bundle mới vào Nginx container `v_eval_web_client`.
+- **Đồng Bộ Cấu Hình Về [`Configs`](./Configs) (Nguồn Cấu Hình Chuẩn) & Deploy Tự Động Nạp Một Chiều**:
+  - Gom `appsettings.json` / `.env` của toàn bộ service con vào `Configs/` bằng `Scripts/sync_config/sync_config.sh` (chế độ `[2]` Services -> Configs): Gateway, Identity, Content, Practice, AI Engine (kèm `rag-service/.env`), Web Client.
+  - Khi deploy, [`start_docker.sh`](./start_docker.sh) và [`run_docker.bat`](./Scripts/run_docker/run_docker.bat) gọi `sync_config --force`: chỉ nạp **Configs -> Services** (ghi đè, có file `.bak`), tuyệt đối không đồng bộ ngược ra ngoài.
+  - Build lại toàn bộ Docker image từ mã nguồn hiện tại bằng `docker compose build`.
 
-- **Kiểm Thử & Đảm Bảo Vận Hành**:
-  - Toàn bộ **19/19 unit tests** trong AI Engine vượt qua thành công 100% trong 309 ms.
-  - Rebuild và khởi động container `v_eval_ai_engine` và `v_eval_web_client` trên Docker.

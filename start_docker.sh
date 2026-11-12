@@ -26,10 +26,10 @@ if command -v fuser &> /dev/null; then
     fuser -k 5212/tcp 5104/tcp 5249/tcp 5250/tcp 5155/tcp 5156/tcp 5002/tcp 5173/tcp 8000/tcp 2>/dev/null || true
 fi
 
-# 3. Đồng bộ file cấu hình nếu còn thiếu
+# 3. Đồng bộ chiều Configs -> Services (Configs là nguồn chuẩn, ghi đè file cục bộ)
 echo "⚙️  [2/4] Kiểm tra và đồng bộ file cấu hình (.env, appsettings.json)..."
 if [ -f "$ROOT_DIR/Scripts/sync_config/sync_config.sh" ]; then
-    bash "$ROOT_DIR/Scripts/sync_config/sync_config.sh" --install-missing
+    bash "$ROOT_DIR/Scripts/sync_config/sync_config.sh" --force
 fi
 
 # 4. Kiểm tra và đóng gói dist của Web Client

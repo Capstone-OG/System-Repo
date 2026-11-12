@@ -16,3 +16,4 @@ Thư mục này chứa các file cấu hình môi trường **chuẩn (working e
 
 1. **Nạp cấu hình vào các service:** Chạy `Scripts/sync_config/sync_config.bat` và chọn `[1]` để áp dụng toàn bộ cấu hình chuẩn cho máy local.
 2. **Cập nhật chia sẻ cho cả nhóm:** Khi bạn sửa đổi cấu hình và muốn cập nhật bản mẫu cho cả team, chạy `Scripts/sync_config/sync_config.bat` chọn `[2]`, sau đó commit `System-Repo`.
+3. **Deploy (Docker):** `start_docker.sh` / `run_docker.bat` tự động chạy `sync_config --force`, chỉ nạp một chiều **Configs -> Services**. Configs là nguồn chuẩn; deploy không bao giờ đồng bộ ngược ra ngoài.
