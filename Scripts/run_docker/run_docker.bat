@@ -23,12 +23,12 @@ if %ERRORLEVEL% neq 0 (
 
 REM Tu dong kiem tra va bo sung cau hinh neu con thieu
 if exist "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" (
-    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --install-missing
+    call "%ROOT_DIR%\Scripts\sync_config\sync_config.bat" --force
 )
 
-echo Dang khoi dong cac Docker Container (va build lai neu co thay doi)...
+echo Dang khoi dong cac Docker Container va build lai neu co thay doi...
 pushd "%ROOT_DIR%"
-docker-compose up --build
+docker compose up -d --build
 popd
 
 pause
