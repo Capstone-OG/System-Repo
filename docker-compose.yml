@@ -112,7 +112,7 @@ services:
       - GrpcSettings__IdentityServiceUrl=http://v-eval-identity-service:5156
       - GrpcSettings__ContentServiceUrl=http://v-eval-content-service:5250
       - ContentSettings__ServiceUrl=http://v-eval-content-service:5249
-      - AiSettings__ServiceUrl=http://v-eval-ai-engine:5104
+      - AiSettings__ServiceUrl=http://v-eval-ai-rag:8000
     restart: unless-stopped
     networks:
       - veval_network

@@ -25,3 +25,13 @@
   - Khi deploy, [`start_docker.sh`](./start_docker.sh) và [`run_docker.bat`](./Scripts/run_docker/run_docker.bat) gọi `sync_config --force`: chỉ nạp **Configs -> Services** (ghi đè, có file `.bak`), tuyệt đối không đồng bộ ngược ra ngoài.
   - Build lại toàn bộ Docker image từ mã nguồn hiện tại bằng `docker compose build`.
 
+- **Khắc Phục Lỗi Docker Container `v-eval-ai-rag` Không Nhận Được Request Chat Socratic ([`docker-compose.yml`](./docker-compose.yml), [`Configs/V-Eval-Gateway/appsettings.json`](./Configs/V-Eval-Gateway/appsettings.json))**:
+  - **Nguyên nhân gốc**: Trong [`docker-compose.yml`](./docker-compose.yml) (dòng 115 của `v-eval-practice-service`), biến môi trường `AiSettings__ServiceUrl` bị trỏ nhầm vào `http://v-eval-ai-engine:5104` (.NET AI Engine) thay vì `http://v-eval-ai-rag:8000` (Python FastAPI RAG). Khi học sinh chat Socratic, `AiTutorClient` gọi `POST http://v-eval-ai-engine:5104/api/v1/socratic/ask-stream` bị lỗi `404 Not Found` và tự trả về câu mẫu dự phòng C# mà không bao giờ chạm tới `v-eval-ai-rag:8000`.
+  - **Khắc phục**: Đổi `AiSettings__ServiceUrl=http://v-eval-ai-rag:8000` cho `v-eval-practice-service` trong [`docker-compose.yml`](./docker-compose.yml); bổ sung các route `/api/socratic/{**catch-all}`, `/api/v1/socratic/{**catch-all}`, `/api/v1/academic-graph/{**catch-all}` vào `ai-rag-cluster` trên Gateway; đồng bộ trọn vẹn 4 Gemini API keys mới sang `.env` và `rag-service/.env`.
+
+- **Chuẩn Hóa `.gitignore` & Gỡ Theo Dõi (`git rm --cached`) Cấu Hình Chứa Key Của AI Engine & RAG ([`.gitignore`](./.gitignore), [`All Services/V-Eval-Ai_Engine/.gitignore`](./All%20Services/V-Eval-Ai_Engine/.gitignore))**:
+  - Chặn riêng `Configs/V-Eval-Ai_Engine/appsettings.json`, `Configs/V-Eval-Ai_Engine/rag-service/.env`, root `.env` trong `.gitignore` của `System-Repo` và `**/appsettings.json`, `**/.env` trong `.gitignore` của `V-Eval-Ai_Engine` (kèm `git rm --cached` để không bao giờ bị dính Gemini/OpenAI key khi `git add`).
+  - Các service còn lại (`Gateway`, `Identity`, `Content`, `Practice`, `Web_Client`) vẫn giữ nguyên theo dõi `appsettings.json` / `.env` để push lên bình thường.
+
+
+
