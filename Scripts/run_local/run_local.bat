@@ -10,8 +10,13 @@ pushd "%~dp0..\.."
 set "ROOT_DIR=%CD%"
 popd
 
+set "DOTNET_CMD=dotnet"
 if exist "%USERPROFILE%\.dotnet\dotnet.exe" (
+    set "DOTNET_CMD=%USERPROFILE%\.dotnet\dotnet.exe"
     set "PATH=%USERPROFILE%\.dotnet;%PATH%"
+)
+if exist "C:\Users\USER\AppData\Local\Programs\Python\Python311" (
+    set "PATH=C:\Users\USER\AppData\Local\Programs\Python\Python311;C:\Users\USER\AppData\Local\Programs\Python\Python311\Scripts;!PATH!"
 )
 echo [INFO] Project Root Directory: %ROOT_DIR%
 echo.
