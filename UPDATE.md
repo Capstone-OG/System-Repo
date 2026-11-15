@@ -1,8 +1,9 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [15/11/2026] - Triển Khai Phân Hệ Kiểm Duyệt Gia Sư AI & Tái Thiết Kế Toàn Diện Bố Cục Trang Chủ Quản Lý Học Thuật Đồng Bộ Ngôn Ngữ Student Portal
+## [15/11/2026] - Triển Khai Quản Lý Phiên Hội Thoại Đa Lượt Cho Gia Sư AI Socratic & Tái Thiết Kế Toàn Diện Bố Cục Trang Chủ Quản Lý Học Thuật Đồng Bộ Ngôn Ngữ Student Portal
 
-- **Web Client ([`CampusManagerDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/CampusManagerDashboardView.jsx), [`EarlyWarningsMentorPanel.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/EarlyWarningsMentorPanel.jsx), [`AiTutorModerationView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/AiTutorModerationView.jsx), [`Sidebar.jsx`](./All%20Services/V-Eval-Web_Client/src/components/layout/Sidebar.jsx), [`App.jsx`](./All%20Services/V-Eval-Web_Client/src/App.jsx))**:
+- **Web Client ([`aiSessionManager.js`](./All%20Services/V-Eval-Web_Client/src/utils/aiSessionManager.js), [`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`aiSessionManager.test.js`](./All%20Services/V-Eval-Web_Client/tests/aiSessionManager.test.js), [`CampusManagerDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/CampusManagerDashboardView.jsx), [`EarlyWarningsMentorPanel.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/EarlyWarningsMentorPanel.jsx), [`AiTutorModerationView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/AiTutorModerationView.jsx), [`Sidebar.jsx`](./All%20Services/V-Eval-Web_Client/src/components/layout/Sidebar.jsx), [`App.jsx`](./All%20Services/V-Eval-Web_Client/src/App.jsx))**:
+  - **Quản Lý Phiên Hội Thoại Đa Lượt Gia Sư AI Socratic**: Xây dựng module `aiSessionManager` lưu trữ phiên cục bộ theo từng học sinh (`veval_socratic_sessions_${userId}`), bảo toàn dòng suy nghĩ và chuỗi tin nhắn khi đóng modal hay tải lại trang; thanh lịch sử trượt mở (`PanelLeftClose`/`Open`), tìm kiếm phiên thông minh, nhãn đếm tin nhắn, xóa phiên; đồng bộ ngầm các tương tác đám mây từ Supabase qua `practiceService.getAiTutorInteractions()`; tự động nạp phiên cũ theo câu hỏi khảo thí; không gian làm việc co giãn linh hoạt (`max-w-5xl h-[90vh]`); khắc phục triệt để lỗi vi phạm thứ tự hooks của React (*Rendered more hooks than during previous render*).
   - **Khắc Phục Triệt Để Lỗi Phần Trăm (6688% BKT & 7600%)**: Xây dựng hàm chuẩn hóa `normalizeMasteryPct` tự động chuyển đổi thang đo thập phân (0-1) hoặc phần trăm (0-100), đưa mức làm chủ 4 miền về đúng `76%`, `53%`, `68%`, `71%` và chỉ số toàn cơ sở về đúng **`67% BKT`** (chấm dứt hoàn toàn lỗi hiển thị `6688%` và `7600%`).
   - **Tích Hợp Lời Chào Vào Flagship HeroBanner**: Loại bỏ dòng chữ thô bên ngoài, tích hợp lời chào trang trọng *"Chào mừng Quản lý Học thuật, Nguyễn Duy Khôi!"* cùng dải chuyển động luân phiên 4 thông điệp sư phạm (`Sparkles`), chip năng lực vàng `#FACC15` và thẻ kính mờ điều phối cơ sở.
   - **Chuẩn Hóa 4 Thẻ KPI Symmetrical Theo Phong Cách [`MetricsGrid.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/MetricsGrid.jsx)**: 4 thẻ đối xứng (Học viên hoạt động, Giảng viên cơ sở, Quy mô lớp học, Năng lực toàn cơ sở) có micro-tags, badge trạng thái và footer điều hướng.
@@ -12,6 +13,6 @@
   - **Phân Hệ Kiểm Duyệt Báo Cáo Gia Sư AI (Core Flow 4)**: Màn hình kiểm duyệt đàm thoại Socratic AI với 3 hành động can thiệp Knowledge Graph, hàng đợi split-pane và đối soát đáp án KaTeX; rút gọn badge Sidebar thành `Flow 4` chống co cắt chữ.
   - Mở rộng 3 phương thức API trong [`practiceService.js`](./All%20Services/V-Eval-Web_Client/src/services/practiceService.js) (`overrideTutorExemplar`, `addTutorNovelTrap`, `resolveTutorReport`).
 - **Kiểm Thử & Biên Dịch Toàn Diện**:
-  - `npm run build`: Thành công 100% trong 1.10s.
-  - `node --test`: Đạt **31/31 unit tests pass**.
+  - `npm run build`: Thành công 100% trong 1.19s.
+  - `node --test`: Đạt **36/36 unit tests pass** (bao gồm bộ test 5 ca cho `aiSessionManager`).
   - `npm run lint`: **0 lỗi linter**.
