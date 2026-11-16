@@ -21,19 +21,13 @@ if ! docker info &> /dev/null; then
 fi
 
 # 2. Giải phóng các port nếu đang bị chiếm dụng bởi tiến trình local
-echo "🔍 [1/4] Kiểm tra và giải phóng các port nếu bị chiếm dụng bởi tiến trình local..."
+echo "🔍 [1/3] Kiểm tra và giải phóng các port nếu bị chiếm dụng bởi tiến trình local..."
 if command -v fuser &> /dev/null; then
     fuser -k 5212/tcp 5104/tcp 5249/tcp 5250/tcp 5155/tcp 5156/tcp 5002/tcp 5173/tcp 8000/tcp 2>/dev/null || true
 fi
 
-# 3. Đồng bộ chiều Configs -> Services (Configs là nguồn chuẩn, ghi đè file cục bộ)
-echo "⚙️  [2/4] Kiểm tra và đồng bộ file cấu hình (.env, appsettings.json)..."
-if [ -f "$ROOT_DIR/Scripts/sync_config/sync_config.sh" ]; then
-    bash "$ROOT_DIR/Scripts/sync_config/sync_config.sh" --force
-fi
-
-# 4. Kiểm tra và đóng gói dist của Web Client
-echo "📦 [3/4] Kiểm tra và đóng gói Web Client dist..."
+# 3. Kiểm tra và đóng gói dist của Web Client
+echo "📦 [2/3] Kiểm tra và đóng gói Web Client dist..."
 if [ -d "$ROOT_DIR/All Services/V-Eval-Web_Client" ]; then
     if [ ! -d "$ROOT_DIR/All Services/V-Eval-Web_Client/dist" ] || [ -n "$(find "$ROOT_DIR/All Services/V-Eval-Web_Client/src" -newer "$ROOT_DIR/All Services/V-Eval-Web_Client/dist" 2>/dev/null)" ]; then
         echo "   -> Phát hiện thay đổi trong mã nguồn Web Client. Đang đóng gói lại dist..."
@@ -43,8 +37,8 @@ if [ -d "$ROOT_DIR/All Services/V-Eval-Web_Client" ]; then
     fi
 fi
 
-# 5. Khởi động các container Docker
-echo "🐳 [4/4] Đang khởi chạy các Docker Container ở chế độ nền (-d)..."
+# 4. Khởi động các container Docker
+echo "🐳 [3/3] Đang khởi chạy các Docker Container ở chế độ nền (-d)..."
 cd "$ROOT_DIR"
 docker compose up -d "$@"
 

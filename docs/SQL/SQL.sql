@@ -7,7 +7,7 @@
 -- Kiến trúc: Microservices Database-per-Service
 --   - Khóa ngoại VẬT LÝ (Physical FK): CHỈ tạo khi bảng cha và con CÙNG schema.
 --   - Khóa ngoại LOGIC (Logical FK*): Tham chiếu liên schema được quản lý qua tầng ứng dụng / Event Bus.
--- Tổng số: 51 bảng, 5 Bounded Context Schemas (identity 12, content 8, enrollment 5, practice 19, outcome 7).
+-- Tổng số: 54 bảng, 5 Bounded Context Schemas (identity 12, content 8, enrollment 6, practice 21, outcome 7).
 -- =====================================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;  -- gen_random_uuid() cho PostgreSQL < 13
@@ -252,9 +252,27 @@ CREATE TABLE IF NOT EXISTS v_eval_content."ExamQuestions" (
 COMMENT ON TABLE v_eval_content."ExamQuestions" IS 'Ma trận câu hỏi trong đề thi, có thứ tự (nhiều–nhiều).';
 
 -- =====================================================================
--- PHÂN HỆ 3: SCHEMA v_eval_enrollment (5 bảng)
--- Khóa học, chuẩn đầu ra, đăng ký và thanh toán tích hợp PayOS / VietQR
+-- PHÂN HỆ 3: SCHEMA v_eval_enrollment (6 bảng)
+-- Học kỳ (AcademicTerms), Khóa học, chuẩn đầu ra, đăng ký và thanh toán tích hợp PayOS / VietQR
 -- =====================================================================
+
+-- 20b. Học kỳ / Đợt đào tạo chính thức (Conceptual Entity: Term).
+CREATE TABLE IF NOT EXISTS v_eval_enrollment."AcademicTerms" (
+    "term_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "campus_id" uuid NOT NULL,  -- FK* logic -> v_eval_identity."Campuses"(campus_id)
+    "code" varchar(30) NOT NULL UNIQUE,
+    "name" varchar(150) NOT NULL,
+    "academic_year" varchar(20) NOT NULL DEFAULT '2026-2027',
+    "term_order" integer NOT NULL DEFAULT 1,
+    "start_date" date NOT NULL,
+    "end_date" date NOT NULL,
+    "status" varchar(20) NOT NULL DEFAULT 'ACTIVE',
+    "is_active" boolean NOT NULL DEFAULT true,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
+    CHECK (end_date > start_date),
+    CHECK (status IN ('UPCOMING','ACTIVE','ONGOING','COMPLETED','ARCHIVED'))
+);
+COMMENT ON TABLE v_eval_enrollment."AcademicTerms" IS 'Học kỳ / Đợt đào tạo chính thức theo năm học tại cơ sở (tách bạch với Khóa học Courses).';
 
 -- 21. Khóa học do cơ sở mở: gói, thời lượng, học phí, chính sách học lại, sĩ số tối đa.
 CREATE TABLE IF NOT EXISTS v_eval_enrollment."Courses" (
@@ -290,6 +308,7 @@ CREATE TABLE IF NOT EXISTS v_eval_enrollment."CourseRegistrations" (
     "registration_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "student_id" uuid NOT NULL,  -- FK* logic -> v_eval_identity."Students"(student_id)
     "course_id" uuid NOT NULL,
+    "term_id" uuid,              -- FK vật lý -> v_eval_enrollment."AcademicTerms"(term_id)
     "previous_registration_id" uuid,
     "attempt_no" integer NOT NULL DEFAULT 1,
     "status" varchar(30) NOT NULL DEFAULT 'PENDING_PAYMENT',
@@ -298,6 +317,7 @@ CREATE TABLE IF NOT EXISTS v_eval_enrollment."CourseRegistrations" (
     "end_date" date,
     CONSTRAINT "uq_courseregistrations" UNIQUE ("student_id", "course_id", "attempt_no"),
     CONSTRAINT "fk_courseregistrations_course_id" FOREIGN KEY ("course_id") REFERENCES v_eval_enrollment."Courses"("course_id") ON DELETE RESTRICT,
+    CONSTRAINT "fk_courseregistrations_term_id" FOREIGN KEY ("term_id") REFERENCES v_eval_enrollment."AcademicTerms"("term_id") ON DELETE SET NULL,
     CONSTRAINT "fk_courseregistrations_previous_registration_id" FOREIGN KEY ("previous_registration_id") REFERENCES v_eval_enrollment."CourseRegistrations"("registration_id") ON DELETE SET NULL
 );
 COMMENT ON TABLE v_eval_enrollment."CourseRegistrations" IS 'Đăng ký khóa học của học sinh; attempt_no và previous_registration_id biểu diễn các lần học lại.';
@@ -340,44 +360,94 @@ CREATE TABLE IF NOT EXISTS v_eval_enrollment."PaymentTransactions" (
 COMMENT ON TABLE v_eval_enrollment."PaymentTransactions" IS 'Nhật ký giao dịch và Webhook IPN từ PayOS phục vụ kiểm toán tài chính.';
 
 -- =====================================================================
--- PHÂN HỆ 4: SCHEMA v_eval_practice (19 bảng)
--- Lớp học, lộ trình thích ứng PLAR, bài làm, theo dõi năng lực và cảnh báo
+-- PHÂN HỆ 4: SCHEMA v_eval_practice (21 bảng)
+-- Lớp học, khung lịch tuần, buổi học, điểm danh, lộ trình thích ứng PLAR, bài làm, theo dõi năng lực và cảnh báo
 -- =====================================================================
 
 -- 26. Lớp học trực tiếp (tối đa 20 học sinh), một môn, một giáo viên; có thể là lớp phân cụm theo cohort.
 CREATE TABLE IF NOT EXISTS v_eval_practice."Classes" (
     "class_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "campus_id" uuid NOT NULL,  -- FK* logic -> v_eval_identity."Campuses"(campus_id)
+    "term_id" uuid,             -- FK* logic -> v_eval_enrollment."AcademicTerms"(term_id)
     "course_id" uuid NOT NULL,  -- FK* logic -> v_eval_enrollment."Courses"(course_id)
     "domain_id" uuid NOT NULL,
-    "teacher_id" uuid,  -- FK* logic -> v_eval_identity."TeacherSubjects"(teacher_id)
+    "domain_code" varchar(50),
+    "teacher_id" uuid,          -- FK* logic -> v_eval_identity."TeacherSubjects"(teacher_id)
+    "assigned_by" uuid,         -- FK* logic -> v_eval_identity."Users"(user_id)
     "name" text NOT NULL,
+    "academic_year" varchar(20) DEFAULT '2026-2027',
     "status" varchar(30) NOT NULL DEFAULT 'ACTIVE',
     "class_type" smallint NOT NULL DEFAULT 0,
     "cluster_index" integer,
     "max_capacity" integer NOT NULL DEFAULT 20,
     "start_date" date,
     "end_date" date,
+    "assigned_at" timestamptz,
     "created_at" timestamptz NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE v_eval_practice."Classes" IS 'Lớp học trực tiếp (tối đa 20 học sinh), một môn, một giáo viên; có thể là lớp phân cụm theo cohort.';
+COMMENT ON TABLE v_eval_practice."Classes" IS 'Lớp học trực tiếp (tối đa 20 học sinh), gắn với Học kỳ (term_id) và Khóa học (course_id), một giáo viên chủ nhiệm; có thể là lớp phân cụm theo cohort.';
 
--- 27. Các buổi học của lớp: ngày, giờ, phòng, kỹ năng dạy, trạng thái.
+-- 26b. Khung lịch định kỳ hằng tuần của lớp (Thứ, Ca, Giờ bắt đầu/kết thúc, Phòng học) dùng để tự động rải chuỗi ClassSessions.
+CREATE TABLE IF NOT EXISTS v_eval_practice."ClassSchedules" (
+    "schedule_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "class_id" uuid NOT NULL,
+    "day_of_week" integer NOT NULL,
+    "slot_number" integer NOT NULL DEFAULT 1,
+    "start_time" time NOT NULL,
+    "end_time" time NOT NULL,
+    "room" varchar(100) NOT NULL,
+    "is_active" boolean NOT NULL DEFAULT true,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT "uq_classschedules" UNIQUE ("class_id", "day_of_week", "start_time"),
+    CONSTRAINT "fk_classschedules_class_id" FOREIGN KEY ("class_id") REFERENCES v_eval_practice."Classes"("class_id") ON DELETE CASCADE,
+    CHECK (end_time > start_time)
+);
+COMMENT ON TABLE v_eval_practice."ClassSchedules" IS 'Khung lịch học định kỳ hằng tuần của lớp (Thứ, Ca, Giờ, Phòng) làm khuôn mẫu tự động sinh chuỗi buổi học.';
+
+-- 27. Các buổi học cụ thể của lớp: ngày, giờ, phòng, giảng viên đứng lớp/dạy thay, kỹ năng dạy, buổi học bù, trạng thái.
 CREATE TABLE IF NOT EXISTS v_eval_practice."ClassSessions" (
     "session_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     "class_id" uuid NOT NULL,
-    "skill_id" uuid,  -- FK* logic -> v_eval_content."Skills"(skill_id)
+    "schedule_id" uuid,
+    "session_no" integer NOT NULL DEFAULT 1,
+    "skill_id" uuid,            -- FK* logic -> v_eval_content."Skills"(skill_id)
+    "topic_title" varchar(255),
+    "teacher_id" uuid,          -- FK* logic -> v_eval_identity."Users"(user_id) (Giảng viên đứng lớp thực tế hoặc dạy thay)
     "session_date" date NOT NULL,
     "start_time" time NOT NULL,
     "end_time" time NOT NULL,
     "room" varchar(100),
     "status" varchar(30) NOT NULL DEFAULT 'SCHEDULED',
+    "rescheduled_from_id" uuid, -- Tự tham chiếu -> v_eval_practice."ClassSessions"(session_id) (Buổi học bù cho buổi bị hoãn)
+    "notes" text,
     "created_at" timestamptz NOT NULL DEFAULT now(),
+    "updated_at" timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT "uq_classsessions" UNIQUE ("class_id", "session_date", "start_time"),
     CONSTRAINT "fk_classsessions_class_id" FOREIGN KEY ("class_id") REFERENCES v_eval_practice."Classes"("class_id") ON DELETE CASCADE,
-    CHECK (end_time > start_time)
+    CONSTRAINT "fk_classsessions_schedule_id" FOREIGN KEY ("schedule_id") REFERENCES v_eval_practice."ClassSchedules"("schedule_id") ON DELETE SET NULL,
+    CONSTRAINT "fk_classsessions_rescheduled_from_id" FOREIGN KEY ("rescheduled_from_id") REFERENCES v_eval_practice."ClassSessions"("session_id") ON DELETE SET NULL,
+    CHECK (end_time > start_time),
+    CHECK (status IN ('SCHEDULED','ONGOING','COMPLETED','CANCELLED','RESCHEDULED'))
 );
-COMMENT ON TABLE v_eval_practice."ClassSessions" IS 'Các buổi học của lớp: ngày, giờ, phòng, kỹ năng dạy, trạng thái.';
+COMMENT ON TABLE v_eval_practice."ClassSessions" IS 'Các buổi học của lớp: ngày, giờ, phòng, giảng viên dạy thay (teacher_id), kỹ năng dạy, liên kết học bù (rescheduled_from_id) và trạng thái.';
+
+-- 27b. Điểm danh chuyên cần của từng học sinh tại mỗi buổi học cụ thể (Phân rã từ quan hệ User }o--o{ Session).
+CREATE TABLE IF NOT EXISTS v_eval_practice."SessionAttendances" (
+    "attendance_id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    "session_id" uuid NOT NULL,
+    "student_id" uuid NOT NULL, -- FK* logic -> v_eval_identity."Students"(student_id)
+    "enrollment_id" uuid,
+    "status" varchar(30) NOT NULL DEFAULT 'PRESENT',
+    "check_in_at" timestamptz,
+    "recorded_by" uuid,         -- FK* logic -> v_eval_identity."Users"(user_id)
+    "note" text,
+    "created_at" timestamptz NOT NULL DEFAULT now(),
+    "updated_at" timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT "uq_sessionattendances" UNIQUE ("session_id", "student_id"),
+    CONSTRAINT "fk_sessionattendances_session_id" FOREIGN KEY ("session_id") REFERENCES v_eval_practice."ClassSessions"("session_id") ON DELETE CASCADE,
+    CHECK (status IN ('PRESENT','ABSENT','LATE','EXCUSED'))
+);
+COMMENT ON TABLE v_eval_practice."SessionAttendances" IS 'Điểm danh chuyên cần của từng học sinh tại mỗi buổi học (PRESENT, ABSENT, LATE, EXCUSED).';
 
 -- 28. Kỹ năng chủ đạo của lớp kèm thứ tự ưu tiên.
 CREATE TABLE IF NOT EXISTS v_eval_practice."ClassSkills" (
@@ -766,9 +836,12 @@ CREATE INDEX IF NOT EXISTS "idx_questions_passage_id" ON v_eval_content."Questio
 CREATE INDEX IF NOT EXISTS "idx_examquestions_question_id" ON v_eval_content."ExamQuestions"("question_id");
 
 -- Chỉ mục cho v_eval_enrollment
+CREATE INDEX IF NOT EXISTS "idx_academicterms_campus_id" ON v_eval_enrollment."AcademicTerms"("campus_id");
+CREATE INDEX IF NOT EXISTS "idx_academicterms_academic_year" ON v_eval_enrollment."AcademicTerms"("academic_year", "term_order");
 CREATE INDEX IF NOT EXISTS "idx_courses_campus_id" ON v_eval_enrollment."Courses"("campus_id");
 CREATE INDEX IF NOT EXISTS "idx_readinessstandards_course_id" ON v_eval_enrollment."ReadinessStandards"("course_id");
 CREATE INDEX IF NOT EXISTS "idx_courseregistrations_course_id" ON v_eval_enrollment."CourseRegistrations"("course_id");
+CREATE INDEX IF NOT EXISTS "idx_courseregistrations_term_id" ON v_eval_enrollment."CourseRegistrations"("term_id");
 CREATE INDEX IF NOT EXISTS "idx_courseregistrations_previous_registration_id" ON v_eval_enrollment."CourseRegistrations"("previous_registration_id");
 CREATE INDEX IF NOT EXISTS "idx_payments_registration_id" ON v_eval_enrollment."Payments"("registration_id");
 CREATE INDEX IF NOT EXISTS "idx_payments_parent_id" ON v_eval_enrollment."Payments"("parent_id");
@@ -777,9 +850,14 @@ CREATE INDEX IF NOT EXISTS "idx_paymenttransactions_payment_id" ON v_eval_enroll
 
 -- Chỉ mục cho v_eval_practice
 CREATE INDEX IF NOT EXISTS "idx_classes_campus_id" ON v_eval_practice."Classes"("campus_id");
+CREATE INDEX IF NOT EXISTS "idx_classes_term_id" ON v_eval_practice."Classes"("term_id");
 CREATE INDEX IF NOT EXISTS "idx_classes_course_id" ON v_eval_practice."Classes"("course_id");
 CREATE INDEX IF NOT EXISTS "idx_classes_teacher_id" ON v_eval_practice."Classes"("teacher_id");
+CREATE INDEX IF NOT EXISTS "idx_classschedules_class_id" ON v_eval_practice."ClassSchedules"("class_id");
 CREATE INDEX IF NOT EXISTS "idx_classsessions_skill_id" ON v_eval_practice."ClassSessions"("skill_id");
+CREATE INDEX IF NOT EXISTS "idx_classsessions_teacher_date" ON v_eval_practice."ClassSessions"("teacher_id", "session_date");
+CREATE INDEX IF NOT EXISTS "idx_classsessions_date_room" ON v_eval_practice."ClassSessions"("session_date", "room", "start_time", "end_time");
+CREATE INDEX IF NOT EXISTS "idx_sessionattendances_student_id" ON v_eval_practice."SessionAttendances"("student_id", "status");
 CREATE INDEX IF NOT EXISTS "idx_classskills_skill_id" ON v_eval_practice."ClassSkills"("skill_id");
 CREATE INDEX IF NOT EXISTS "idx_examsubmissions_student_id" ON v_eval_practice."ExamSubmissions"("student_id");
 CREATE INDEX IF NOT EXISTS "idx_examsubmissions_exam_id" ON v_eval_practice."ExamSubmissions"("exam_id");
