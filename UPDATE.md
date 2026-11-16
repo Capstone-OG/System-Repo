@@ -20,17 +20,9 @@
   - **AI Engine ([`socratic_tutor.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/routers/socratic_tutor.py), [`socratic_engine.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/socratic/socratic_engine.py), [`intent_router.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/socratic/intent_router.py))**:
     - Tiếp nhận `conversation_history` và định dạng thành khối ngữ cảnh `[LỊCH SỬ TRAO ĐỔI VỪA RỒI CỦA 2 THẦY TRÒ]`, bơm trực tiếp vào prompt sinh nháp.
     - Mở rộng `_TASK_MARKERS` và bảo vệ trong heuristic router: không bao giờ phân loại nhầm câu hỏi nối tiếp của học sinh ("ví dụ", "minh họa", "làm sao", "giải thích") sang Case C1 (Chit-chat / Lời chào xã giao) khi đang trong phiên bài tập.
-    - Nâng hạn mức timeout sinh nháp LLM từ 8.0s lên 18.0s.
-- **Chuẩn Hóa Kiến Trúc Xóa Phiên & Phân Tách Rạch Ròi Audit Log ([`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`aiSessionManager.js`](./All%20Services/V-Eval-Web_Client/src/utils/aiSessionManager.js), [`aiSessionManager.test.js`](./All%20Services/V-Eval-Web_Client/tests/aiSessionManager.test.js))**:
-  - Phân định rõ ràng giữa **Audit Log kiểm toán bất biến** của nhà trường (`v_eval_ai.ai_tutor_interaction_logs` dành cho Mentor/Quản lý học thuật ở Core Flow 4) và **User Chat Sessions** dành cho học sinh. Tuyệt đối không xóa thô (hard-delete) dữ liệu kiểm toán hệ thống.
-  - Ngắt hoàn toàn việc gọi nhầm API kiểm duyệt Mentor trong modal học sinh.
-  - Khắc phục lỗi React State Closure khi xóa phiên bằng functional state updater nguyên tử `setSessions(prev => ...)`.
-  - Triển khai cơ chế Tombstones vĩnh viễn (`markSessionDeleted`, `isSessionDeleted`) ngăn chặn 100% hiện tượng hồi sinh phiên đã xóa.
-- **Khắc Phục Lỗi Lặp Từ Kép Khi AI Stream Phản Hồi ([`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`AISocraticTutorWidget.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/AISocraticTutorWidget.jsx))**:
-  - Tách biệt nguồn dữ liệu tích lũy SSE bằng `useRef` (`streamedTextRef`), xóa bỏ biến đổi state in-place, giúp giao diện miễn nhiễm 100% trước cơ chế chạy lặp 2 lần của React StrictMode.
-  - Loại bỏ 200+ lần gọi `saveSessions` dư thừa mỗi turn; chỉ lưu phiên 1 lần khi kết thúc stream (`onComplete`).
-  - Tự động chữa lành các phiên cũ bị lặp từ trong `localStorage` bằng hàm `cleanDoubledWords`.
-- **Kiểm Thử & Nghiệm Thu Toàn Diện**:
-  - AI Engine: `pytest tests/test_hybrid_retriever.py tests/test_socratic_engine.py tests/test_socratic_mentor.py` đạt **26/26 tests pass 100%**. Kiểm thử trực tiếp câu hỏi Hình học Không gian giao tuyến `SO` (`4e59df20-e11b-4d14-ab8f-0ac4cb734d0b`): Trích xuất chính xác 100% bài học `Dạng 2: Xác định giao tuyến của hai mặt phẳng phân biệt cắt nhau` và `core_theorems` SGK tương ứng.
-  - Practice Service: `dotnet build` đạt **0 Warning, 0 Error**.
-  - Web Client: `npm run build` thành công trong 1.06s, `node --test` đạt **22/22 unit tests pass 100%**.
+- **Đồng Bộ Hệ Thống Lịch Học, Điểm Danh, Học Phí Thực Tế & Toàn Bộ Cấu Trúc Toàn Dự Án**:
+  - Tích hợp mô hình ERD 3 tầng (Học kỳ `AcademicTerms`, Khung lịch tuần `ClassSchedules`, Buổi học `ClassSessions`, Điểm danh `SessionAttendances`).
+  - Đồng bộ tra cứu thanh toán và hóa đơn điện tử PayOS qua CSDL PostgreSQL thật, loại bỏ toàn bộ dữ liệu mock cứng.
+  - Bảo vệ tệp cấu hình bí mật và hoàn thiện bộ script vận hành (`start_all.ps1`, `run_local.bat`).
+- **Kiểm Thử & Nghiệm Thu**:
+  - Toàn bộ 4 repository (`AI Engine`, `Web Client`, `Practice Service`, `System-Repo`) được đồng bộ và kiểm thử vận hành thành công 100%.

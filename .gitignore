@@ -12,16 +12,16 @@ obj/
 scratch/
 .local_logs/
 
-# Ignore root .env and AI Engine / RAG configs (contain Gemini/OpenAI keys)
+# Ignore root .env and all service configs (contain Gemini/OpenAI keys & DB credentials)
 /.env
 /.env.*
 !/.env.example
-Configs/V-Eval-Ai_Engine/appsettings.json
-Configs/V-Eval-Ai_Engine/appsettings.*.json
-!Configs/V-Eval-Ai_Engine/appsettings.example.json
-Configs/V-Eval-Ai_Engine/rag-service/.env
-Configs/V-Eval-Ai_Engine/rag-service/.env.*
-!Configs/V-Eval-Ai_Engine/rag-service/.env.example
+Configs/**/appsettings.json
+Configs/**/appsettings.*.json
+!Configs/**/appsettings.example.json
+Configs/**/.env
+Configs/**/.env.*
+!Configs/**/.env.example
 **/*.bak
 
 # Test results and Coverage reports
