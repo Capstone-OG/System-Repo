@@ -1,14 +1,17 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [16/11/2026] - Khắc Phục Triệt Để Hiện Tượng Lặp Từ Kép (Double Token Glitch) Khi Gia Sư AI Socratic Trả Lời & Tối Ưu Hóa Dòng Stream SSE
+## [16/11/2026] - Khắc Phục Triệt Để Hiện Tượng Lặp Từ Kép & Chuẩn Hóa Kiến Trúc Xóa Phiên Gia Sư AI Socratic (Client-Side Isolation & Tombstones)
 
+- **Chuẩn Hóa Kiến Trúc Xóa Phiên & Phân Tách Rạch Ròi Audit Log ([`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`aiSessionManager.js`](./All%20Services/V-Eval-Web_Client/src/utils/aiSessionManager.js), [`aiSessionManager.test.js`](./All%20Services/V-Eval-Web_Client/tests/aiSessionManager.test.js))**:
+  - **Tách bạch 2 tầng kiến trúc chuẩn Enterprise SaaS**: Phân định rõ ràng giữa **Audit Log kiểm toán bất biến** của nhà trường (`v_eval_ai.ai_tutor_interaction_logs` dành cho Mentor/Quản lý học thuật ở Core Flow 4) và **User Chat Sessions** dành cho học sinh. Tuyệt đối không xóa thô (hard-delete) dữ liệu kiểm toán hệ thống.
+  - **Ngắt hoàn toàn việc gọi nhầm API kiểm duyệt Mentor**: Xóa bỏ lời gọi ngầm `practiceService.getAiTutorInteractions({ reportedOnly: false })` trong modal học sinh. Học sinh chỉ tải và quản lý các phiên hội thoại cá nhân của chính mình.
+  - **Khắc phục lỗi React State Closure khi xóa phiên**: Thay thế biến `sessions` cũ bằng functional state updater nguyên tử `setSessions(prev => ...)`. Khi xóa phiên đang chọn hoặc xóa phiên cuối cùng, hệ thống tính toán danh sách `remaining` tức thời và khởi tạo phiên mới tinh khôi `[freshSess]` mà không kéo theo phiên cũ.
+  - **Triển khai cơ chế Tombstones vĩnh viễn**: Bổ sung các phương thức `markSessionDeleted`, `getDeletedSessionIds`, `isSessionDeleted` trong `aiSessionManager.js` lưu vết danh sách ID đã xóa vào `localStorage`. Bất kỳ tiến trình đồng bộ nào cũng tự động bỏ qua các ID này, ngăn chặn 100% hiện tượng hồi sinh phiên đã xóa.
 - **Khắc Phục Lỗi Lặp Từ Kép Khi AI Stream Phản Hồi ([`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`AISocraticTutorWidget.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/AISocraticTutorWidget.jsx))**:
-  - **Xác định nguyên nhân gốc rễ**: Trong môi trường React 19 / Vite development mode, React StrictMode thực thi các hàm cập nhật trạng thái (`setSessions(prev => ...)`) 2 lần liên tiếp nhằm kiểm tra tính thuần khiết (pure function). Trước đây, code cũ thực hiện biến đổi trực tiếp thuộc tính đối tượng in-place (`last.text = (last.text || '') + token`), khiến mỗi token gửi từ SSE bị cộng dồn 2 lần (dẫn đến hiện tượng mọi từ đều bị lặp kép như *"Chào Chào em! em! Chà, Chà, em em vừa vừa mang mang đến đến một một..."*).
-  - **Tách biệt luồng tích lũy với `useRef` (Decoupled Stream Ref)**: Sử dụng `streamedTextRef.current` lưu trữ nguồn dữ liệu chính xác duy nhất cho chuỗi văn bản đang stream. State updater chỉ thực hiện gán bất biến (`text: currentText`) qua `prev.map(...)`, hoàn toàn miễn nhiễm 100% trước cơ chế chạy lặp của React StrictMode.
-  - **Triệt tiêu 200+ lần ghi đĩa dư thừa vào LocalStorage**: Loại bỏ lời gọi `aiSessionManager.saveSessions(...)` bên trong callback `onToken`. Việc lưu phiên chỉ thực hiện đúng 1 lần duy nhất khi kết thúc lượt stream (`onComplete`) hoặc khi gặp lỗi (`onError`), giải phóng hoàn toàn nghẽn I/O và hiện tượng giật lag giao diện.
-- **Tự Động Làm Sạch & Phục Hồi Dữ Liệu Phiên Cũ ([`aiSessionManager.js`](./All%20Services/V-Eval-Web_Client/src/utils/aiSessionManager.js), [`aiSessionManager.test.js`](./All%20Services/V-Eval-Web_Client/tests/aiSessionManager.test.js))**:
-  - Xây dựng hàm `cleanDoubledWords` nhận diện và tự động chữa lành các tin nhắn lịch sử từng bị dính lỗi lặp từ trước đó trong `localStorage` ngay khi nạp phiên, đồng thời giữ nguyên các từ láy tự nhiên trong tiếng Việt (như "thong thả", "chầm chậm").
+  - Tách biệt nguồn dữ liệu tích lũy SSE bằng `useRef` (`streamedTextRef`), xóa bỏ biến đổi state in-place, giúp giao diện miễn nhiễm 100% trước cơ chế chạy lặp 2 lần của React StrictMode.
+  - Loại bỏ 200+ lần gọi `saveSessions` dư thừa mỗi turn; chỉ lưu phiên 1 lần khi kết thúc stream (`onComplete`).
+  - Tự động chữa lành các phiên cũ bị lặp từ trong `localStorage` bằng hàm `cleanDoubledWords`.
 - **Kiểm Thử & Biên Dịch Toàn Diện**:
-  - `npm run build`: Thành công 100% trong 1.20s.
-  - `node --test`: Đạt **22/22 unit tests pass 100%** (bao gồm toàn bộ suite `aiSessionManager` và `cleanVietnameseDiacritics`).
+  - `npm run build`: Thành công 100% trong 1.08s.
+  - `node --test`: Đạt **22/22 unit tests pass 100%** (bao gồm bài test chuyên sâu cho Tombstones và ngăn chặn hồi sinh phiên).
   - **Không phát sinh bất kỳ cảnh báo breaking change hay suy giảm hiệu năng nào**.
