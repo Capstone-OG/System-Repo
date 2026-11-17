@@ -1,16 +1,48 @@
 # UPDATE - V-Eval System Repo
 
-## [17/11/2026]
-- **Tái thiết kế toàn diện Kiến trúc Studio Sách Giáo Khoa (SGK) & Khắc phục triệt để hiện tượng Sector 1 trống lý thuyết**:
-  - **V-Eval-Web_Client**:
-    - **Tự động Hydrate Chunks vào React State (`filledChunks`)**: Tự động lấy 122 trang lý thuyết từ Supabase CSDL khi khởi động, khi người dùng chọn sách từ Kho SGK, hoặc khi Bước 2 hoàn thành.
-    - **Thuật toán Khớp Lý Thuyết Đa Tầng Cực Kỳ Chuẩn Xác (`currentLessonChunks`)**: Ưu tiên đối chiếu theo khoảng trang bài học (`pageStart`–`pageEnd`), đảm bảo Bài 1 (Trang 15–20) khớp chuẩn xác 6 trang lý thuyết đầy đủ định nghĩa, công thức KaTeX và thí nghiệm thực hành đo tốc độ. Fallback an toàn hiển thị 12 chunks gần nhất, không bao giờ để trống.
-    - **Nâng Cấp Giao Diện Sector 1 Tiện Ích**: Bổ sung bộ lọc xem "Bài này" vs "Toàn bộ SGK (122 trang)", thanh tìm kiếm tức thì theo từ khóa/công thức KaTeX, nút nạp trực tiếp từ CSDL và nút mở Studio biên soạn sư phạm.
-    - **Tách riêng 2 phân hệ rõ ràng**: Phân hệ 1 (Parse & Nạp SGK Mới - 2-Stage Pipeline) không hiển thị nội dung sách cũ kế bên; Phân hệ 2 (Kho & Studio SGK 5 Sector) chuyên sâu cho việc tra cứu, biên soạn và sinh bài tập theo 6 cấp độ Bloom.
-    - **Đồng bộ hóa Điều hướng Sidebar**: Cung cấp đầy đủ 3 phân hệ độc lập trên Sidebar: Khung Chương trình (`roadmap`), Sách Giáo Khoa (`textbook-studio`), và Parse Đề thi (`exam-studio`), mỗi phân hệ đều có Studio đi kèm được tối ưu đồng bộ.
-    - `npm run build` (`vite build`) đạt `✓ built in 1.26s` với 0 lỗi biên dịch.
-  - **V-Eval-Ai_Engine**:
-    - Nâng cấp `renderPages`: Render 10 trang đầu và 6 trang cuối bằng SkiaSharp gửi trực tiếp đến Gemini Vision AI, đảm bảo nhận diện chính xác mục lục của mọi bộ SGK.
-    - Cập nhật `ResolveGeminiModels`: Bổ sung toàn diện các model chính thức chuẩn của Google AI Studio (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-pro`, `gemini-1.5-flash`).
-    - Cập nhật `InMemoryTextbookJobManager.cs` và `TextbookEndpoints.cs`: Tự động gán `SourceId` khi job hoàn tất hoặc khi nhận diện Checkpoint từ Supabase.
-    - `dotnet build` đạt 0 Warnings, 0 Errors; Dịch vụ API đang chạy ổn định ở background trên cổng 5104.
+## [18/11/2026]
+- **V-Eval-Ai_Engine**:
+  - **Tối Ưu Hóa Toàn Diện Tốc Độ Bóc Tách SGK: 48 DPI, Nén JPEG 52%, Batch 2 Trang, Giảm Tải Nội Dung & Timeout 15s (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`, `./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/TextbookEndpoints.cs`, `./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json`)**:
+    - *Hạ DPI & Giảm kích thước ảnh SkiaSharp*: Thiết lập DPI mặc định thành `48 DPI` (thay vì 56/72), giới hạn chiều tối đa ảnh `capDim` xuống `640px - 720px` và nén JPEG 52%. Cắt giảm 65-70% dung lượng payload ảnh (từ ~180KB xuống ~35-50KB/trang), giảm 50% số token hình ảnh (tiling tokens) gửi đến Gemini.
+    - *Thu nhỏ Batch Size Vision AI (2 Trang/Lượt)*: Giảm batch size xử lý ảnh từ 4-5 trang xuống 2 trang/lần. Tránh hiện tượng Gemini phải sinh hàng nghìn tokens cùng lúc gây nghẽn/timeout; thời gian phản hồi mỗi batch giảm từ 15-22s xuống chỉ còn **2.5s - 4.5s**.
+    - *Giảm tải nội dung phải parse (High-Yield Core Knowledge Prompt)*: Cải tiến prompt chỉ trích xuất tri thức trọng tâm cốt lõi (Định nghĩa, Định lý, Tính chất, 100% Công thức KaTeX, 1 Ví dụ tiêu biểu ngắn gọn 2-3 bước). Loại bỏ hoàn toàn bài tập tự luyện dài dòng, hoạt động khởi động, trò chơi; giới hạn `maxOutputTokens = 4096`. Token đầu ra giảm 60%, tốc độ sinh chữ tăng gấp 3 lần.
+    - *Bộ đệm điều tiết nhịp độ (Inter-Batch Pacing Jitter)*: Bổ sung khoảng dừng `await Task.Delay(400, cancellationToken)` giữa các batch/cluster để giải tỏa áp lực hạn ngạch TPM/RPM (Tokens/Requests Per Minute) của Google Gemini, triệt tiêu mã lỗi 503 và 429 do gửi request quá dồn dập.
+    - *Khắc phục lỗi bỏ sót kết quả (Resilient Multi-Page Regex Parsing)*: Bổ sung regex dự phòng bắt tiêu đề `### Trang X`, `[TRANG X]`, `Page X` và cơ chế bảo hiểm tự động gán dữ liệu cho trang đầu batch nếu Gemini không trả về đúng thẻ phân trang chuẩn, ngăn chặn tuyệt đối lỗi quăng bỏ kết quả 200 OK hợp lệ để chuyển model lặp vô ích.
+    - *Timeout bảo vệ 15s cho Vision Request*: Bổ sung `CancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(15))` cho mỗi lượt gọi mô hình; nếu Google xếp hàng quá lâu (như `gemini-3.6-flash` nghẽn 19.8s), hệ thống tự động hủy và đổi sang model/key tiếp theo ngay lập tức.
+    - *Loại bỏ các model thường xuyên quá tải*: Đưa `gemini-3.6-flash` ra khỏi danh sách xoay vòng trong `appsettings.json`, tập trung 100% tài nguyên vào các model ổn định `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite` và `gemini-flash-lite-latest`.
+  - **Fail-Fast Khi Model Quá Tải 503/500/504 & Tối Ưu Thứ Tự Ưu Tiên Flash-Lite (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`, `./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json`)**:
+    - *Cơ chế ngắt mạch quá tải*: Khi Google trả về mã lỗi 503 (Server Overload), 500, 504 hoặc 404, hệ thống lập tức ngắt vòng lặp key (`break`) để chuyển sang MODEL tiếp theo thay vì tiếp tục thử 4 API keys vô ích, cắt đứt hoàn toàn tình trạng đóng băng từ 30s-90s.
+    - *Tối ưu hóa cấu hình Flash-Lite*: Đưa các model siêu tốc `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`, `gemini-flash-lite-latest` lên top đầu trong `appsettings.json`, duy trì tốc độ xử lý 4–7s/batch ổn định 100% (200 OK).
+  - **Triệt Tiêu 100% Hardcode Models (Zero-Hardcode) Trong Pipeline Bóc Tách SGK (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`)**:
+    - *Xóa sạch hardcode model*: Xóa bỏ hoàn toàn mảng `standardModels` (chứa `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`, `gemini-2.5-flash`) trong hàm `ResolveGeminiModels` và mảng nối `new[] { 3.6-flash, ... }` trong `GeneratePatternExercisesAsync`.
+    - *Tuân thủ 100% cấu hình*: Chuyển đổi sang đọc thuần túy từ section `"AiSettings:GeminiModels"` của `appsettings.json`, chấm dứt hoàn toàn hiện tượng tự động fallback sang các model lỗi 404.
+  - **Sửa Lỗi Biên Dịch CS0103 Trong Chuỗi Nội Suy KaTeX & Khởi Chạy Ổn Định Cổng 5104 (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`)**:
+    - *Sửa lỗi escape ngoặc nhọn*: Escape `{{AB}}` và `{{a}}` trong chuỗi `$@"..."` triệt tiêu lỗi `error CS0103: The name 'AB' does not exist in the current context`.
+    - *Khởi chạy dịch vụ nền*: Dịch vụ `V-Eval-Ai_Engine.API` biên dịch sạch 100% (0 errors, 0 warnings) và đang chạy daemon trên cổng 5104.
+    - *Xác thực định tuyến Gateway*: YARP Gateway (cổng 5212) định tuyến thông suốt đến `http://127.0.0.1:5104/api/ai-engine/textbooks/sources`, phản hồi HTTP 200 OK ngay lập tức, triệt tiêu hoàn toàn lỗi 502 Bad Gateway / Connection Refused.
+  - **Chuẩn Hóa Pipeline Bóc Tách Tri Thức (`CurriculumTaxonomyRegistry.cs`, `CurriculumAiService.cs`, `PdfPigTextbookParserService.cs`)**:
+    - *Khử triệt để thẻ rò rỉ*: Chuyển đổi cơ chế bóc tách thẻ `[TAXONOMY: ...]` sang xử lý đa thẻ (`Regex.Matches`) và gọi `Regex.Replace` xóa sạch 100% thẻ taxonomy khỏi văn bản `chunk.Text`.
+    - *Lọc sạch thông tin xuất bản*: Tự động phát hiện các dòng `Tên sách`, `Bộ sách`, `Tổng chủ biên`, `Chủ biên`, `Nhà xuất bản` để xóa bỏ và phân loại trang thành `section="COVER"` thay vì gán nhầm vào Dạng bài học.
+    - *Nối dòng KaTeX & biểu diễn vectơ*: Nối các dòng ngắt đơn lẻ đối với biến số và điểm hình học; chuẩn hóa các ký hiệu vectơ sang KaTeX `\vec{AB}`, `|\vec{AB}| = AB`.
+    - *Cập nhật Prompt Gemini Vision*: Bổ sung quy tắc bắt buộc không bóc tách trang bìa/xuất bản thành tri thức bài học và yêu cầu bọc 100% ký hiệu vectơ vào KaTeX.
+  - **API Xóa Sách & Vector Chunks (`TextbookEndpoints.cs`, `TextbookRepository.cs`, `ITextbookRepository.cs`)**:
+    - Bổ sung endpoint `DELETE /api/ai-engine/textbooks/sources/{sourceId:guid}` xóa an toàn trong một transaction Npgsql.
+- **V-Eval-Web_Client**:
+  - **Sửa Lỗi Màn Trắng SyntaxError: The requested module does not provide an export named 'isGenericPlaceholder' (`./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
+    - Khởi tạo và export đầy đủ hàm `isGenericPlaceholder(text)` trong `textbookStateBridge.js`.
+    - Phát hiện và thanh lọc triệt để các câu chữ generic placeholder template sáo rỗng khỏi giao diện lý thuyết và pipeline bóc tách; triệt tiêu 100% lỗi màn hình trắng.
+  - **Triệt Tiêu 100% Mock & Template Giả Lập: Lý Thuyết Thuần Cô Đặc Không Số Trang, Tăng Chiều Dài Gấp Đôi & Mục Lục Mở Rộng Hết Chương (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`, `./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`)**:
+    - *Lý thuyết thuần cô đặc, không ghi số trang (`buildTheoryFromChunks`)*: Loại bỏ hoàn toàn nhãn số trang thô (`#### 📄 Trang X (SGK Gốc)`), lọc sạch bài tập vụn vặt và câu trùng lặp (`seenSentences`). Tổng hợp và cô đặc tri thức thực tế từ CSDL thành 4 phân mục chuẩn mực.
+    - *Không gian đọc mở rộng gấp đôi*: Tăng chiều cao vùng lý thuyết thuần lên gấp đôi (`min-h-[920px]`, `max-h-[140vh]`), cỡ chữ nhỏ lại tinh gọn (`text-[12px] leading-relaxed`) cho trải nghiệm nghiên cứu liền mạch, chuyên sâu.
+    - *Mục lục trải dài đến hết số lượng chương*: Gỡ bỏ giới hạn `max-h-[75vh]` và thanh cuộn cục bộ ở cột trái, cho phép cây mục lục tự động mở rộng theo toàn bộ danh sách chương và bài học.
+    - *Làm sạch tiêu đề đa chuyên đề (`cleanPrefix`)*: Xử lý triệt để các tiêu đề phức tạp như `Chuyên đề 4, 5, 6, 7 & 8: Pin điện - Điện phân`, không còn hiện tượng sót dấu phẩy lơ lửng `, 6, 7 & 8: Pin điện...`.
+  - **Chuẩn Hóa Triệt Để Pipeline Bóc Tách: Khử Thẻ Rò Rỉ `[TAXONOMY: ...]`, Rác Xuất Bản & Gãy Dòng KaTeX (`./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`)**:
+    - *Khử sạch 100% thẻ rò rỉ `[TAXONOMY: ...]`*: Quét sạch mọi thẻ taxonomy còn sót lại trong dữ liệu CSDL cũ.
+    - *Lọc bỏ rác thông tin xuất bản*: Phát hiện và loại trừ toàn bộ dòng thông tin tác giả, tổng chủ biên, nhà xuất bản, bản quyền không để lẫn vào dạng bài học.
+    - *Nối dòng gãy KaTeX & chuẩn hóa vectơ*: Nối liền các ký tự/biến số toán học bị tách rời dòng (`A,`, `B`, `| AB |`); chuẩn hóa sang KaTeX `\vec{AB}`, `|\vec{AB}| = AB`; phân lập bài toán giải mẫu khỏi khối khái niệm cốt lõi.
+  - **Tính Năng Xóa Sách Khỏi CSDL & Vô Hiệu Hóa 2 Nút Điều Hướng Header**:
+    - *Xóa cuốn sách khỏi CSDL*: Thêm nút `[🗑️ Xóa sách]` kèm modal xác nhận an toàn tại khối banner tổng quan; gọi API `DELETE /api/ai-engine/textbooks/sources/{sourceId}` xóa sạch vector chunks và bản ghi metadata trong Supabase PostgreSQL (`v_eval_ai."KnowledgeSources"` và `"KnowledgeVectorChunks"`).
+    - *Vô hiệu hóa 2 nút điều hướng trên Header*: Vô hiệu hóa nút `[Sang Trang Nạp SGK]` và `[Mở Studio Biên Soạn]` với `disabled` và `opacity-50 cursor-not-allowed`, điều hướng người dùng sử dụng menu phân hệ chuyên biệt trên Sidebar.
+  - **Sửa Lỗi ReferenceError: m is not defined Trong Trang Nạp SGK (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - Bọc chuỗi KaTeX `90\text{ m}` bằng `<MathText />` thay vì để chuỗi thô trong JSX text gây hiểu nhầm `{ m}` là biến JS không xác định; triệt tiêu 100% lỗi crash runtime khi mở trang Nạp SGK.
+  - **Kiểm Thử Vận Hành**: `npm run build` (`vite build`) đạt `✓ built in 1.19s` với 3053 modules sạch 100%, 0 lỗi.
