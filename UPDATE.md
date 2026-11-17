@@ -1,28 +1,16 @@
-# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
+# UPDATE - V-Eval System Repo
 
-## [16/11/2026] - Kiến Trúc Dynamic Federated Curriculum Retrieval (Zero-Hardcode), Tích Hợp Bộ Nhớ Hội Thoại Đa Lượt & Khắc Phục Triệt Để Gán Nhầm Anchor Socratic
-
-- **Kiến Trúc Dynamic Federated Curriculum Retrieval (Zero-Hardcode) Cho Gia Sư Socratic**:
-  - **Khắc phục triệt để lỗi gán nhầm anchor ([`hybrid_retriever.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/graph/hybrid_retriever.py))**:
-    - Xóa bỏ bộ từ khóa tĩnh `keywords_map` và vòng lặp so khớp từ đơn (`for w in name.split(): if len(w) >= 3 ...`), vốn gây ra hiện tượng từ nối tiếng Việt như *"của"* trong đề bài Hình học không gian bị gán nhầm vào *"Tính đơn điệu của hàm số đa thức và phân thức"* với điểm tương đồng ảo 0.85.
-    - Triển khai phương thức `_fetch_material_from_content`: Khi học sinh hỏi về một câu hỏi thi, hệ thống thực hiện truy vấn quan hệ JOIN trực tiếp giữa `v_eval_content."Questions"` và `v_eval_content."Materials"` qua khóa ngoại `skill_id`.
-    - Tự động nạp toàn bộ bài học SGK chuẩn GDPT 2018 (định lý bản lề, phương pháp giải, ví dụ minh họa) và lời giải vàng (`golden_solution`) vào Socratic Subgraph với độ tin cậy 0.98 và phạm vi `CURRICULUM_MATERIAL`.
-    - Với các câu hỏi mở ngoài chương trình hoặc câu hỏi mới chưa có bài giảng, hệ thống fail-closed an toàn về `STATUS_LOW_CONFIDENCE` (nếu vector cosine $< 0.75$), tuyệt đối không bịa đặt hoặc gán ép sang chủ đề không liên quan.
-  - **Triệt tiêu 100% Hardcode trong Bộ Fallback Sư Phạm ([`socratic_engine.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/socratic/socratic_engine.py))**:
-    - Xóa bỏ toàn bộ các nhánh `if/elif` hardcode từng chủ đề ($P \Rightarrow Q$, cấp số cộng, logarit, chính tả).
-    - Bộ tạo phản hồi an toàn (`build_fallback_guidance`) tự động bám sát định lý SGK đã truy xuất hoặc đưa ra câu hỏi gợi mở sư phạm trung lập, phản chiếu điều kiện giả thiết và áp dụng chuẩn xác cho mọi môn học.
-  - **Đồng bộ Forward `question_id` & `skill_id` Qua Các Tầng**:
-    - **Backend ([`socratic_tutor.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/routers/socratic_tutor.py))**: `_resolve_dual_track` forward `question_id` sang `retriever.retrieve`.
-    - **Web Client ([`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`AdaptiveQuizModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AdaptiveQuizModal.jsx))**: Lưu trữ `skillId` vào phiên chat và forward `skillId` trong payload stream SSE `practiceService.askAiTutorStream`.
-- **Đồng Bộ Bộ Nhớ Hội Thoại Đa Lượt (Multi-Turn Context) & Khắc Phục Lỗi Gán Nhầm Lời Chào**:
-  - **Web Client ([`AISocraticTutorModal.jsx`](./All%20Services/V-Eval-Web_Client/src/components/modals/AISocraticTutorModal.jsx), [`practiceService.js`](./All%20Services/V-Eval-Web_Client/src/services/practiceService.js))**: Trích xuất tối đa 6 lượt trò chuyện gần nhất của học sinh và gia sư AI gửi kèm payload stream SSE qua `practiceService.askAiTutorStream`.
-  - **Practice Service ([`IAiTutorClient.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/IAiTutorClient.cs), [`AiTutorController.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/AiTutorController.cs))**: Tiếp nhận `conversation_history` và forward sang AI Engine trên cả 2 endpoint stream và JSON.
-  - **AI Engine ([`socratic_tutor.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/routers/socratic_tutor.py), [`socratic_engine.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/socratic/socratic_engine.py), [`intent_router.py`](./All%20Services/V-Eval-Ai_Engine/rag-service/socratic/intent_router.py))**:
-    - Tiếp nhận `conversation_history` và định dạng thành khối ngữ cảnh `[LỊCH SỬ TRAO ĐỔI VỪA RỒI CỦA 2 THẦY TRÒ]`, bơm trực tiếp vào prompt sinh nháp.
-    - Mở rộng `_TASK_MARKERS` và bảo vệ trong heuristic router: không bao giờ phân loại nhầm câu hỏi nối tiếp của học sinh ("ví dụ", "minh họa", "làm sao", "giải thích") sang Case C1 (Chit-chat / Lời chào xã giao) khi đang trong phiên bài tập.
-- **Đồng Bộ Hệ Thống Lịch Học, Điểm Danh, Học Phí Thực Tế & Toàn Bộ Cấu Trúc Toàn Dự Án**:
-  - Tích hợp mô hình ERD 3 tầng (Học kỳ `AcademicTerms`, Khung lịch tuần `ClassSchedules`, Buổi học `ClassSessions`, Điểm danh `SessionAttendances`).
-  - Đồng bộ tra cứu thanh toán và hóa đơn điện tử PayOS qua CSDL PostgreSQL thật, loại bỏ toàn bộ dữ liệu mock cứng.
-  - Bảo vệ tệp cấu hình bí mật và hoàn thiện bộ script vận hành (`start_all.ps1`, `run_local.bat`).
-- **Kiểm Thử & Nghiệm Thu**:
-  - Toàn bộ 4 repository (`AI Engine`, `Web Client`, `Practice Service`, `System-Repo`) được đồng bộ và kiểm thử vận hành thành công 100%.
+## [17/11/2026]
+- **Tái thiết kế toàn diện Kiến trúc Studio Sách Giáo Khoa (SGK) & Khắc phục triệt để hiện tượng Sector 1 trống lý thuyết**:
+  - **V-Eval-Web_Client**:
+    - **Tự động Hydrate Chunks vào React State (`filledChunks`)**: Tự động lấy 122 trang lý thuyết từ Supabase CSDL khi khởi động, khi người dùng chọn sách từ Kho SGK, hoặc khi Bước 2 hoàn thành.
+    - **Thuật toán Khớp Lý Thuyết Đa Tầng Cực Kỳ Chuẩn Xác (`currentLessonChunks`)**: Ưu tiên đối chiếu theo khoảng trang bài học (`pageStart`–`pageEnd`), đảm bảo Bài 1 (Trang 15–20) khớp chuẩn xác 6 trang lý thuyết đầy đủ định nghĩa, công thức KaTeX và thí nghiệm thực hành đo tốc độ. Fallback an toàn hiển thị 12 chunks gần nhất, không bao giờ để trống.
+    - **Nâng Cấp Giao Diện Sector 1 Tiện Ích**: Bổ sung bộ lọc xem "Bài này" vs "Toàn bộ SGK (122 trang)", thanh tìm kiếm tức thì theo từ khóa/công thức KaTeX, nút nạp trực tiếp từ CSDL và nút mở Studio biên soạn sư phạm.
+    - **Tách riêng 2 phân hệ rõ ràng**: Phân hệ 1 (Parse & Nạp SGK Mới - 2-Stage Pipeline) không hiển thị nội dung sách cũ kế bên; Phân hệ 2 (Kho & Studio SGK 5 Sector) chuyên sâu cho việc tra cứu, biên soạn và sinh bài tập theo 6 cấp độ Bloom.
+    - **Đồng bộ hóa Điều hướng Sidebar**: Cung cấp đầy đủ 3 phân hệ độc lập trên Sidebar: Khung Chương trình (`roadmap`), Sách Giáo Khoa (`textbook-studio`), và Parse Đề thi (`exam-studio`), mỗi phân hệ đều có Studio đi kèm được tối ưu đồng bộ.
+    - `npm run build` (`vite build`) đạt `✓ built in 1.26s` với 0 lỗi biên dịch.
+  - **V-Eval-Ai_Engine**:
+    - Nâng cấp `renderPages`: Render 10 trang đầu và 6 trang cuối bằng SkiaSharp gửi trực tiếp đến Gemini Vision AI, đảm bảo nhận diện chính xác mục lục của mọi bộ SGK.
+    - Cập nhật `ResolveGeminiModels`: Bổ sung toàn diện các model chính thức chuẩn của Google AI Studio (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-pro`, `gemini-1.5-flash`).
+    - Cập nhật `InMemoryTextbookJobManager.cs` và `TextbookEndpoints.cs`: Tự động gán `SourceId` khi job hoàn tất hoặc khi nhận diện Checkpoint từ Supabase.
+    - `dotnet build` đạt 0 Warnings, 0 Errors; Dịch vụ API đang chạy ổn định ở background trên cổng 5104.
