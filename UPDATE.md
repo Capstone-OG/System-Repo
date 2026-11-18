@@ -31,6 +31,16 @@
   - **API Xóa Sách & Vector Chunks (`TextbookEndpoints.cs`, `TextbookRepository.cs`, `ITextbookRepository.cs`)**:
     - Bổ sung endpoint `DELETE /api/ai-engine/textbooks/sources/{sourceId:guid}` xóa an toàn trong một transaction Npgsql.
 - **V-Eval-Web_Client**:
+  - **Kiến Trúc Universal Storage Bridge, Triệt Tiêu Stale Closure & Đồng Bộ Câu Hỏi Thời Gian Thực Hai Chiều (`./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
+    - *Chẩn đoán & Khắc phục triệt để lỗi mất câu hỏi*:
+      + Triệt tiêu lỗi Stale Closure React trong `saveToStorage`: sử dụng `skeletonRef = useRef(skeleton)` và luôn cập nhật `skeletonRef.current` trước khi lưu vào persistent storage, loại bỏ hiện tượng async loop ghi đè skeleton rỗng lên `localStorage`.
+      + Loại bỏ lỗi lệch chỉ số mảng (Index Mismatch): thay thế truy cập chỉ số `chapters[cIdx]` bằng hàm `updatePatternByName(chapterTitle, lessonTitle, patternName, updater)` định vị tuyệt đối theo tên chương, bài học và dạng bài.
+      + Khắc phục trạng thái rỗng khi Mount: `TextbookStandardView.jsx` tự động nạp dữ liệu câu hỏi từ `getSavedTextbookData(sourceId, fileName)` và hợp nhất sâu qua `mergeSavedExercisesIntoChapters` ngay khi component khởi tạo.
+    - *Cứu cánh lưu trữ Universal Storage Bridge*:
+      + Hàm `getSavedTextbookData` tra cứu đa tầng qua `sourceId` CSDL Supabase, `fileName` và fallback mặc định across `localStorage` và `sessionStorage`.
+      + Hàm `saveTextbookData` ghi đồng thời vào nhiều khóa và phát sự kiện `window.dispatchEvent(new CustomEvent('veval:textbook-saved', { detail }))`.
+      + Tích hợp listener `veval:textbook-saved` giúp phản hồi tức thì hai chiều: AI sinh câu hỏi ở Trang Nạp là Trang Xem hiển thị ngay lập tức mà không cần F5.
+    - *Nạp sẵn bộ câu hỏi mẫu chuẩn GDPT 2018*: Bổ sung ngân hàng câu hỏi mẫu hoàn chỉnh kèm công thức KaTeX, đáp án A/B/C/D và lời giải chi tiết cho `PHYS_10` Bài 1 và Bài 2 trong `GDPT_PRESETS`.
   - **Thu Gọn Thanh Mục Lục Cấu Trúc SGK Linh Hoạt Tương Tự Sidebar (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
     - *Cơ chế thu gọn `isTocCollapsed`*: Tích hợp nút thu gọn (`ChevronLeft`) trên thanh tiêu đề mục lục bên trái.
     - *Thu nhỏ thành cột dọc tinh tế*: Khi thu gọn, cột mục lục co lại thành dải thanh dọc (`lg:col-span-1`) hiển thị nút mở rộng (`ChevronRight`) và tiêu đề xoay dọc `Mục Lục SGK ({count} Chương)`, giải phóng diện tích ngang cho cột nội dung mở rộng sang `lg:col-span-11`.
@@ -45,9 +55,6 @@
     - *Thẻ bài tập chi tiết*: Render đề bài toán học qua `<MathText />`, 4 phương án trắc nghiệm A/B/C/D với đáp án đúng được làm nổi bật viền xanh ngọc `ring-1 ring-emerald-400` kèm icon `CheckCircle2`.
     - *Phương pháp & Lời giải chi tiết*: Nút đóng/mở xem phương pháp và lời giải chi tiết kèm icon bóng đèn `Lightbulb`.
     - *Empty State thân thiện*: Nếu bài học chưa có bài tập, hiển thị hướng dẫn kèm nút `[Đến Trang Nạp SGK để sinh câu hỏi]` điều hướng trực tiếp sang tab `ingest`.
-  - **Đồng Bộ Dữ Liệu Câu Hỏi Theo `sourceId` CSDL Supabase Giữa Trang Xem & Trang Nạp SGK (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
-    - Đồng bộ khóa lưu trữ `veval_textbook_saved_${sourceId}`: Khi chọn sách trong CSDL, cả hai trang đều đọc và ghi cùng một khóa định danh `sourceId`.
-    - Mọi câu hỏi sinh thêm hoặc cập nhật ở Trang Nạp SGK đều tự động hiển thị đầy đủ, nguyên vẹn khi người dùng chuyển sang Trang Xem SGK và ngược lại.
   - **Tối Giản Hóa Giao Diện Sinh Câu Hỏi Phần 3: Loại Bỏ Nút Toàn Sách Cục Bộ, Bộ Chọn 1 Trong 2 Kèm Nút Sinh Duy Nhất & Dọn Dẹp Icon Thừa (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
     - *Xóa nút "Sinh toàn bộ sách" khỏi header bài học*: Loại bỏ nút toàn sách khỏi Phần 3 để tách bạch ranh giới phạm vi, đưa chức năng toàn sách lên thanh điều khiển tổng quát trên cùng.
     - *Bộ chọn phạm vi 1 trong 2*: Bổ sung thanh chọn gọn gàng với tiêu mục rõ ràng `Sinh câu hỏi:` cho phép chọn 1 trong 2 chế độ:
@@ -83,4 +90,4 @@
   - **Đồng Bộ Hoàn Toàn Cây Cấu Trúc Sách Phân Cấp (Chương ▾ Bài Học ▾ Dạng Bài) Cho Trang Nạp SGK Giống Trang Xem SGK Chuẩn (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
     - Tái thiết kế cột trái `lg:col-span-4` thành cây accordion 3 tầng chuẩn mực (`Chương C.X` ▾ `Bài học B.X` ▾ `Dạng bài P.X` kèm nhãn Bloom L1–L6 và `cleanPrefix`).
     - Cho phép click chọn Dạng bài trực tiếp trên cây để kích hoạt Phần 3 (Câu Hỏi & Bài Tập SGK).
-  - **Kiểm Thử Vận Hành**: `npm run build` (`vite build`) đạt `✓ built in 2.24s` với 3053 modules sạch 100%, 0 lỗi.
+  - **Kiểm Thử Vận Hành**: `npm run build` (`vite build`) đạt `✓ built in 1.24s` với 3053 modules sạch 100%, 0 lỗi.
