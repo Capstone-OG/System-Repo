@@ -1,21 +1,21 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [19/11/2026] - Chuẩn Hóa Trải Nghiệm Người Dùng Cổng Phụ Huynh (User-Centric UX): Loại Bỏ 100% Thuật Ngữ Kỹ Thuật
+## [19/11/2026] - Nâng Cấp Giao Diện Cổng Phụ Huynh: Đồng Bộ Thiết Kế Hiện Đại, Tinh Tế Hóa Bố Cục & Chuẩn Hóa Dữ Liệu Giáo Viên Thực Tế
 
-- **Thanh Lọc Toàn Diện Thuật Ngữ Kỹ Thuật Trên Giao Diện Phụ Huynh ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
-  - Loại bỏ hoàn toàn các thuật ngữ nội bộ của developer: `Core Flow 5`, `● Live Identity + Practice gRPC`, `R_exam`, `PLAR`, `tâm trắc học IRT & BKT`, `thích ứng ZPD`, `chống treo máy ảo`.
-  - Thay thế bằng ngôn ngữ thân thiện, chuẩn góc nhìn cha mẹ:
-    - *Top Badge*: Chuyển thành `"Không Gian Đồng Hành Cùng Con"` kèm chấm xanh *"Cập nhật trực tiếp theo thời gian thực"*.
-    - *Khối Học phí*: Chuyển thành `"Nộp Học Phí Để Mở Khóa Lộ Trình Học Cá Nhân Hóa Cho Con"`, nút `"Nộp Học Phí Cho Con"`.
-    - *4 Thẻ tổng quan*: `"Chỉ Số Sẵn Sàng Thi ĐGNL"`, `"Mức độ bao quát kiến thức các phần thi ĐGNL"`.
-    - *3 Trụ cột đánh giá*: Đổi thành `"3 Trụ Cột Đánh Giá Mức Độ Sẵn Sàng Đi Thi Của Con"` (Năng lực giải đề 50%, Độ vững kiến thức 35%, Kỷ luật học tập 15%).
-    - *Khung giờ học*: Đổi thành giải thích sư phạm nhân văn, loại bỏ các từ ngữ kỹ thuật treo máy ảo.
-- **Tối Ưu Ngôi Xưng Nhắc Nhở Học Tập ([`StudentEarlyWarningsCard.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/StudentEarlyWarningsCard.jsx))**:
-  - Chuyển đổi ngôi xưng sang *"nhắc nhở con ôn bài..."* và *"Con đang duy trì nhịp độ học tập rất tốt!"*.
-- **Chuẩn Hóa Sidebar & Footer ([`Sidebar.jsx`](./All%20Services/V-Eval-Web_Client/src/components/layout/Sidebar.jsx), [`App.jsx`](./All%20Services/V-Eval-Web_Client/src/App.jsx))**:
-  - Sidebar: Loại bỏ các nhãn kỹ thuật `R_exam`, đổi nhãn thanh toán thành `"Đóng Học phí & Gói học"`.
-  - Footer: Đổi hiển thị từ `"Vai trò hiện tại: PARENT"` thành `"Tài khoản: Phụ huynh"`.
-- **Kiểm Thử & Biên Dịch**:
-  - `V-Eval-Web_Client`: `npm run build` thành công trong 1.19s, **22/22 tests passed**.
-  - `V-Eval-Practice_Service`: 20/20 unit tests passed.
-  - `V-Eval-Identity_Service`: 5/5 unit tests passed.
+- **Tái Cấu Trúc Toàn Diện Hero Header & Thông Tin Ngữ Cảnh Con ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
+  - Khắc phục triệt để tình trạng 2 banner màu xanh đậm cồng kềnh xếp chồng lên nhau gây nặng nề và rời rạc thị giác.
+  - Tích hợp trực tiếp các chip thông tin trường lớp của con (`Trường THPT`, `Khối lớp`, `Ngành mục tiêu NV1`) ngay dưới tên học sinh trong Hero Header (`from-slate-900 via-indigo-950 to-blue-950`), giúp phụ huynh nhanh chóng nhận diện bối cảnh học tập của con.
+  - Loại bỏ hoàn toàn khối giáo viên hiển thị tạm bợ, chật chội trôi nổi bên trong Hero Banner.
+- **Tinh Tế Hóa Khối Thanh Toán Học Phí PayOS (Tuition Ribbon) ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
+  - Chuyển đổi từ banner gradient xanh đậm 200px cồng kềnh thành ribbon thông báo tài chính thanh lịch với tông màu sáng dịu (`bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-slate-50 border border-blue-200/80`).
+  - Tích hợp biểu tượng `ShieldCheck`, nhãn dịch vụ học tập, mức học phí rõ ràng (5.000 ₫) và nút kêu gọi hành động VietQR quét mã tức thì.
+- **Nâng Cấp Thiết Kế 4 Thẻ Chỉ Số Trọng Tâm (4 Metric Cards Grid) ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
+  - Đồng bộ hóa cấu trúc 4 thẻ (`Mức Độ Sẵn Sàng Thi`, `Giờ Tự Học Tuần Này`, `Chuỗi Ngày Chuyên Cần`, `Độ Phủ Kiến Thức ĐGNL`) với icon badge màu ngữ nghĩa bo cong (`w-8 h-8 rounded-xl`), số liệu đậm nét và nhãn trạng thái sinh động.
+  - Cập nhật hàm thông minh `getTierInfo` phân loại chuẩn xác 4 cấp bậc sẵn sàng (`NOT_READY`, `PREPARING`, `ACCELERATING`, `READY`), loại bỏ hoàn toàn lỗi hiển thị sai lệch khi điểm thấp (19.2/100) bị gắn nhãn màu xanh "Sẵn sàng".
+- **Hài Hòa Hóa 3 Trụ Cột Đánh Giá Năng Lực & Khối Giáo Viên Phụ Trách ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
+  - Thiết kế từng trụ cột thành các khối thẻ micro tinh tế với số thứ tự đánh dấu (1, 2, 3), thanh đo gradient mượt mà và lời giải thích ngắn gọn, dễ hiểu.
+  - Đưa khối thông tin giáo viên phụ trách về đúng vị trí tại cột phải trong card `Giáo Viên Phụ Trách & Cố Vấn Học Vụ`: hiển thị avatar ký tự, tên giảng viên phụ trách thật hoặc nhãn trung thực *"Chưa có giáo viên phụ trách"*, số điện thoại liên hệ, thông tin lớp học và nút *"Đăng Ký Lịch Trao Đổi 1-1 Với Giáo Viên"*.
+- **Kiểm Thử & Biên Dịch Toàn Hệ Thống**:
+  - `V-Eval-Web_Client`: `npm run build` thành công trong 1.07s, **22/22 unit tests passed**.
+  - `V-Eval-Practice_Service`: **20/20 unit tests passed**.
+  - `V-Eval-Identity_Service`: **5/5 unit tests passed**.
