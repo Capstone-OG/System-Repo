@@ -31,6 +31,23 @@
   - **API Xóa Sách & Vector Chunks (`TextbookEndpoints.cs`, `TextbookRepository.cs`, `ITextbookRepository.cs`)**:
     - Bổ sung endpoint `DELETE /api/ai-engine/textbooks/sources/{sourceId:guid}` xóa an toàn trong một transaction Npgsql.
 - **V-Eval-Web_Client**:
+  - **Thu Gọn Thanh Mục Lục Cấu Trúc SGK Linh Hoạt Tương Tự Sidebar (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
+    - *Cơ chế thu gọn `isTocCollapsed`*: Tích hợp nút thu gọn (`ChevronLeft`) trên thanh tiêu đề mục lục bên trái.
+    - *Thu nhỏ thành cột dọc tinh tế*: Khi thu gọn, cột mục lục co lại thành dải thanh dọc (`lg:col-span-1`) hiển thị nút mở rộng (`ChevronRight`) và tiêu đề xoay dọc `Mục Lục SGK ({count} Chương)`, giải phóng diện tích ngang cho cột nội dung mở rộng sang `lg:col-span-11`.
+    - *Nút shortcut mở nhanh*: Bổ sung nút `[Mục lục]` với icon `ChevronRight` trên thanh header bài học giúp mở lại cây mục lục 1-click tức thì.
+    - *Tự động mở rộng 2 trang OCR song song*: Khi mục lục hoặc sidebar thu gọn (`isSidebarCollapsed || isTocCollapsed`), bộ trích xuất OCR tự động hiển thị 2 trang sách song song (`pageSize = 2`).
+  - **Thu Nhỏ Ô Lý Thuyết Còn 3/5 Tỉ Lệ Chuẩn (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
+    - Giới hạn chiều cao ô hiển thị lý thuyết chuẩn xuống ~3/5 (từ `min-h-[920px] max-h-[140vh]` còn `min-h-[380px] max-h-[550px] overflow-y-auto`, làm tròn xuống 550px) giúp bố cục cân đối và cuộn mượt mà.
+    - Ở chế độ chỉnh sửa trực tiếp lý thuyết (`isEditingTheory`), điều chỉnh ô `textarea` từ `rows={16}` xuống `rows={10}` tương ứng tỉ lệ 3/5.
+  - **Bổ Sung Phân Hệ Ngân Hàng Câu Hỏi & Bài Tập SGK Trực Tiếp Dưới Ô Lý Thuyết (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
+    - *Header phân hệ câu hỏi*: Hiển thị tổng số câu hỏi thực tế (`{activeLessonExercises.length} câu`), định danh bài học và huy hiệu phân hóa Bloom Taxonomy L1–L6.
+    - *Bộ lọc phạm vi & cấp độ nhận thức*: Cho phép lọc `[Cả bài]` hoặc `[Dạng bài đang chọn]`, kèm các pill lọc nhanh theo 6 cấp độ Bloom (L1. Nhớ, L2. Hiểu, L3. Vận dụng, L4. Phân tích, L5. Đánh giá, L6. Sáng tạo).
+    - *Thẻ bài tập chi tiết*: Render đề bài toán học qua `<MathText />`, 4 phương án trắc nghiệm A/B/C/D với đáp án đúng được làm nổi bật viền xanh ngọc `ring-1 ring-emerald-400` kèm icon `CheckCircle2`.
+    - *Phương pháp & Lời giải chi tiết*: Nút đóng/mở xem phương pháp và lời giải chi tiết kèm icon bóng đèn `Lightbulb`.
+    - *Empty State thân thiện*: Nếu bài học chưa có bài tập, hiển thị hướng dẫn kèm nút `[Đến Trang Nạp SGK để sinh câu hỏi]` điều hướng trực tiếp sang tab `ingest`.
+  - **Đồng Bộ Dữ Liệu Câu Hỏi Theo `sourceId` CSDL Supabase Giữa Trang Xem & Trang Nạp SGK (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - Đồng bộ khóa lưu trữ `veval_textbook_saved_${sourceId}`: Khi chọn sách trong CSDL, cả hai trang đều đọc và ghi cùng một khóa định danh `sourceId`.
+    - Mọi câu hỏi sinh thêm hoặc cập nhật ở Trang Nạp SGK đều tự động hiển thị đầy đủ, nguyên vẹn khi người dùng chuyển sang Trang Xem SGK và ngược lại.
   - **Tối Giản Hóa Giao Diện Sinh Câu Hỏi Phần 3: Loại Bỏ Nút Toàn Sách Cục Bộ, Bộ Chọn 1 Trong 2 Kèm Nút Sinh Duy Nhất & Dọn Dẹp Icon Thừa (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
     - *Xóa nút "Sinh toàn bộ sách" khỏi header bài học*: Loại bỏ nút toàn sách khỏi Phần 3 để tách bạch ranh giới phạm vi, đưa chức năng toàn sách lên thanh điều khiển tổng quát trên cùng.
     - *Bộ chọn phạm vi 1 trong 2*: Bổ sung thanh chọn gọn gàng với tiêu mục rõ ràng `Sinh câu hỏi:` cho phép chọn 1 trong 2 chế độ:
