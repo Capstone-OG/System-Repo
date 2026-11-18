@@ -1,15 +1,21 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [19/11/2026] - Triệt Tiêu Hoàn Toàn Giả Lập Giáo Viên Cổng Phụ Huynh: Hiển Thị Đúng Trạng Thái Chưa Phân Công Từ CSDL
+## [19/11/2026] - Chuẩn Hóa Trải Nghiệm Người Dùng Cổng Phụ Huynh (User-Centric UX): Loại Bỏ 100% Thuật Ngữ Kỹ Thuật
 
-- **Loại Bỏ Hoàn Toàn Dữ Liệu Fallback Giả Lập ([`GetParentDashboardQueryHandler.cs`](./All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Analytics/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs), [`IdentityGrpcService.cs`](./All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Services/IdentityGrpcService.cs))**:
-  - Xóa bỏ 100% dữ liệu cứng `"ThS. Nguyễn Minh Triết"` và `"0908 246 357"`.
-  - Phản ánh trung thực trạng thái CSDL: Khi lớp học chưa gán `TeacherId` (hoặc giáo viên không tồn tại trong CSDL), hệ thống trả về `"Chưa có giáo viên phụ trách"` và số điện thoại `"Chưa có"`.
-  - `IdentityGrpcService.GetTeacherProfile` trả về `Exists = false` khi không tìm thấy giáo viên trong CSDL thay vì sinh dữ liệu mẫu.
-- **Tối Ưu Trải Nghiệm Giao Diện Phụ Huynh ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
-  - Hiển thị rõ ràng trạng thái chưa có giáo viên hoặc chưa có số liên hệ.
-  - Nút đăng ký trao đổi 1-1 hiển thị thông báo hướng dẫn phụ huynh khi lớp con đang chờ điều phối giáo viên.
-- **Kiểm Thử & Nghiệm Thu**:
-  - `V-Eval-Practice_Service.Tests`: 20/20 unit tests Passed 100%.
-  - `V-Eval-Identity_Service.Tests`: 5/5 unit tests Passed 100%.
-  - `V-Eval-Web_Client`: `npm run build` thành công 100%.
+- **Thanh Lọc Toàn Diện Thuật Ngữ Kỹ Thuật Trên Giao Diện Phụ Huynh ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
+  - Loại bỏ hoàn toàn các thuật ngữ nội bộ của developer: `Core Flow 5`, `● Live Identity + Practice gRPC`, `R_exam`, `PLAR`, `tâm trắc học IRT & BKT`, `thích ứng ZPD`, `chống treo máy ảo`.
+  - Thay thế bằng ngôn ngữ thân thiện, chuẩn góc nhìn cha mẹ:
+    - *Top Badge*: Chuyển thành `"Không Gian Đồng Hành Cùng Con"` kèm chấm xanh *"Cập nhật trực tiếp theo thời gian thực"*.
+    - *Khối Học phí*: Chuyển thành `"Nộp Học Phí Để Mở Khóa Lộ Trình Học Cá Nhân Hóa Cho Con"`, nút `"Nộp Học Phí Cho Con"`.
+    - *4 Thẻ tổng quan*: `"Chỉ Số Sẵn Sàng Thi ĐGNL"`, `"Mức độ bao quát kiến thức các phần thi ĐGNL"`.
+    - *3 Trụ cột đánh giá*: Đổi thành `"3 Trụ Cột Đánh Giá Mức Độ Sẵn Sàng Đi Thi Của Con"` (Năng lực giải đề 50%, Độ vững kiến thức 35%, Kỷ luật học tập 15%).
+    - *Khung giờ học*: Đổi thành giải thích sư phạm nhân văn, loại bỏ các từ ngữ kỹ thuật treo máy ảo.
+- **Tối Ưu Ngôi Xưng Nhắc Nhở Học Tập ([`StudentEarlyWarningsCard.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/StudentEarlyWarningsCard.jsx))**:
+  - Chuyển đổi ngôi xưng sang *"nhắc nhở con ôn bài..."* và *"Con đang duy trì nhịp độ học tập rất tốt!"*.
+- **Chuẩn Hóa Sidebar & Footer ([`Sidebar.jsx`](./All%20Services/V-Eval-Web_Client/src/components/layout/Sidebar.jsx), [`App.jsx`](./All%20Services/V-Eval-Web_Client/src/App.jsx))**:
+  - Sidebar: Loại bỏ các nhãn kỹ thuật `R_exam`, đổi nhãn thanh toán thành `"Đóng Học phí & Gói học"`.
+  - Footer: Đổi hiển thị từ `"Vai trò hiện tại: PARENT"` thành `"Tài khoản: Phụ huynh"`.
+- **Kiểm Thử & Biên Dịch**:
+  - `V-Eval-Web_Client`: `npm run build` thành công trong 1.19s, **22/22 tests passed**.
+  - `V-Eval-Practice_Service`: 20/20 unit tests passed.
+  - `V-Eval-Identity_Service`: 5/5 unit tests passed.
