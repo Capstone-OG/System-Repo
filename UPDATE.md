@@ -2,6 +2,10 @@
 
 ## [18/11/2026]
 - **V-Eval-Ai_Engine**:
+  - **Nâng Cấp Prompt Bóc Tách Cấu Trúc SGK Skeleton Đa Dạng Hóa Dạng Bài (2–4 Dạng) & Bloom L1–L4 (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`)**:
+    - *Giải quyết nguyên nhân chỉ có 1 dạng bài L2*: Trước đây prompt `ScanTextbookSkeletonAsync` chỉ cung cấp JSON template 1 dạng bài mẫu với `bloomLevel: 2`, dẫn đến AI chỉ sinh 1 dạng duy nhất cho mọi bài học.
+    - *Ép buộc 2–4 dạng bài với Bloom đa dạng*: Bổ sung quy tắc: *"Mỗi bài học PHẢI có từ 2 đến 4 dạng bài trọng tâm với bloomLevel đa dạng từ 1 đến 4 (1: Nhận biết, 2: Thông hiểu, 3: Vận dụng, 4: Vận dụng cao), tuyệt đối không để 1 dạng duy nhất hoặc toàn bộ bloomLevel=2"*.
+    - *Minh họa schema mẫu đa tầng*: Đưa các dạng bài mẫu với `bloomLevel: 1` và `bloomLevel: 3` vào template mẫu gửi Gemini Vision.
   - **Tối Ưu Hóa Toàn Diện Tốc Độ Bóc Tách SGK: 48 DPI, Nén JPEG 52%, Batch 2 Trang, Giảm Tải Nội Dung & Timeout 15s (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`, `./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/TextbookEndpoints.cs`, `./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/appsettings.json`)**:
     - *Hạ DPI & Giảm kích thước ảnh SkiaSharp*: Thiết lập DPI mặc định thành `48 DPI` (thay vì 56/72), giới hạn chiều tối đa ảnh `capDim` xuống `640px - 720px` và nén JPEG 52%. Cắt giảm 65-70% dung lượng payload ảnh (từ ~180KB xuống ~35-50KB/trang), giảm 50% số token hình ảnh (tiling tokens) gửi đến Gemini.
     - *Thu nhỏ Batch Size Vision AI (2 Trang/Lượt)*: Giảm batch size xử lý ảnh từ 4-5 trang xuống 2 trang/lần. Tránh hiện tượng Gemini phải sinh hàng nghìn tokens cùng lúc gây nghẽn/timeout; thời gian phản hồi mỗi batch giảm từ 15-22s xuống chỉ còn **2.5s - 4.5s**.
@@ -14,35 +18,52 @@
     - *Cơ chế ngắt mạch quá tải*: Khi Google trả về mã lỗi 503 (Server Overload), 500, 504 hoặc 404, hệ thống lập tức ngắt vòng lặp key (`break`) để chuyển sang MODEL tiếp theo thay vì tiếp tục thử 4 API keys vô ích, cắt đứt hoàn toàn tình trạng đóng băng từ 30s-90s.
     - *Tối ưu hóa cấu hình Flash-Lite*: Đưa các model siêu tốc `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`, `gemini-flash-lite-latest` lên top đầu trong `appsettings.json`, duy trì tốc độ xử lý 4–7s/batch ổn định 100% (200 OK).
   - **Triệt Tiêu 100% Hardcode Models (Zero-Hardcode) Trong Pipeline Bóc Tách SGK (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`)**:
-    - *Xóa sạch hardcode model*: Xóa bỏ hoàn toàn mảng `standardModels` (chứa `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`, `gemini-2.5-flash`) trong hàm `ResolveGeminiModels` và mảng nối `new[] { 3.6-flash, ... }` trong `GeneratePatternExercisesAsync`.
+    - *Xóa sạch hardcode model*: Xóa bỏ hoàn toàn mảng `standardModels` trong hàm `ResolveGeminiModels` và mảng nối `new[] { 3.6-flash, ... }` trong `GeneratePatternExercisesAsync`.
     - *Tuân thủ 100% cấu hình*: Chuyển đổi sang đọc thuần túy từ section `"AiSettings:GeminiModels"` của `appsettings.json`, chấm dứt hoàn toàn hiện tượng tự động fallback sang các model lỗi 404.
   - **Sửa Lỗi Biên Dịch CS0103 Trong Chuỗi Nội Suy KaTeX & Khởi Chạy Ổn Định Cổng 5104 (`./All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs`)**:
     - *Sửa lỗi escape ngoặc nhọn*: Escape `{{AB}}` và `{{a}}` trong chuỗi `$@"..."` triệt tiêu lỗi `error CS0103: The name 'AB' does not exist in the current context`.
     - *Khởi chạy dịch vụ nền*: Dịch vụ `V-Eval-Ai_Engine.API` biên dịch sạch 100% (0 errors, 0 warnings) và đang chạy daemon trên cổng 5104.
-    - *Xác thực định tuyến Gateway*: YARP Gateway (cổng 5212) định tuyến thông suốt đến `http://127.0.0.1:5104/api/ai-engine/textbooks/sources`, phản hồi HTTP 200 OK ngay lập tức, triệt tiêu hoàn toàn lỗi 502 Bad Gateway / Connection Refused.
+    - *Xác thực định tuyến Gateway*: YARP Gateway (cổng 5212) định tuyến thông suốt đến `http://127.0.0.1:5104/api/ai-engine/textbooks/sources`, phản hồi HTTP 200 OK ngay lập tức.
   - **Chuẩn Hóa Pipeline Bóc Tách Tri Thức (`CurriculumTaxonomyRegistry.cs`, `CurriculumAiService.cs`, `PdfPigTextbookParserService.cs`)**:
     - *Khử triệt để thẻ rò rỉ*: Chuyển đổi cơ chế bóc tách thẻ `[TAXONOMY: ...]` sang xử lý đa thẻ (`Regex.Matches`) và gọi `Regex.Replace` xóa sạch 100% thẻ taxonomy khỏi văn bản `chunk.Text`.
-    - *Lọc sạch thông tin xuất bản*: Tự động phát hiện các dòng `Tên sách`, `Bộ sách`, `Tổng chủ biên`, `Chủ biên`, `Nhà xuất bản` để xóa bỏ và phân loại trang thành `section="COVER"` thay vì gán nhầm vào Dạng bài học.
+    - *Lọc sạch thông tin xuất bản*: Tự động phát hiện các dòng `Tên sách`, `Bộ sách`, `Tổng chủ biên`, `Chủ biên`, `Nhà xuất bản` để xóa bỏ và phân loại trang thành `section="COVER"`.
     - *Nối dòng KaTeX & biểu diễn vectơ*: Nối các dòng ngắt đơn lẻ đối với biến số và điểm hình học; chuẩn hóa các ký hiệu vectơ sang KaTeX `\vec{AB}`, `|\vec{AB}| = AB`.
-    - *Cập nhật Prompt Gemini Vision*: Bổ sung quy tắc bắt buộc không bóc tách trang bìa/xuất bản thành tri thức bài học và yêu cầu bọc 100% ký hiệu vectơ vào KaTeX.
   - **API Xóa Sách & Vector Chunks (`TextbookEndpoints.cs`, `TextbookRepository.cs`, `ITextbookRepository.cs`)**:
     - Bổ sung endpoint `DELETE /api/ai-engine/textbooks/sources/{sourceId:guid}` xóa an toàn trong một transaction Npgsql.
 - **V-Eval-Web_Client**:
-  - **Sửa Lỗi Màn Trắng SyntaxError: The requested module does not provide an export named 'isGenericPlaceholder' (`./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
-    - Khởi tạo và export đầy đủ hàm `isGenericPlaceholder(text)` trong `textbookStateBridge.js`.
-    - Phát hiện và thanh lọc triệt để các câu chữ generic placeholder template sáo rỗng khỏi giao diện lý thuyết và pipeline bóc tách; triệt tiêu 100% lỗi màn hình trắng.
-  - **Triệt Tiêu 100% Mock & Template Giả Lập: Lý Thuyết Thuần Cô Đặc Không Số Trang, Tăng Chiều Dài Gấp Đôi & Mục Lục Mở Rộng Hết Chương (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`, `./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`)**:
-    - *Lý thuyết thuần cô đặc, không ghi số trang (`buildTheoryFromChunks`)*: Loại bỏ hoàn toàn nhãn số trang thô (`#### 📄 Trang X (SGK Gốc)`), lọc sạch bài tập vụn vặt và câu trùng lặp (`seenSentences`). Tổng hợp và cô đặc tri thức thực tế từ CSDL thành 4 phân mục chuẩn mực.
-    - *Không gian đọc mở rộng gấp đôi*: Tăng chiều cao vùng lý thuyết thuần lên gấp đôi (`min-h-[920px]`, `max-h-[140vh]`), cỡ chữ nhỏ lại tinh gọn (`text-[12px] leading-relaxed`) cho trải nghiệm nghiên cứu liền mạch, chuyên sâu.
-    - *Mục lục trải dài đến hết số lượng chương*: Gỡ bỏ giới hạn `max-h-[75vh]` và thanh cuộn cục bộ ở cột trái, cho phép cây mục lục tự động mở rộng theo toàn bộ danh sách chương và bài học.
-    - *Làm sạch tiêu đề đa chuyên đề (`cleanPrefix`)*: Xử lý triệt để các tiêu đề phức tạp như `Chuyên đề 4, 5, 6, 7 & 8: Pin điện - Điện phân`, không còn hiện tượng sót dấu phẩy lơ lửng `, 6, 7 & 8: Pin điện...`.
-  - **Chuẩn Hóa Triệt Để Pipeline Bóc Tách: Khử Thẻ Rò Rỉ `[TAXONOMY: ...]`, Rác Xuất Bản & Gãy Dòng KaTeX (`./All Services/V-Eval-Web_Client/src/components/curriculum/textbookStateBridge.js`)**:
-    - *Khử sạch 100% thẻ rò rỉ `[TAXONOMY: ...]`*: Quét sạch mọi thẻ taxonomy còn sót lại trong dữ liệu CSDL cũ.
-    - *Lọc bỏ rác thông tin xuất bản*: Phát hiện và loại trừ toàn bộ dòng thông tin tác giả, tổng chủ biên, nhà xuất bản, bản quyền không để lẫn vào dạng bài học.
-    - *Nối dòng gãy KaTeX & chuẩn hóa vectơ*: Nối liền các ký tự/biến số toán học bị tách rời dòng (`A,`, `B`, `| AB |`); chuẩn hóa sang KaTeX `\vec{AB}`, `|\vec{AB}| = AB`; phân lập bài toán giải mẫu khỏi khối khái niệm cốt lõi.
-  - **Tính Năng Xóa Sách Khỏi CSDL & Vô Hiệu Hóa 2 Nút Điều Hướng Header**:
-    - *Xóa cuốn sách khỏi CSDL*: Thêm nút `[🗑️ Xóa sách]` kèm modal xác nhận an toàn tại khối banner tổng quan; gọi API `DELETE /api/ai-engine/textbooks/sources/{sourceId}` xóa sạch vector chunks và bản ghi metadata trong Supabase PostgreSQL (`v_eval_ai."KnowledgeSources"` và `"KnowledgeVectorChunks"`).
-    - *Vô hiệu hóa 2 nút điều hướng trên Header*: Vô hiệu hóa nút `[Sang Trang Nạp SGK]` và `[Mở Studio Biên Soạn]` với `disabled` và `opacity-50 cursor-not-allowed`, điều hướng người dùng sử dụng menu phân hệ chuyên biệt trên Sidebar.
-  - **Sửa Lỗi ReferenceError: m is not defined Trong Trang Nạp SGK (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
-    - Bọc chuỗi KaTeX `90\text{ m}` bằng `<MathText />` thay vì để chuỗi thô trong JSX text gây hiểu nhầm `{ m}` là biến JS không xác định; triệt tiêu 100% lỗi crash runtime khi mở trang Nạp SGK.
-  - **Kiểm Thử Vận Hành**: `npm run build` (`vite build`) đạt `✓ built in 1.19s` với 3053 modules sạch 100%, 0 lỗi.
+  - **Tối Giản Hóa Giao Diện Sinh Câu Hỏi Phần 3: Loại Bỏ Nút Toàn Sách Cục Bộ, Bộ Chọn 1 Trong 2 Kèm Nút Sinh Duy Nhất & Dọn Dẹp Icon Thừa (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - *Xóa nút "Sinh toàn bộ sách" khỏi header bài học*: Loại bỏ nút toàn sách khỏi Phần 3 để tách bạch ranh giới phạm vi, đưa chức năng toàn sách lên thanh điều khiển tổng quát trên cùng.
+    - *Bộ chọn phạm vi 1 trong 2*: Bổ sung thanh chọn gọn gàng với tiêu mục rõ ràng `Sinh câu hỏi:` cho phép chọn 1 trong 2 chế độ:
+      + `[Dạng này]`: Sinh câu hỏi cho dạng bài đang chọn (`activePattern`).
+      + `[Cả bài học ({validPatterns.length})]`: Duyệt sinh câu hỏi cho toàn bộ các dạng bài của bài học hiện tại.
+    - *Nút `[Sinh câu hỏi]` duy nhất*: Thay thế cụm 3 nút cồng kềnh trước đây bằng 1 nút duy nhất thực thi theo phạm vi đã chọn, tích hợp trạng thái tải xoay vòng `Đang sinh...` chuyên nghiệp.
+    - *Dọn dẹp triệt để icon và text dư thừa*: Xóa sạch các emoji lồng ghép trùng lặp (`⚡`, `⚡⚡`, `🌟`, `✨ ⚡`, `⚡ ⚡ ⚡`, `✨ 🌟`), quy chuẩn 100% về icon SVG Lucide tinh tế (`Sparkles`, `RefreshCw`).
+  - **Thanh Tác Vụ Tổng Quát Nằm Ngay Trên Bộ Chuyển 3 Chế Độ, Tự Động Lưu (Auto-Save) & Nút Lưu Toàn Bộ SGK (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - *Bố trí Thanh Điều Khiển Tổng Quát chuẩn công thái học*: Đặt nổi bật ngay phía trên bộ chuyển 3 chế độ (Phần 1: Cấu trúc / Phần 2: Lý thuyết / Phần 3: Câu hỏi), tách bạch hoàn toàn các tác vụ thuộc về toàn bộ cuốn sách khỏi các phân mục con của từng bài học.
+    - *Nút "Lưu Toàn Bộ SGK"*: Thiết kế trực quan với icon `Save`, màu xanh ngọc lục bảo `bg-emerald-700`, cho phép người dùng chủ động bấm lưu toàn bộ Cấu trúc mục lục, Lý thuyết và Ngân hàng câu hỏi của cuốn sách vào persistent storage (`localStorage` & `sessionStorage`).
+    - *Nút "Sinh Toàn Bộ Sách"*: Đặt ngay tại thanh tổng quát trên cùng, tách biệt với các nút sinh cục bộ cho bài học và dạng bài ở Phần 3.
+    - *Cơ chế Tự Động Lưu (Auto-Save ON) & Khôi Phục Tự Động (Auto-Restore)*:
+      + Tự động lưu tức thì vào `localStorage` (`veval_textbook_saved_${sourceId}`) ngay khi AI sinh thêm câu hỏi, chuyển cấp độ Bloom hoặc sửa đổi cấu trúc.
+      + Badge hiển thị thời gian: `Đã lưu lúc HH:mm:ss` kèm chấm tròn phát xung xanh lá thời gian thực.
+      + Khi chọn lại cuốn sách từ dropdown hoặc refresh trang, hệ thống tự động khôi phục toàn bộ câu hỏi và dạng bài đã lưu từ cache, không bao giờ bị mất dữ liệu.
+  - **Đa Dạng Hóa Dạng Bài Chuẩn GDPT 2018 & Bộ Chọn Cấp Độ Nhận Thức Bloom (L1–L6) Trực Quan 1-Click (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`, `./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookStandardView.jsx`)**:
+    - *Tự động làm giàu dạng bài từ GDPT 2018 preset (`getGdptPreset`)*: Khắc phục hiện tượng bài học chỉ có 1 dạng bài đơn điệu mang cấp độ L2 do chunks OCR chỉ có nhãn mặc định chung. Hệ thống tự động nạp từ 2 đến 4 dạng bài thực tế từ bộ chuẩn GDPT 2018 với đa dạng cấp độ Bloom (L1 Nhớ, L2 Hiểu, L3 Vận dụng, L4 Phân tích).
+    - *Bộ chuyển đổi Bloom Level 1-click*:
+      + Trên cây mục lục bên trái: Huy hiệu `L{bloomLevel} ▾` cho phép click trực tiếp để xoay vòng cấp độ Bloom (L1 -> L2 -> L3 -> L4 -> L5 -> L6) kèm cập nhật màu sắc tức thì.
+      + Tại Phần 3: Bổ sung thanh pill chọn nhanh 6 cấp độ Bloom (L1. Nhớ, L2. Hiểu, L3. Vận dụng, L4. Phân tích, L5. Đánh giá, L6. Sáng tạo) ngay trên danh sách bài tập.
+      + Cập nhật `handleAddNewPatternToLesson` tự động gán Bloom level tịnh tiến khi tạo dạng bài mới.
+  - **Thay Thế `window.confirm`/`alert` Bằng Modal Popup Xác Nhận & Cam Kết Cơ Chế Chỉ Sinh Thêm (Append-Only) Tuyệt Đối Không Ghi Đè Câu Hỏi (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - *Thay thế hộp thoại browser bằng in-app Modal Dialog (`confirmModal`)*: Loại bỏ hoàn toàn `window.confirm`/`alert` của trình duyệt; tích hợp Modal Dialog Tailwind UI hiện đại với backdrop mờ (`backdrop-blur-xs`), card nổi bo tròn 3xl.
+    - *Thống kê chi tiết & cam kết bảo toàn*: Hiển thị rõ tên phạm vi bài học / toàn sách, tổng số dạng bài, số câu sinh thêm (`+ 3 câu / dạng`), kèm thông báo cam kết xanh lá: *"Cam kết chỉ sinh thêm, không thay thế: Hệ thống chỉ sinh thêm câu hỏi mới và nối tiếp vào danh sách. Toàn bộ các câu hỏi đã có trước đó đều được giữ nguyên 100%, tuyệt đối không bị ghi đè hoặc thay thế."*
+    - *Cơ chế Append-Only an toàn tuyệt đối*:
+      + Toàn bộ logic cập nhật bài tập (`updatePatternAt`, `updatePattern`) sử dụng cú pháp nối mảng `exercises: [...existing, ...mappedNew]`.
+      + Cấp phát mã ID duy nhất cho từng bài tập mới sinh (`id: `ex_${Date.now()}_...``) chống xung đột key React.
+      + Thông báo Toast hiển thị tổng số câu tích lũy sau khi hoàn thành.
+  - **Tính Năng AI Sinh Câu Hỏi Hàng Loạt (Batch Exercise Generation) Cho Mọi Dạng Bài (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - 3 chế độ sinh bài tập thông minh: Đơn lẻ, Toàn bộ dạng trong bài học, và Toàn bộ dạng trong toàn cuốn sách.
+    - Kích hoạt nhanh từ Cây Mục Lục bên trái và Thanh Tổng Quát trên cùng.
+    - Thanh tiến trình trực quan thời gian thực hiển thị tỷ lệ `%`, số thứ tự `Dạng X / Y`, tên bài và tên dạng đang xử lý kèm nút `[Dừng Lại]`.
+  - **Đồng Bộ Hoàn Toàn Cây Cấu Trúc Sách Phân Cấp (Chương ▾ Bài Học ▾ Dạng Bài) Cho Trang Nạp SGK Giống Trang Xem SGK Chuẩn (`./All Services/V-Eval-Web_Client/src/components/curriculum/TextbookIngestView.jsx`)**:
+    - Tái thiết kế cột trái `lg:col-span-4` thành cây accordion 3 tầng chuẩn mực (`Chương C.X` ▾ `Bài học B.X` ▾ `Dạng bài P.X` kèm nhãn Bloom L1–L6 và `cleanPrefix`).
+    - Cho phép click chọn Dạng bài trực tiếp trên cây để kích hoạt Phần 3 (Câu Hỏi & Bài Tập SGK).
+  - **Kiểm Thử Vận Hành**: `npm run build` (`vite build`) đạt `✓ built in 2.24s` với 3053 modules sạch 100%, 0 lỗi.
