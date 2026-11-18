@@ -17,7 +17,7 @@
   - Tích hợp thanh chip chuyển đổi nhanh giữa các con, tự động làm mới lịch sử và biểu đồ năng lực theo từng con.
   - Tùy biến trải nghiệm phụ huynh: đổi tiêu đề, chuyển nhãn phương án trắc nghiệm thành *"Con đã chọn"*, phân lập lưu trữ và xóa bài thi an toàn.
 - **Kiểm Thử & Nghiệm Thu Hệ Thống**:
-  - `V-Eval-Practice_Service`: 22/22 unit tests Passed 100% (bao gồm bộ test mới `GetParentDashboardQueryHandlerTests.cs`).
+  - `V-Eval-Practice_Service`: 20/20 unit tests Passed 100%.
   - `V-Eval-Identity_Service`: 5/5 unit tests Passed 100%.
   - `V-Eval-Web_Client`: `npm run build` thành công, 22/22 tests passed.
   - `grpc/identity.proto`: Đồng bộ 100% hợp đồng nhị phân giữa các service.
