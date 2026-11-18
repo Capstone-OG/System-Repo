@@ -1,6 +1,6 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [19/11/2026] - Nâng Cấp Giao Diện Cổng Phụ Huynh: Đồng Bộ Thiết Kế Hiện Đại, Tinh Tế Hóa Bố Cục & Chuẩn Hóa Dữ Liệu Giáo Viên Thực Tế
+## [19/11/2026] - Nâng Cấp Toàn Diện Giao Diện Cổng Phụ Huynh & Lịch Sử Bài Thi Của Con (Parent Companion Portal & Submission History)
 
 - **Tái Cấu Trúc Toàn Diện Hero Header & Thông Tin Ngữ Cảnh Con ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
   - Khắc phục triệt để tình trạng 2 banner màu xanh đậm cồng kềnh xếp chồng lên nhau gây nặng nề và rời rạc thị giác.
@@ -15,7 +15,14 @@
 - **Hài Hòa Hóa 3 Trụ Cột Đánh Giá Năng Lực & Khối Giáo Viên Phụ Trách ([`ParentDashboardView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx))**:
   - Thiết kế từng trụ cột thành các khối thẻ micro tinh tế với số thứ tự đánh dấu (1, 2, 3), thanh đo gradient mượt mà và lời giải thích ngắn gọn, dễ hiểu.
   - Đưa khối thông tin giáo viên phụ trách về đúng vị trí tại cột phải trong card `Giáo Viên Phụ Trách & Cố Vấn Học Vụ`: hiển thị avatar ký tự, tên giảng viên phụ trách thật hoặc nhãn trung thực *"Chưa có giáo viên phụ trách"*, số điện thoại liên hệ, thông tin lớp học và nút *"Đăng Ký Lịch Trao Đổi 1-1 Với Giáo Viên"*.
+- **Chuẩn Hóa Giao Diện Lịch Sử Bài Thi Của Con ([`SubmissionHistoryView.jsx`](./All%20Services/V-Eval-Web_Client/src/components/diagnostic/SubmissionHistoryView.jsx))**:
+  - **Đồng bộ Hero Header sang chủ đề Navy-Indigo sang trọng**: Chuyển banner sang tông màu `from-slate-900 via-indigo-950 to-blue-950` đồng điệu với trang Tổng quan, bổ sung thanh chọn nhanh con đa năng linh hoạt.
+  - **Triệt tiêu thuật ngữ kỹ thuật khó hiểu**:
+    - Chuyển đổi hiển thị chỉ số toán học psychometrics khô khan (`Theta IRT: -1.8333`) sang phân cấp sư phạm nhân văn và dễ hiểu qua hàm `formatThetaDisplay` (*"Khởi đầu nền tảng - Cần gia đình kèm cặp ôn tập thêm"* / *"Đạt chuẩn"* / *"Vượt trội"*).
+    - Xóa bỏ hậu tố kỹ thuật tiếng Anh `(DIAGNOSTIC)` trong tên bài thi; chuẩn hóa các nhãn phân loại thành *"Khảo sát ĐGNL (30 câu)"*, *"Luyện tập thích ứng"*, *"Chuyên đề"*.
+    - Làm mới thông điệp: loại bỏ các thuật ngữ developer như *"phân tích tư duy Socratic"*, thay bằng *"hướng dẫn giải chi tiết và gợi ý phương pháp giải"*.
+  - **Khắc phục lỗi đếm lệch câu làm sai (0 câu vs 26 câu)**: Tính toán chính xác tổng số câu làm chưa đúng (`summaryStats.totalWrong = totalQuestions - totalCorrect`) trên toàn bộ các bài thi, hiển thị trung thực `26 câu` và bổ sung hướng dẫn người dùng bấm vào bài làm để tải chi tiết câu hỏi vào sổ tay.
 - **Kiểm Thử & Biên Dịch Toàn Hệ Thống**:
-  - `V-Eval-Web_Client`: `npm run build` thành công trong 1.07s, **22/22 unit tests passed**.
+  - `V-Eval-Web_Client`: `npm run build` thành công trong 1.15s, **22/22 unit tests passed**.
   - `V-Eval-Practice_Service`: **20/20 unit tests passed**.
   - `V-Eval-Identity_Service`: **5/5 unit tests passed**.
