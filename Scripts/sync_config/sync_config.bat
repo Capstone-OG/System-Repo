@@ -112,6 +112,7 @@ REM =====================================================================
 :DO_INSTALL_MISSING
 echo [INFO] Kiem tra va tu dong bo sung cau hinh neu con thieu...
 
+call :INSTALL_IF_MISSING "%ROOT_DIR%\.env.example" "%ROOT_DIR%\.env" "Root Environment [.env]" "%ROOT_DIR%"
 call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Gateway\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Gateway\V-Eval-Gateway.API\appsettings.json" "V-Eval-Gateway" "%ALL_SERVICES_DIR%\V-Eval-Gateway"
 call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Identity_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service\V-Eval-Identity_Service.API\appsettings.json" "V-Eval-Identity_Service" "%ALL_SERVICES_DIR%\V-Eval-Identity_Service"
 call :INSTALL_IF_MISSING "%CONFIGS_DIR%\V-Eval-Content_Service\appsettings.json" "%ALL_SERVICES_DIR%\V-Eval-Content_Service\V-Eval-Content_Service.API\appsettings.json" "V-Eval-Content_Service" "%ALL_SERVICES_DIR%\V-Eval-Content_Service"
@@ -204,6 +205,16 @@ if not exist "%DST_FILE%" (
     copy /y "%SRC_FILE%" "%DST_FILE%" >nul 2>&1
     if !ERRORLEVEL! equ 0 (
         echo [BO SUNG] Da tu dong tao file cau hinh con thieu cho: %LABEL%
+    )
+) else (
+    findstr /C:"YOUR_GEMINI_API_KEY" "%DST_FILE%" >nul 2>&1
+    if !ERRORLEVEL! equ 0 (
+        findstr /C:"YOUR_GEMINI_API_KEY" "%SRC_FILE%" >nul 2>&1
+        if not !ERRORLEVEL! equ 0 (
+            copy /y "%DST_FILE%" "%DST_FILE%.bak" >nul 2>&1
+            copy /y "%SRC_FILE%" "%DST_FILE%" >nul 2>&1
+            echo [CAP NHAT] Da thay the placeholder bang cau hinh thuc te cho: %LABEL%
+        )
     )
 )
 exit /b 0

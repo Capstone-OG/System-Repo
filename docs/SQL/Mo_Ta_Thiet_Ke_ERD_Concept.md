@@ -2,7 +2,8 @@
 # HỆ THỐNG ĐÁNH GIÁ & HỌC TẬP THÍCH ỨNG V-EVAL (V-ACT ĐHQG-HCM)
 
 > **Tài liệu**: Bản đặc tả kiến trúc dữ liệu và mô hình thực thể quan hệ (ERD Specification)  
-> **Phiên bản Schema**: Schema V4.1 (Đồng bộ 100% CSDL PostgreSQL/Supabase, 4 Microservices & [SQL.sql](./SQL.sql))  
+> **Đặc tả 3 tầng V5.0 (Conceptual 21 Thực thể → Logical 5 Schemas → Physical 51 Bảng)**: Xem chi tiết tại [Dac_Ta_3_Tang_ERD_Conceptual_Logical_Physical.md](./Dac_Ta_3_Tang_ERD_Conceptual_Logical_Physical.md) và [SQL.sql](./SQL.sql)  
+> **Phiên bản Schema**: Schema V4.1 / V5.0 (Đồng bộ 100% CSDL PostgreSQL/Supabase & [SQL.sql](./SQL.sql))  
 > **Ngày ban hành**: 24/10/2026 — Phiên bản Chuẩn hóa Toàn diện  
 > **Quy mô Hệ thống**: 47 Thực thể (`v_eval_identity`: 13, `v_eval_content`: 8, `v_eval_practice`: 19, `v_eval_ai`: 7) & 74 Mối quan hệ  
 > **Sơ đồ đính kèm**: File [Capstone.drawio](./Capstone.drawio) gồm đầy đủ 3 Trang chuẩn (Trang-1: Bounded Context Clustered ERD, Trang-2: Conceptual Entity ERD, Trang-3: Flat Full-Detail Physical & Logical ERD)  

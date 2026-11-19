@@ -154,20 +154,35 @@ CapStone/
 
 ## 🚀 KHỞI CHẠY HỆ THỐNG (QUICK START)
 
-### 1. Khởi chạy toàn bộ hệ sinh thái (Docker Compose):
-Nhấp đúp chuột vào file script hoặc chạy từ Terminal:
+### 1. Khởi chạy toàn bộ hệ sinh thái qua Docker (1-Click):
+Chạy trực tiếp script thực thi tại thư mục gốc:
+```bash
+./start_docker.sh
+# Hoặc shortcut:
+./start.sh
+```
+Trên Windows (CMD / PowerShell):
 ```cmd
 Scripts\run_docker\run_docker.bat
 ```
-Hoặc bằng lệnh CLI:
+
+### 2. Khởi chạy môi trường phát triển Local (7 Cửa sổ Terminal độc lập):
 ```bash
-docker compose up --build -d
+./start_local.sh
+```
+Trên Windows (CMD / PowerShell):
+```cmd
+Scripts\run_local\run_local.bat
 ```
 
-### 2. Điểm truy cập hệ thống (Access Endpoints):
-- **Web Client (Giao diện người dùng)**: `http://localhost:5173`
-- **API Gateway (Single Entry Point)**: `http://localhost:5212`
+### 3. Điểm truy cập hệ thống (Access Endpoints):
+- **Web Client (Giao diện người dùng)**: `http://localhost:5173` | `https://pickic.io.vn` | `https://app.pickic.io.vn`
+- **API Gateway (Single Entry Point)**: `http://localhost:5212` | `https://api.pickic.io.vn`
 - **Gateway Health Check**: `http://localhost:5212/healthz`
+- **Identity Service**: `http://localhost:5155` | gRPC: `5156`
+- **Content Service**: `http://localhost:5249` | gRPC: `5250`
+- **Practice Service**: `http://localhost:5002` (Docker) / `http://localhost:5261` (Local)
+- **AI Engine API**: `http://localhost:5104`
 
 ---
 
