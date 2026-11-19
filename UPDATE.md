@@ -1,4 +1,4 @@
-# UPDATE - V-Eval System Repo
+# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
 ## [20/11/2026]
 - **V-Eval-Web_Client**:
