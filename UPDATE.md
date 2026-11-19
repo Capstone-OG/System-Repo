@@ -2,6 +2,9 @@
 
 ### [19/11/2026]
 - **Nhiệm vụ trọng tâm**:
+  - **0. Nâng Cấp Cơ Chế Xếp Lớp Đầu Vào Theo Ma Trận 4 Miền × 3 Cấp Bậc (Tối Thiểu 12 Lớp Chuẩn)**:
+    - **Backend (`V-Eval-Practice_Service`)**: Phân hóa mỗi học sinh đã làm bài test 30 câu vào đúng **4 lớp** (1 lớp / miền kiến thức: `DOM_LANG`, `DOM_MATH`, `DOM_NAT_SCI`, `DOM_SOC_SCI`) theo 3 cấp bậc **Cơ bản (`< 50%`) – Tăng tốc (`50% – < 75%`) – Nâng cao (`>= 75%`)**, trần `20 HS/lớp` có tự động tách lớp tràn, mặc định **Bảo toàn 100% HS cũ (`PreserveExistingEnrollments = true`)** chỉ xếp bổ sung HS mới vào chỗ trống từng miền (vẫn đảm bảo mỗi HS mới đủ 4 lớp).
+    - **Frontend (`V-Eval-Web_Client`)**: Nâng cấp Section 3 (`AcademicManagerDashboardView.jsx`) sang giao diện **Ma trận 4 Hàng (4 Miền) × 3 Cột (3 Cấp bậc)** với ngưỡng tùy chỉnh, checkbox bảo toàn HS cũ, badge `+N mới` và gán giáo viên trực tiếp trên từng lớp.
   - **1. Triệt Tiêu 100% Hardcode Họ Tên Học Sinh - Kết Nối Động Qua Identity Service (gRPC & REST API)**:
     - **Backend (`GetAlertsDashboardQueryHandler.cs` & `IdentityGrpcClient.cs` trong `V-Eval-Practice_Service`)**:
       - Xóa bỏ hoàn toàn dictionary tĩnh `KnownStudentNames` và switch-case phân giải tên theo tiền tố GUID.
