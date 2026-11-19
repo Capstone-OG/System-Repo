@@ -1,46 +1,32 @@
 # NHẬT KÝ CẬP NHẬT TIẾN ĐỘ HẰNG NGÀY (DAILY UPDATE LOG)
 
-### [16/11/2026]
+### [19/11/2026]
 - **Nhiệm vụ trọng tâm**:
-  - **1. Rà soát & Tinh chỉnh chi tiết các Sheet Unit Test trong [FA26SE090_Unit_Test.xlsx](./docs/Test/FA26SE090_Unit_Test.xlsx) & [Report5_Unit Test.xlsx](./docs/Test/Report5_Unit%20Test.xlsx)**:
-    - **`UT013` (IngestDocument)**:
-      - Chuẩn hóa 8 Test Cases (2 Normal, 1 Boundary, 5 Abnormal) cho luồng nạp tài liệu giáo trình và lập chỉ mục Vector RAG (Semantic Chunking & 768-dim Embeddings):
-        - Cột 1 & 2: Nạp thành công tài liệu PDF chuẩn (`Chuyen_De_Logarit_12.pdf`, 4.2MB) và Markdown (`De_Cuong_Logic_DGNL.md`, 850KB), băm nhỏ ngữ nghĩa bảo toàn công thức LaTeX, tạo vector nhúng 768 chiều và lưu vào `pgvector`.
-        - Cột 3: Biên dung lượng tối đa cho phép: Tệp PDF đạt đúng ngưỡng trần sàn `50.0 MB` (52,428,800 bytes) nạp thành công.
-        - Cột 4, 5, 6: Các lỗi kiểm định tệp: Dung lượng vượt quá 50MB (`File.TooLarge`, 413 Payload Too Large), định dạng tệp không hỗ trợ `.exe` (`File.UnsupportedFormat`, 400 Bad Request), và tệp rỗng 0-byte (`File.Empty`, 400 Bad Request).
-        - Cột 7: Mã chuyên đề kỹ năng gắn với tài liệu không tồn tại (`Curriculum.SkillNotFound`, 404 Not Found).
-        - Cột 8: Dịch vụ Gemini Embedding API quá tải hoặc timeout (`Rag.UpstreamUnavailable`, 503 Service Unavailable).
-    - **`UT014` (AskSocraticTutor)**:
-      - Chuẩn hóa 10 Test Cases (2 Normal, 2 Boundary, 6 Abnormal) cho Trợ lý Gia sư AI Socratic đa tác tử kết hợp cơ chế kiểm duyệt độc lập Validator Judge (Anti-answer-giveaway & Prompt Invariants):
-        - Cột 1 & 2: Sinh gợi ý tư duy Socratic Sư phạm từng bước (Happy Path), và cơ chế Validator Judge tự động phát hiện và chặn bản nháp làm lộ trực tiếp đáp án (như "Đáp án C"), buộc LLM viết lại theo chuẩn Socratic.
-        - Cột 3 & 4: Biên độ dài câu hỏi tối đa 1000 ký tự (chấp nhận đúng 1000 chars), và biên Validator Judge từ chối 2 bản nháp liên tiếp $\rightarrow$ kích hoạt mẫu gợi ý an toàn dự phòng (Fallback Template) kèm cảnh báo `MSG08`.
-        - Cột 5: Chặn học sinh sử dụng Gia sư AI trong khi đang làm bài thi thử chính thức (`403 Forbidden` theo quy tắc chống gian lận `BR-12`).
-        - Cột 6: Chặn khi học sinh sử dụng hết hạn ngạch Token hàng ngày $\ge 50,000$ tokens (`429 Too Many Requests`).
-        - Cột 7, 8, 9, 10: Độ dài câu hỏi vượt quá 1000 ký tự (`Prompt.TooLong`), câu hỏi rỗng (`Prompt.Empty`), câu hỏi nằm ngoài phạm vi kiến thức ĐGNL (`422 Unprocessable Entity`), và dịch vụ AI phía Google bị quá tải/timeout (`503 Service Unavailable`).
-    - **`UT015` (SubmitMockExam)**:
-      - Chuẩn hóa và bóc tách chuyên biệt 9 Test Cases (2 Normal, 3 Boundary, 4 Abnormal) cho luồng Chấm điểm thi thử chuẩn hóa 120 câu kết hợp Giám sát chống gian lận trực tuyến (Anti-Cheat Proctoring - BR-10, BR-11):
-        - Cột 1 & 2: Học sinh thi nghiêm túc (`TabDepartureCount = 0`) hoàn thành trước giờ hoặc nộp tự động khi đếm ngược hết 150 phút (9000s) $\rightarrow$ `200 OK`, `COMPLETED`, công bố điểm IRT 2PL [300..1200].
-        - Cột 3 & 4: Cận biên rời màn hình: Rời đúng 3 lần ($\le 3$) được chấp nhận là lỗi vô tình (`COMPLETED`); rời đúng 4 lần ($> 3$) lập tức bị gắn cờ `FLAGGED_FOR_REVIEW`, chuyển bài thi sang `UNDER_REVIEW` (chờ Hội đồng hậu kiểm, giữ lại điểm và phát `MSG10`).
-        - Cột 5 & 6: Cận biên thời gian thi chạm đúng giây 9000s; và bất thường vi phạm nghiêm trọng (rời màn hình 7 lần) chuyển diện `UNDER_REVIEW`.
-        - Cột 7, 8, 9: Bóc tách độc lập và chính xác 3 mã lỗi kỹ thuật: Cột 7 lỗi danh sách đáp án chứa câu hỏi rác (`400 Bad Request` / `ValidationException`), Cột 8 nộp lại bài thi đã kết thúc (`409 Conflict` / `DomainException`), Cột 9 mã bài thi không tồn tại (`404 Not Found` / `KeyNotFoundException`).
-    - **`UT016` (MentorReviewExam)**:
-      - Chuẩn hóa và bóc tách chuyên biệt 8 Test Cases (2 Normal, 2 Boundary, 4 Abnormal) cho nghiệp vụ Giáo viên/Mentor thẩm định bài thi thử bị nghi ngờ gian lận (Teacher Proctoring Review & Adjudication - FE-15, BR-18):
-        - Cột 1 & 3: Phán quyết chấp thuận `APPROVED` (kèm ghi chú rớt mạng khách quan, tối thiểu 10 ký tự) $\rightarrow$ Mở khóa công nhận điểm số chính thức, chuyển `Status = COMPLETED`.
-        - Cột 2 & 4: Phán quyết hủy bài `DISQUALIFIED` (kèm ghi chú xác minh học sinh cố tình mở tab khác tra cứu bài giải, tối đa 500 ký tự) $\rightarrow$ Hủy điểm về 0 (`TotalScore = 0`, `TotalCorrect = 0`), chuyển `Status = DISQUALIFIED` và phát thông báo kỷ luật `MSG11`.
-        - Cột 5, 6, 7, 8: Bóc tách độc lập các lỗi nghiệp vụ: Cột 5 kết luận không hợp lệ (`400 Bad Request`), Cột 6 bài thi đã có kết luận trước đó (`COMPLETED` hoặc `DISQUALIFIED`, không thể sửa đổi - `409 Conflict`), Cột 7 chọn `DISQUALIFIED` nhưng bỏ trống ghi chú (`400 Bad Request`), Cột 8 phiên thi không tồn tại (`404 Not Found`).
-    - **`UT017` (RecalculateForecast)**:
-      - Chuẩn hóa và bóc tách chuyên biệt 9 Test Cases (2 Normal, 2 Boundary, 5 Abnormal) cho luồng Dự báo điểm thi ĐGNL 95% CI (SEM) kết hợp Tối ưu hóa Toa thuốc bù điểm bằng giải thuật Cái túi Tham lam (Greedy Knapsack Remediation Plan - FE-16, BR-13, BR-14):
-        - Cột 1 & 2: Dự báo chuẩn năng lực $\theta = 0.80$, thông tin Fisher $I(\theta) = 16.0 \rightarrow$ Điểm dự báo 860, sai số chuẩn $SEM = 25$, khoảng tin cậy 95% $[811, 909]$, gom chọn các chuyên đề bù điểm có tỷ số $ROI = \Delta Score / t_k$ cao nhất ứng với quỹ thời gian 120 phút và 60 phút (`Forecast.Calculated`).
-        - Cột 3 & 4: Cận biên năng lực cực cao ($\theta = 2.90$) kẹp trần tối đa 1200 điểm, và năng lực cực thấp ($\theta = -2.90$) kẹp sàn tối thiểu 300 điểm $\rightarrow$ Bóc tách dòng log riêng biệt `Forecast.ScoreClamped`.
-        - Cột 5: Bất thường hàm thông tin Fisher $I(\theta) = 0 \rightarrow$ Bóc tách dòng log riêng biệt `Forecast.FallbackVariance` (kích hoạt cơ chế dự phòng dùng phương sai tiên nghiệm mặc định).
-        - Cột 6, 7, 8, 9: Bóc tách độc lập 4 mã lỗi kỹ thuật: Cột 6 quỹ thời gian học âm/0 (`400 Bad Request`), Cột 7 quỹ thời gian dưới ngưỡng sàn 15 phút (`400 Bad Request`), Cột 8 điểm mục tiêu ngoài thang [300, 1200] (`400 Bad Request`), Cột 9 học sinh chưa có dữ liệu năng lực đầu vào (`404 Not Found`).
-    - **`UT018` (AutoClusterCohorts)**:
-      - Chuẩn hóa và bóc tách chuyên biệt 9 Test Cases (2 Normal, 2 Boundary, 5 Abnormal) cho thuật toán Phân cụm học sinh thành các Lớp Chuyên Đề bù đắp lỗ hổng kiến thức bằng K-Means++ 4 chiều kết hợp Elbow Method và Ràng buộc sĩ số sư phạm [5..20] (FE-23, BR-21, BR-22):
-        - Cột 1 & 2: Phân cụm $N = 32$ học sinh chia đều 2 lớp ($16$ & $16$) và $N = 45$ học sinh chia đều 3 lớp ($15, 15, 15$), phát thông báo thành công `MSG20`.
-        - Cột 3 & 4: Cận biên sĩ số chính xác: Đúng $N = 5$ học sinh gom 1 lớp chạm đúng sàn tối thiểu 5 học sinh; đúng $N = 20$ học sinh chạm đúng trần tối đa 20 học sinh.
-        - Cột 5, 6, 7, 8, 9: **Bóc tách độc lập 5 mã lỗi kỹ thuật**: Cột 5 sĩ số dưới 5 học sinh (`422 Unprocessable Entity`), Cột 6 cấu hình vượt trần 20 (`400 Bad Request`), Cột 7 cấu hình dưới sàn 5 (`400 Bad Request`), Cột 8 cơ sở không có học sinh (`404 Not Found`), Cột 9 mã cơ sở Campus không tồn tại (`404 Not Found`).
-    - **Kiểm toán Unit Test Workbook (`audit_ut_xlsx.js`)**: Đạt **`0 issues`** tuyệt đối trên toàn bộ 18 Function sheets (Tổng 155 Test Cases: 35 Normal, 86 Abnormal, 34 Boundary).
-  - **2. Đồng bộ chéo toàn bộ tài liệu Test theo chuẩn `Report7_Final Project Report.pdf`**:
-    - Chuẩn hóa lại toàn bộ mã `FE-01 -> FE-22` và `BR-01 -> BR-25` trong [FA26SE090_Unit_Test.xlsx](./docs/Test/FA26SE090_Unit_Test.xlsx) và [Report5_Unit Test.xlsx](./docs/Test/Report5_Unit%20Test.xlsx) khớp 100% với Chương III SRS & mục `3. Detailed Design` (`3.1.1 -> 3.7.2`) của `Report7_Final Project Report.pdf`.
-    - Sửa chu kỳ SM-2 ở `STU_63` (Sheet `Student`) trong [FA26SE090_Test_Report.xlsx](./docs/Test/FA26SE090_Test_Report.xlsx) và [FA26SE090_Blackbox_UI_Test_Cases.md](./docs/Test/FA26SE090_Blackbox_UI_Test_Cases.md) từ `1 day -> 6 days` thành `1 day -> 3 days` (khớp code C# `1 -> 3 -> 7` và `UT012`), đồng thời cập nhật ngày phát hành `Cover` sang `16/11/2026`.
-- **Trạng thái**: Hoàn thành 100% (`0 lỗi`), đã tái xuất bản thành công [FA26SE090_Unit_Test.xlsx](./docs/Test/FA26SE090_Unit_Test.xlsx), [Report5_Unit Test.xlsx](./docs/Test/Report5_Unit%20Test.xlsx) và [FA26SE090_Test_Report.xlsx](./docs/Test/FA26SE090_Test_Report.xlsx).
+  - **1. Triệt Tiêu 100% Hardcode Họ Tên Học Sinh - Kết Nối Động Qua Identity Service (gRPC & REST API)**:
+    - **Backend (`GetAlertsDashboardQueryHandler.cs` & `IdentityGrpcClient.cs` trong `V-Eval-Practice_Service`)**:
+      - Xóa bỏ hoàn toàn dictionary tĩnh `KnownStudentNames` và switch-case phân giải tên theo tiền tố GUID.
+      - Mở rộng hợp đồng gRPC `GetStudentsByIds` trong `identity.proto` trên cả 3 vị trí (Identity Service, Practice Service, root grpc).
+      - Triển khai phương thức `GetStudentsByIds` trong `IdentityGrpcService.cs` (`V-Eval-Identity_Service`) truy vấn trực tiếp bảng `iam.users` theo batch `student_ids`.
+      - Triển khai `GetStudentNamesAsync` trong `IdentityGrpcClient.cs` gọi Identity Service qua gRPC, trả về `Dictionary<Guid, string>` tên học sinh thật (*Phạm Tấn Lộc*, *Thái Thịnh*, *asdasda a*...).
+    - **Frontend (`EarlyWarningsMentorPanel.jsx` trong `V-Eval-Web_Client`)**:
+      - Bổ sung `useMemo` vào import từ React, khắc phục triệt để lỗi runtime `ReferenceError: useMemo is not defined`.
+      - Xóa bỏ hoàn toàn hàm `resolveStudentDisplayName` chứa các điều kiện so khớp chuỗi hex tĩnh.
+      - Tích hợp `userService.getUsers({ role: 'STUDENT', pageSize: 100 })` tự động tạo từ điển người dùng động `identityUsersMap` từ Identity Service REST API.
+      - Ưu tiên sử dụng `a.studentName` đã phân giải từ Backend, kết hợp fallback tra cứu động từ Identity REST API.
+  - **2. Khắc Phục Lỗi Xung Đột Phòng Học 409 & Hoàn Thiện Modal Thời Khóa Biểu & Buổi Học**:
+    - **Frontend (`AcademicManagerDashboardView.jsx` trong `V-Eval-Web_Client`)**:
+      - Chuyển đổi cơ chế cập nhật: Bổ sung danh sách các ca học hiện có trong tuần của lớp kèm 2 nút bấm tiện ích: ✏️ **"Đổi Phòng / Giờ"** và 🗑️ **"Xóa"** ca học.
+      - Khi bấm **"Đổi Phòng / Giờ"**, form kích hoạt chế độ chỉnh sửa (`editingSlotIdx !== null`), thay thế trực tiếp ca học đang chọn thay vì thêm mới chồng lấn (`slots.map(...)`), loại bỏ hoàn toàn mã phòng cũ (`P.301`) trước khi gửi lên API Backend `saveClassWeeklySchedules`.
+      - Cập nhật logic phát hiện xung đột thời gian thực `scheduleSlotConflict`: Loại trừ chính ca học đang chỉnh sửa khỏi tập kiểm tra xung đột nội bộ, lập tức ẩn cảnh báo đỏ khi người dùng bấm chọn sang phòng còn trống (`P.302`, `P.303`...).
+  - **3. Triển Khai Kiểm Soát Xung Đột Phòng Học & Lịch Giảng Dạy 2 Tầng (`ScheduleService.cs` & `AcademicManagerDashboardView.jsx`)**:
+    - **Tầng Backend**: Bổ sung hàm kiểm tra `CheckWeeklySchedulesConflictAsync` vào cả 2 luồng `CreateClassWithScheduleAsync` và `SaveClassSchedulesAsync`, trả về `409 Conflict` kèm thông báo chi tiết khi trùng phòng học hoặc trùng giảng viên.
+    - **Tầng Frontend**: Bộ phát hiện xung đột thời gian thực `classConflictsMap`, `createClassConflict`, `scheduleSlotConflict`; hiển thị cảnh báo đỏ trực quan và khóa nút gửi khi có xung đột.
+  - **4. Hoàn Thiện Bộ Nghiệp Vụ Quản Lý Học Thuật Cơ Sở (`CAMPUS_MANAGER` - `MGR_01..22`)**:
+    - Chuẩn hóa phân cụm K-Means `5..20 HS/lớp`, tự cân bằng cụm thiếu sĩ số (`RebalanceUndersizedClusters`), hỗ trợ chế độ mô phỏng xem trước (`DryRun = true`) và xuất bản chính thức (`DryRun = false`).
+    - API xếp/chuyển học sinh thủ công kèm cơ chế tự động tràn lớp 20/20 (`POST /api/practice/classes/{classId}/enroll-student`).
+    - Khóa chặt cơ sở phụ trách với **Huy hiệu Cơ sở Cố định (Locked Badge)** có biểu tượng `Lock` và `ShieldCheck`.
+    - Chuẩn hóa giao diện Cảnh báo sớm Production-grade (loại bỏ thuật ngữ đồ án/đặc tả như `Core Flow 6`, `BR-04`, `Tier 1/2/3`, `Toa thuốc bù điểm ROI #1`, `SM-2`, `Mục tiêu ảo`).
+    - Bổ sung nút *"✨ Nạp Đợt Học Mẫu Để Kiểm Thử"* và *"✨ Nạp Khóa Học Mẫu Để Kiểm Thử"* giúp kiểm thử tạo mới tức thì.
+  - **5. Mở Rộng Backend `V-Eval-Identity_Service` Trả Về Cơ Sở Phụ Trách (`CampusId`, `CampusName`)**:
+    - Tự động join bảng `iam.academic_managers`, `iam.teachers` và `iam.campuses` trong `GetUserCampusInfoAsync` để nạp chính xác cơ sở phụ trách vào hồ sơ đăng nhập.
+- **Trạng thái**: Hoàn thành 100%, `dotnet build` trên `V-Eval-Identity_Service` và `V-Eval-Practice_Service` đạt `0 Warning(s), 0 Error(s)`, tests pass 20/20, `npm run build` trên `V-Eval-Web_Client` đạt `✓ built in 1.66s` (`0 lỗi`).
