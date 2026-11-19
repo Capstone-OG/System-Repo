@@ -2,6 +2,10 @@
 
 ## [19/11/2026]
 - **V-Eval-Web_Client**:
+  - **Tách Biệt Triệt Để Giữa Khung Chương Trình Chuẩn Và Luồng Khảo Thí Năng Lực (`App.jsx`, `Sidebar.jsx`, `StudentCurriculumView.jsx`)**:
+    - *Sửa lỗi điều hướng Tab Khảo thí*: Loại bỏ hoàn toàn khối override định tuyến giả định `if (activeTab === 'diagnostic' && role !== 'student') return <CurriculumExplorerView />` trong `App.jsx`. Giờ đây tab `diagnostic` luôn hiển thị chính xác trang khảo thí chẩn đoán năng lực (`DiagnosticAssessmentPage`) cho mọi vai trò (học sinh, giảng viên, admin, khách), không còn hiện tượng bấm vào kiểm tra năng lực lại bị điều hướng nhầm vào trang Khung chương trình.
+    - *Chuẩn hóa nhãn menu và Sidebar*: Cập nhật nhãn tab tại `App.jsx` từ `Khảo thí 30 câu` thành `Khảo thí & Chẩn đoán`, đổi badge và sublabel tại `Sidebar.jsx` thành `Khảo thí` và `Đề chuẩn hóa năng lực & IRT 2PL`, loại bỏ sự trùng lặp và gây hiểu nhầm về số lượng câu hỏi.
+    - *Tinh chỉnh thông điệp học sinh (`StudentCurriculumView.jsx`)*: Chuẩn hóa lời nhắc khảo sát đầu vào trong tab Lộ trình cá nhân, phân định rõ ràng giữa Khung chương trình chuẩn đào tạo GDPT 2018 (kèm phiếu củng cố 5 câu theo dạng bài) và Bài thi khảo thí chẩn đoán năng lực.
   - **Khắc Phục Triệt Để Lỗi Tạp Nhiễm Tri Thức Chéo Môn Học & Chéo Chương (`CurriculumExplorerView.jsx`, `UnifiedNodeDetailView.jsx`, `textbookStateBridge.js`)**:
     - *Bộ Lọc Phạm Vi Tri Thức 4 Lớp (Strict Scoping Hierarchy)*: Cập nhật các hàm `getMatchedChunksForChapter`, `getMatchedChunksForLesson`, `getMatchedChunksForPattern` với cơ chế nhận diện môn học tự động (`detectSubjectFromContext`, `isSubjectCompatible`) và cô lập nghiêm ngặt theo Chương (`parentChapter`) và Bài học (`parentLesson`).
     - Triệt tiêu hoàn toàn lỗi hiển thị 46 chunks tạp nhiễm (chứa cả Bất phương trình bậc hai một ẩn từ Chương 2, Hình học toạ độ từ Chương 4 và Phân lớp electron từ Hóa học 10 vào Dạng 1 của Bài 1: Không gian mẫu và biến cố trong Chương 10 Toán học). Trả về đúng 19 trang tri thức chuẩn xác của Bài 1 vào Khối 1.
@@ -15,16 +19,16 @@
     - *Cơ chế Fallback Sư phạm Thông minh*: Bọc toàn bộ luồng gọi `aiService.analyzePatternWithAi` trong khối try-catch an toàn. Nếu kết nối mạng hoặc API có sự cố, hệ thống tự động kích hoạt bộ sinh sư phạm chuẩn GDPT 2018 theo môn và dạng bài, đảm bảo nút AI luôn hoạt động 100% không bao giờ bị đơ/liệt.
     - *Sửa lỗi thiếu `isEdited: true`*: Đánh dấu cờ `isEdited: true` khi AI sinh lý thuyết/phương pháp, ngăn chặn triệt để việc logic render vô tình đè ngược lại bằng dữ liệu chunks cũ.
     - *Khắc phục bất đồng bộ React setState*: Truyền trực tiếp chỉ số dạng bài mục tiêu (`targetPatIdx`) vào hàm thực thi thay vì chờ state cập nhật, đảm bảo AI bóc tách đúng dạng bài được click.
-  - **Biên Dịch*: `npm run build` hoàn tất sạch sẽ trong 3.06s với 3054 modules transformed (0 Error).
+  - **Biên Dịch**: `npm run build` hoàn tất sạch sẽ trong 2.56s với 3054 modules transformed (0 Error).
 - **V-Eval-Content_Service**:
   - **Triệt Tiêu 100% Generic Hardcode & Cung Cấp Dữ Liệu Động 100% CSDL**:
     - Xóa bỏ hoàn toàn các chuỗi gán mặc định ("Kiến thức nền tảng trong cơ sở dữ liệu.", "Phương pháp giải chi tiết trong cơ sở dữ liệu.") tại `GetCurriculumTreeQuery.cs`.
     - Trả về chuỗi rỗng khi học liệu chưa có trong CSDL để phía Client phân định chính xác và hiển thị trạng thái "Chưa có dữ liệu nguồn".
     - Cung cấp đầy đủ qua REST API `GET /api/content/curriculum`: **139 Chương • 337 Bài học • 337 Dạng bài • 343 Học liệu Materials • 588 Câu hỏi Questions** từ CSDL PostgreSQL (`v_eval_content`).
-    - Biên dịch sạch: `dotnet build` đạt 0 Error, 100% Succeeded.
+    - Biên dịch sạch: `dotnet build --no-restore` đạt 0 Error, 100% Succeeded.
 - **V-Eval-Ai_Engine**:
   - **Nâng Cấp Prompt Bóc Tách Mục Lục Đa Bài Học & Triển Khai Lesson Guard C# (`PdfPigTextbookParserService.cs`)**:
     - *Ràng buộc đa bài học*: Cải tiến prompt Gemini Vision ép buộc bóc tách đầy đủ tất cả các bài học con trong mỗi chương, nghiêm cấm chỉ lấy 1 bài đại diện hoặc gộp bài; cung cấp schema JSON mẫu chứa nhiều bài học (`Bài 1`, `Bài 2`...).
     - *Triển khai Lesson Guard*: Khi AI parse ra tổng số bài học quá thấp (`totalParsedLessons < 10` hoặc trung bình `` `\le 1.2` `` bài/chương đối với sách `` `\ge 25` `` trang), hệ thống tự động đối soát và hòa nhập (backfill/merge) toàn bộ các bài học chuẩn còn thiếu từ `gdpt2018_dgnl_taxonomy.json` vào từng chương, bảo toàn trọn vẹn 10–25 bài học của cuốn sách.
     - *Đồng bộ taxonomy GDPT 2018*: Bao quát đầy đủ 139 Chương và 337 Bài học của 17 SGK Chân trời sáng tạo.
-    - *Biên dịch*: `dotnet build` đạt 0 Error, 0 Warning.
+    - *Biên dịch*: `dotnet build --no-restore` đạt 0 Error, 0 Warning.
