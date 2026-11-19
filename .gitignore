@@ -28,3 +28,6 @@ Configs/**/.env.*
 TestResults/
 [Tt]est[Rr]esults/
 *.cobertura.xml
+
+wwwroot/
+
