@@ -139,10 +139,10 @@ services:
     networks:
       - veval_network
 
-  # 7. Cloudflare Tunnel Service (Expose pickic.io.vn and api.pickic.io.vn to the Internet)
+  # 7. Cloudflare Tunnel Service (Expose veval.io.vn and api.veval.io.vn to the Internet)
   tunnel:
     image: cloudflare/cloudflared:latest
-    container_name: pickic-tunnel
+    container_name: veval-tunnel
     network_mode: host
     user: "1000:1000"
     volumes:
