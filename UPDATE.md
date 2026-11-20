@@ -1,17 +1,14 @@
-# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
+# UPDATE - SYSTEM REPO
 
-## [20/11/2026]
-- **V-Eval-Web_Client**:
-  - **Kiến Trúc 3 Trang Đề Thi Độc Lập Đồng Bộ 1:1 Với SGK, Chức Năng Xóa Đề Toàn Diện & Render Đầy Đủ Bảng/Công Thức/Đồ Thị (`Sidebar.jsx`, `App.jsx`, `examStateBridge.js`, `useExamWorkspaceController.js`, `ExamWorkspaceHeader.jsx`, `ExamSharedModals.jsx`, `ExamBankView.jsx`, `ExamIngestView.jsx`, `ExamStudioView.jsx`, `ExamPaperView.jsx`, `ExamQuestionStudioTab.jsx`, `ExamOrganizerTab.jsx`, `ExamBloomAiGeneratorTab.jsx`, `ExamRichContent.jsx`, `ExamDatabaseModal.jsx`, `ExamMediaLightbox.jsx`, `ExamNodePickerModal.jsx`, `ExamBlueprintDrawer.jsx`, `TeacherPortalView.jsx`, `examParserUtils.js`, `examCurriculumMatcher.js`, `examOrganizerUtils.js`, `aiService.js`, `contentService.js`)**:
-    - *Dropdown `exam-group` (`Đề thi & AI Bloom`) cho Teacher/Manager/Admin với 3 trang tách bạch*: **`1. Kho Đề & Xem Đề Thi` (`exam-bank`)**, **`2. Parse PDF & AI Bloom` (`exam-ingest`)**, **`3. Studio Biên Soạn Đề` (`exam-studio`)**, đồng bộ trạng thái xuyên trang qua `examStateBridge.js`.
-    - *Nút `Xóa Đề` đầy đủ trên mọi màn hình*: Xóa cả đề lưu Supabase (`DELETE /api/content/exams/{id}`) lẫn đề nháp vừa parse PDF/soạn thủ công ngay tại Trang 1, Trang 2, Trang 3, Modal Kho Đề và `TeacherPortalView`.
-    - *Hiển thị học thuật đầy đủ*: KaTeX 6 tầng, bảng Markdown 2 tầng + bảng HTML `<table>` gộp ô (`rowspan`/`colspan`), bảo vệ `[VARIATION_TABLE]`/`[MATH_GRAPH]`/`[MATH_GRAPH_3D]`, biểu đồ Recharts, nhận diện Node 4 tầng & Ma Trận Đặc Tả Đề Thi.
-  - **Kiểm Thử & Biên Dịch**: `oxlint` 0 Warning/0 Error (22 files phân hệ Đề thi); `node --test` pass 37/37; `npm run build` thành công trong 6.19s (`3073 modules`, `0 Error`).
-- **V-Eval-Ai_Engine**:
-  - **Page-Batched Gemini Vision AI + Tự Giải Đáp Án Chuẩn SGK & Bộ Dự Phòng Thuần C# `PdfPigLocalExamParser` (`MultiCloudExamParserService.cs`, `PdfPigLocalExamParser.cs`, `IExamParserService.cs`, `ExamEndpoints.cs`, `PdfPigTextbookParserService.cs`, `PdfPigLocalExamParserTests.cs`)**:
-    - Đồng bộ 100% chuỗi model & payload SGK (`AiSettings:GeminiModels` trên `generativelanguage.googleapis.com/v1beta`, bỏ `thinkingConfig` & nested schema gây 400 trên Lite, lọc `thought: true`); render cụm 2 trang JPEG sắc nét (`115 DPI`, `1400px`, `78%`) chạy song song; AI đọc trọn KaTeX, bảng biểu, gạch chân tiếng Anh, **bỏ qua khoanh bút học sinh** tự giải chọn đúng `correct_option`, viết `explanation` & gán Bloom `1–6`; `MergeBatchExamResults` ghép chùm liên trang; dự phòng `PdfPigLocalExamParser` thuần C# không cần `pymupdf`.
-  - **Endpoint AI Phân Loại Node (`POST /api/ai-engine/exams/classify-nodes`) (`ExamNodeClassificationDtos.cs`, `ExamNodeClassificationTests.cs`)**:
-    - Phân lô 30 câu/lượt qua Gemini + fallback `ClassifyQuestionLexically` (`dotnet build` 0 Error, `5/5` unit tests pass).
-- **V-Eval-Content_Service**:
-  - **Liên Kết Câu Hỏi Đề Thi Vào Cây Node 4 Tầng & Bảo Vệ Khóa Ngoại Khi Xóa Đề (`ImportMockExamCommand.cs`, `ImportMockExamCommandHandler.cs`, `MockExamDetailDto.cs`, `GetMockExamByIdQueryHandler.cs`, `DeleteMockExamCommandHandler.cs`)**:
-    - Gắn trực tiếp `SkillId` khi import (chống N+1 query & chấm dứt Skill mồ côi); trả về trọn vẹn `skill_id`, `domain_name`, `chapter_name`, `lesson_name`, `pattern_name`; kiểm tra câu hỏi dùng chung (`sharedQuestionIds`) chống lỗi khóa ngoại PostgreSQL (`23503`) khi `DELETE /api/content/exams/{id}` (`dotnet build` 0 Error, `dotnet test` 3/3 pass).
+## [21/11/2026]
+- **Tối Ưu Hóa Trình Bày Câu Hỏi Tìm Lỗi Sai Tiếng Anh, Tự Động Phục Hồi Chùm Đọc Hiểu 118–120 & Nâng Cấp Bộ Parser Đề Thi PDF (Chạy Local, Không Deploy Docker)**:
+  - **Web Client (`examParserUtils.js`, `examTextRepair.js`, `ExamPaperView.jsx`, `MathText.jsx`, `examStateBridge.js`, `examStateBridge.test.js`)**:
+    + Bổ sung cơ chế tự động chữa lành chùm đọc hiểu (`normalizeExamData`): giải cứu các câu hỏi bị nuốt vào bên trong thân đoạn văn do dữ liệu cũ, tách riêng thành 3 câu hỏi con 118, 119, 120 với đầy đủ phương án A/B/C/D (chuyển trạng thái từ "0 câu" thành "3 câu"); phục hồi nguyên bản đoạn văn Lịch sử 11 trang 155 không còn ký tự rác.
+    + Xóa bỏ các nhãn `(A)`, `(B)`, `(C)`, `(D)` lơ lửng trên câu hỏi; định dạng từ cần tìm lỗi sai thành **in đậm + gạch chân** (`font-bold underline`).
+    + Nâng cấp `STORAGE_KEY` lên `v3` để trình duyệt tự động xóa cache cũ và kích hoạt logic phục hồi.
+  - **AI Engine (`PdfPigLocalExamParser.cs`, `PdfPigLocalExamParserTests.cs`)**:
+    + Chuyển sang thuật toán **Line-Following (Nearest-Neighbor Horizontal Chain)** trong `ExtractOrderedPageText`: loại bỏ 100% tình trạng xé lẻ chữ cái đơn (`o`, `g`, `n`, `u`, `V`, `i`, `đ`) và chống trộn dòng khi trang scan bị nghiêng.
+    + Mở rộng nhận diện câu hỏi số trần (`91.`, `92.`, `118.`, `119.`, `120.`), chống chùm đọc hiểu nuốt câu hỏi con.
+- **Kiểm Thử Toàn Hệ Thống**:
+  - `V-Eval-Ai_Engine`: `dotnet build --no-restore` 0 Error, `dotnet test --no-build` `65/65` passed.
+  - `V-Eval-Web_Client`: `examStateBridge.test.js` `6/6` passed, `tests/*.test.js` `22/22` passed, `npm run build` thành công `6.40s`.
