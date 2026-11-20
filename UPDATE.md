@@ -1,17 +1,15 @@
-# NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
+# NHẬT KÝ CẬP NHẬT TIẾN ĐỘ HẰNG NGÀY (DAILY UPDATE LOG)
 
-## [20/11/2026]
-- **V-Eval-Web_Client**:
-  - **Kiến Trúc 3 Trang Đề Thi Độc Lập Đồng Bộ 1:1 Với SGK, Chức Năng Xóa Đề Toàn Diện & Render Đầy Đủ Bảng/Công Thức/Đồ Thị (`Sidebar.jsx`, `App.jsx`, `examStateBridge.js`, `useExamWorkspaceController.js`, `ExamWorkspaceHeader.jsx`, `ExamSharedModals.jsx`, `ExamBankView.jsx`, `ExamIngestView.jsx`, `ExamStudioView.jsx`, `ExamPaperView.jsx`, `ExamQuestionStudioTab.jsx`, `ExamOrganizerTab.jsx`, `ExamBloomAiGeneratorTab.jsx`, `ExamRichContent.jsx`, `ExamDatabaseModal.jsx`, `ExamMediaLightbox.jsx`, `ExamNodePickerModal.jsx`, `ExamBlueprintDrawer.jsx`, `TeacherPortalView.jsx`, `examParserUtils.js`, `examCurriculumMatcher.js`, `examOrganizerUtils.js`, `aiService.js`, `contentService.js`)**:
-    - *Dropdown `exam-group` (`Đề thi & AI Bloom`) cho Teacher/Manager/Admin với 3 trang tách bạch*: **`1. Kho Đề & Xem Đề Thi` (`exam-bank`)**, **`2. Parse PDF & AI Bloom` (`exam-ingest`)**, **`3. Studio Biên Soạn Đề` (`exam-studio`)**, đồng bộ trạng thái xuyên trang qua `examStateBridge.js`.
-    - *Nút `Xóa Đề` đầy đủ trên mọi màn hình*: Xóa cả đề lưu Supabase (`DELETE /api/content/exams/{id}`) lẫn đề nháp vừa parse PDF/soạn thủ công ngay tại Trang 1, Trang 2, Trang 3, Modal Kho Đề và `TeacherPortalView`.
-    - *Hiển thị học thuật đầy đủ*: KaTeX 6 tầng, bảng Markdown 2 tầng + bảng HTML `<table>` gộp ô (`rowspan`/`colspan`), bảo vệ `[VARIATION_TABLE]`/`[MATH_GRAPH]`/`[MATH_GRAPH_3D]`, biểu đồ Recharts, nhận diện Node 4 tầng & Ma Trận Đặc Tả Đề Thi.
-  - **Kiểm Thử & Biên Dịch**: `oxlint` 0 Warning/0 Error (22 files phân hệ Đề thi); `node --test` pass 37/37; `npm run build` thành công trong 6.19s (`3073 modules`, `0 Error`).
-- **V-Eval-Ai_Engine**:
-  - **Page-Batched Gemini Vision AI + Tự Giải Đáp Án Chuẩn SGK & Bộ Dự Phòng Thuần C# `PdfPigLocalExamParser` (`MultiCloudExamParserService.cs`, `PdfPigLocalExamParser.cs`, `IExamParserService.cs`, `ExamEndpoints.cs`, `PdfPigTextbookParserService.cs`, `PdfPigLocalExamParserTests.cs`)**:
-    - Đồng bộ 100% chuỗi model & payload SGK (`AiSettings:GeminiModels` trên `generativelanguage.googleapis.com/v1beta`, bỏ `thinkingConfig` & nested schema gây 400 trên Lite, lọc `thought: true`); render cụm 2 trang JPEG sắc nét (`115 DPI`, `1400px`, `78%`) chạy song song; AI đọc trọn KaTeX, bảng biểu, gạch chân tiếng Anh, **bỏ qua khoanh bút học sinh** tự giải chọn đúng `correct_option`, viết `explanation` & gán Bloom `1–6`; `MergeBatchExamResults` ghép chùm liên trang; dự phòng `PdfPigLocalExamParser` thuần C# không cần `pymupdf`.
-  - **Endpoint AI Phân Loại Node (`POST /api/ai-engine/exams/classify-nodes`) (`ExamNodeClassificationDtos.cs`, `ExamNodeClassificationTests.cs`)**:
-    - Phân lô 30 câu/lượt qua Gemini + fallback `ClassifyQuestionLexically` (`dotnet build` 0 Error, `5/5` unit tests pass).
-- **V-Eval-Content_Service**:
-  - **Liên Kết Câu Hỏi Đề Thi Vào Cây Node 4 Tầng & Bảo Vệ Khóa Ngoại Khi Xóa Đề (`ImportMockExamCommand.cs`, `ImportMockExamCommandHandler.cs`, `MockExamDetailDto.cs`, `GetMockExamByIdQueryHandler.cs`, `DeleteMockExamCommandHandler.cs`)**:
-    - Gắn trực tiếp `SkillId` khi import (chống N+1 query & chấm dứt Skill mồ côi); trả về trọn vẹn `skill_id`, `domain_name`, `chapter_name`, `lesson_name`, `pattern_name`; kiểm tra câu hỏi dùng chung (`sharedQuestionIds`) chống lỗi khóa ngoại PostgreSQL (`23503`) khi `DELETE /api/content/exams/{id}` (`dotnet build` 0 Error, `dotnet test` 3/3 pass).
+### [20/11/2026]
+- **Nhiệm vụ trọng tâm**:
+  - **Chuẩn Hóa Vai Trò Cổng Giám Đốc Học Thuật Liên Cơ Sở (`ACADEMIC_DIRECTOR`) Trên `V-Eval-Web_Client`**:
+    - Bảo toàn 100% 4 phân hệ chuyên môn cốt lõi của Director (`Kiểm duyệt Gia sư AI`, `Quản lý Khung Chương trình`, `Sách giáo khoa (SGK)`, `Đề thi & AI Bloom`).
+    - Dọn sạch Menu Sidebar (`Sidebar.jsx`): đổi tên nhóm sang **"Quản Trị Học Thuật Liên Cơ Sở"**, mục trang chủ **"Tổng quan Các Cơ sở"**, gỡ 3 mục trỏ nhầm/lấn sân (`Giám sát Ma trận Lớp học`, `Báo cáo Chất lượng Đào tạo`, `Cấp phát Tài khoản IAM`) và bỏ badge `Flow 4` gây cắt chữ.
+    - Nâng cấp chế độ `isDirectorMode` ngay trong `CampusManagerDashboardView.jsx` (không tạo file dư thừa): xóa hardcode `, Nguyễn Duy Khôi!` và `67%`, mặc định hiển thị **Tất cả các cơ sở (`ALL`)** kèm **Bảng Đối Sánh Chất Lượng Giữa Các Cơ Sở**, nạp KPI thật từ `contentService` / `userService` / `practiceService`, bổ sung 4 thẻ lối tắt chuyên môn, chuyển bản đồ nhiệt sang chế độ **Giám sát (Chỉ đọc)**.
+    - Cập nhật routing an toàn trong `App.jsx` để Director không bị rơi nhầm sang màn hình Student hoặc Teacher.
+  - **Khắc Phục Triệt Để Lỗi Logout Vẫn Dính Tài Khoản Cũ Trên Trang Chủ (`App.jsx`, `apiClient.js`, `authService.js`, `PublicHeader.jsx`)**:
+    - Chặn Race Condition của `/api/v1/users/me` qua `sessionVersion`, chặn lưu hồ sơ "bóng ma" khi không có `accessToken`, chuyển sang Optimistic Logout tức thì và kiểm tra `authService.isAuthenticated()` trên `PublicHeader.jsx`.
+  - **Đồng Bộ 100% Đợt Học & Khóa Học Sang Cổng Học Phí Student/Parent + Bổ Sung Sửa/Xóa Khóa Học (`V-Eval-Practice_Service` & `V-Eval-Web_Client`)**:
+    - **Backend (`CoursesController.cs`, `ScheduleService.cs`, `IScheduleService.cs`, `ScheduleDtos.cs`)**: Bổ sung `PUT /api/v1/courses/{courseId}` (chỉnh sửa khóa học, kiểm tra trùng mã) và `DELETE /api/v1/courses/{courseId}` (tự động Soft-Archive `IsActive = false` nếu đã gắn lớp học hoặc học sinh đăng ký/đóng tiền, xóa cứng nếu chưa có ràng buộc).
+    - **Frontend (`TuitionPaymentView.jsx`, `AcademicManagerDashboardView.jsx`, `practiceService.js`)**: Gỡ bỏ hoàn toàn 3 gói học hardcode, tải trực tiếp `AcademicTerms` (`ACTIVE`) và `Courses` (`isActive: true`) theo `campusId` kèm Banner Đợt học đang tuyển sinh; bổ sung nút Sửa (✏️) và Xóa (🗑️) khóa học trên cổng Academic Manager.
+- **Trạng thái**: Hoàn thành 100%, `dotnet build` sạch `0 Warning / 0 Error`, `dotnet test` đạt **20/20 Passed**, và `npm run build` (`vite build`) đạt `✓ built in 1.39s` (`0 lỗi`).
