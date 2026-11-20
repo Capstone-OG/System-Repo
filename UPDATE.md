@@ -1,35 +1,15 @@
 # NHẬT KÝ CẬP NHẬT TIẾN ĐỘ HẰNG NGÀY (DAILY UPDATE LOG)
 
-### [19/11/2026]
+### [20/11/2026]
 - **Nhiệm vụ trọng tâm**:
-  - **0. Nâng Cấp Cơ Chế Xếp Lớp Đầu Vào Theo Ma Trận 4 Miền × 3 Cấp Bậc (Tối Thiểu 12 Lớp Chuẩn)**:
-    - **Backend (`V-Eval-Practice_Service`)**: Phân hóa mỗi học sinh đã làm bài test 30 câu vào đúng **4 lớp** (1 lớp / miền kiến thức: `DOM_LANG`, `DOM_MATH`, `DOM_NAT_SCI`, `DOM_SOC_SCI`) theo 3 cấp bậc **Cơ bản (`< 50%`) – Tăng tốc (`50% – < 75%`) – Nâng cao (`>= 75%`)**, trần `20 HS/lớp` có tự động tách lớp tràn, mặc định **Bảo toàn 100% HS cũ (`PreserveExistingEnrollments = true`)** chỉ xếp bổ sung HS mới vào chỗ trống từng miền (vẫn đảm bảo mỗi HS mới đủ 4 lớp).
-    - **Frontend (`V-Eval-Web_Client`)**: Nâng cấp Section 3 (`AcademicManagerDashboardView.jsx`) sang giao diện **Ma trận 4 Hàng (4 Miền) × 3 Cột (3 Cấp bậc)** với ngưỡng tùy chỉnh, checkbox bảo toàn HS cũ, badge `+N mới` và gán giáo viên trực tiếp trên từng lớp.
-  - **1. Triệt Tiêu 100% Hardcode Họ Tên Học Sinh - Kết Nối Động Qua Identity Service (gRPC & REST API)**:
-    - **Backend (`GetAlertsDashboardQueryHandler.cs` & `IdentityGrpcClient.cs` trong `V-Eval-Practice_Service`)**:
-      - Xóa bỏ hoàn toàn dictionary tĩnh `KnownStudentNames` và switch-case phân giải tên theo tiền tố GUID.
-      - Mở rộng hợp đồng gRPC `GetStudentsByIds` trong `identity.proto` trên cả 3 vị trí (Identity Service, Practice Service, root grpc).
-      - Triển khai phương thức `GetStudentsByIds` trong `IdentityGrpcService.cs` (`V-Eval-Identity_Service`) truy vấn trực tiếp bảng `iam.users` theo batch `student_ids`.
-      - Triển khai `GetStudentNamesAsync` trong `IdentityGrpcClient.cs` gọi Identity Service qua gRPC, trả về `Dictionary<Guid, string>` tên học sinh thật (*Phạm Tấn Lộc*, *Thái Thịnh*, *asdasda a*...).
-    - **Frontend (`EarlyWarningsMentorPanel.jsx` trong `V-Eval-Web_Client`)**:
-      - Bổ sung `useMemo` vào import từ React, khắc phục triệt để lỗi runtime `ReferenceError: useMemo is not defined`.
-      - Xóa bỏ hoàn toàn hàm `resolveStudentDisplayName` chứa các điều kiện so khớp chuỗi hex tĩnh.
-      - Tích hợp `userService.getUsers({ role: 'STUDENT', pageSize: 100 })` tự động tạo từ điển người dùng động `identityUsersMap` từ Identity Service REST API.
-      - Ưu tiên sử dụng `a.studentName` đã phân giải từ Backend, kết hợp fallback tra cứu động từ Identity REST API.
-  - **2. Khắc Phục Lỗi Xung Đột Phòng Học 409 & Hoàn Thiện Modal Thời Khóa Biểu & Buổi Học**:
-    - **Frontend (`AcademicManagerDashboardView.jsx` trong `V-Eval-Web_Client`)**:
-      - Chuyển đổi cơ chế cập nhật: Bổ sung danh sách các ca học hiện có trong tuần của lớp kèm 2 nút bấm tiện ích: ✏️ **"Đổi Phòng / Giờ"** và 🗑️ **"Xóa"** ca học.
-      - Khi bấm **"Đổi Phòng / Giờ"**, form kích hoạt chế độ chỉnh sửa (`editingSlotIdx !== null`), thay thế trực tiếp ca học đang chọn thay vì thêm mới chồng lấn (`slots.map(...)`), loại bỏ hoàn toàn mã phòng cũ (`P.301`) trước khi gửi lên API Backend `saveClassWeeklySchedules`.
-      - Cập nhật logic phát hiện xung đột thời gian thực `scheduleSlotConflict`: Loại trừ chính ca học đang chỉnh sửa khỏi tập kiểm tra xung đột nội bộ, lập tức ẩn cảnh báo đỏ khi người dùng bấm chọn sang phòng còn trống (`P.302`, `P.303`...).
-  - **3. Triển Khai Kiểm Soát Xung Đột Phòng Học & Lịch Giảng Dạy 2 Tầng (`ScheduleService.cs` & `AcademicManagerDashboardView.jsx`)**:
-    - **Tầng Backend**: Bổ sung hàm kiểm tra `CheckWeeklySchedulesConflictAsync` vào cả 2 luồng `CreateClassWithScheduleAsync` và `SaveClassSchedulesAsync`, trả về `409 Conflict` kèm thông báo chi tiết khi trùng phòng học hoặc trùng giảng viên.
-    - **Tầng Frontend**: Bộ phát hiện xung đột thời gian thực `classConflictsMap`, `createClassConflict`, `scheduleSlotConflict`; hiển thị cảnh báo đỏ trực quan và khóa nút gửi khi có xung đột.
-  - **4. Hoàn Thiện Bộ Nghiệp Vụ Quản Lý Học Thuật Cơ Sở (`CAMPUS_MANAGER` - `MGR_01..22`)**:
-    - Chuẩn hóa phân cụm K-Means `5..20 HS/lớp`, tự cân bằng cụm thiếu sĩ số (`RebalanceUndersizedClusters`), hỗ trợ chế độ mô phỏng xem trước (`DryRun = true`) và xuất bản chính thức (`DryRun = false`).
-    - API xếp/chuyển học sinh thủ công kèm cơ chế tự động tràn lớp 20/20 (`POST /api/practice/classes/{classId}/enroll-student`).
-    - Khóa chặt cơ sở phụ trách với **Huy hiệu Cơ sở Cố định (Locked Badge)** có biểu tượng `Lock` và `ShieldCheck`.
-    - Chuẩn hóa giao diện Cảnh báo sớm Production-grade (loại bỏ thuật ngữ đồ án/đặc tả như `Core Flow 6`, `BR-04`, `Tier 1/2/3`, `Toa thuốc bù điểm ROI #1`, `SM-2`, `Mục tiêu ảo`).
-    - Bổ sung nút *"✨ Nạp Đợt Học Mẫu Để Kiểm Thử"* và *"✨ Nạp Khóa Học Mẫu Để Kiểm Thử"* giúp kiểm thử tạo mới tức thì.
-  - **5. Mở Rộng Backend `V-Eval-Identity_Service` Trả Về Cơ Sở Phụ Trách (`CampusId`, `CampusName`)**:
-    - Tự động join bảng `iam.academic_managers`, `iam.teachers` và `iam.campuses` trong `GetUserCampusInfoAsync` để nạp chính xác cơ sở phụ trách vào hồ sơ đăng nhập.
-- **Trạng thái**: Hoàn thành 100%, `dotnet build` trên `V-Eval-Identity_Service` và `V-Eval-Practice_Service` đạt `0 Warning(s), 0 Error(s)`, tests pass 20/20, `npm run build` trên `V-Eval-Web_Client` đạt `✓ built in 1.66s` (`0 lỗi`).
+  - **Chuẩn Hóa Vai Trò Cổng Giám Đốc Học Thuật Liên Cơ Sở (`ACADEMIC_DIRECTOR`) Trên `V-Eval-Web_Client`**:
+    - Bảo toàn 100% 4 phân hệ chuyên môn cốt lõi của Director (`Kiểm duyệt Gia sư AI`, `Quản lý Khung Chương trình`, `Sách giáo khoa (SGK)`, `Đề thi & AI Bloom`).
+    - Dọn sạch Menu Sidebar (`Sidebar.jsx`): đổi tên nhóm sang **"Quản Trị Học Thuật Liên Cơ Sở"**, mục trang chủ **"Tổng quan Các Cơ sở"**, gỡ 3 mục trỏ nhầm/lấn sân (`Giám sát Ma trận Lớp học`, `Báo cáo Chất lượng Đào tạo`, `Cấp phát Tài khoản IAM`) và bỏ badge `Flow 4` gây cắt chữ.
+    - Nâng cấp chế độ `isDirectorMode` ngay trong `CampusManagerDashboardView.jsx` (không tạo file dư thừa): xóa hardcode `, Nguyễn Duy Khôi!` và `67%`, mặc định hiển thị **Tất cả các cơ sở (`ALL`)** kèm **Bảng Đối Sánh Chất Lượng Giữa Các Cơ Sở**, nạp KPI thật từ `contentService` / `userService` / `practiceService`, bổ sung 4 thẻ lối tắt chuyên môn, chuyển bản đồ nhiệt sang chế độ **Giám sát (Chỉ đọc)**.
+    - Cập nhật routing an toàn trong `App.jsx` để Director không bị rơi nhầm sang màn hình Student hoặc Teacher.
+  - **Khắc Phục Triệt Để Lỗi Logout Vẫn Dính Tài Khoản Cũ Trên Trang Chủ (`App.jsx`, `apiClient.js`, `authService.js`, `PublicHeader.jsx`)**:
+    - Chặn Race Condition của `/api/v1/users/me` qua `sessionVersion`, chặn lưu hồ sơ "bóng ma" khi không có `accessToken`, chuyển sang Optimistic Logout tức thì và kiểm tra `authService.isAuthenticated()` trên `PublicHeader.jsx`.
+  - **Đồng Bộ 100% Đợt Học & Khóa Học Sang Cổng Học Phí Student/Parent + Bổ Sung Sửa/Xóa Khóa Học (`V-Eval-Practice_Service` & `V-Eval-Web_Client`)**:
+    - **Backend (`CoursesController.cs`, `ScheduleService.cs`, `IScheduleService.cs`, `ScheduleDtos.cs`)**: Bổ sung `PUT /api/v1/courses/{courseId}` (chỉnh sửa khóa học, kiểm tra trùng mã) và `DELETE /api/v1/courses/{courseId}` (tự động Soft-Archive `IsActive = false` nếu đã gắn lớp học hoặc học sinh đăng ký/đóng tiền, xóa cứng nếu chưa có ràng buộc).
+    - **Frontend (`TuitionPaymentView.jsx`, `AcademicManagerDashboardView.jsx`, `practiceService.js`)**: Gỡ bỏ hoàn toàn 3 gói học hardcode, tải trực tiếp `AcademicTerms` (`ACTIVE`) và `Courses` (`isActive: true`) theo `campusId` kèm Banner Đợt học đang tuyển sinh; bổ sung nút Sửa (✏️) và Xóa (🗑️) khóa học trên cổng Academic Manager.
+- **Trạng thái**: Hoàn thành 100%, `dotnet build` sạch `0 Warning / 0 Error`, `dotnet test` đạt **20/20 Passed**, và `npm run build` (`vite build`) đạt `✓ built in 1.39s` (`0 lỗi`).
