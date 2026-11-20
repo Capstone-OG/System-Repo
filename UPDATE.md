@@ -9,5 +9,11 @@
   - **Practice Service (`GetNextQuestionQueryHandler.cs`)**:
     + Chuẩn hóa truy vấn câu hỏi thích ứng Pha Apply (Pha A): Bỏ fallback GUID giả, truyền `examId: null` để Content Service cấp phát câu hỏi thích ứng phong phú từ L1 đến L4 chuẩn theo dạng bài `skillId` và cây kỹ năng của môn học đó.
     + Kiểm thử `dotnet test --no-restore` đạt 20/20 test passed 100%.
-  - **Web Client & AI Engine (Đã nghiệm thu ở commit trước)**:
+  - **Web Client & Kho Tri Thức SGK PLAR (`PlarNodeStudioPanel.jsx`, CSDL PostgreSQL `v_eval_content."Materials"`)**:
+    + Khắc phục triệt để lỗi khung lý thuyết trong PLAR bị giới hạn chiều cao / chỉ xem được đoạn đầu:
+      * Tích hợp trực tiếp module tri thức SGK `getDefaultLessonTheory` và `getSavedTextbookData` vào Pha Learn của PLAR.
+      * Loại bỏ hoàn toàn mọi rào cản chiều cao (`overflow-visible`), hiển thị đầy đủ 100% định nghĩa, công thức KaTeX, phương pháp giải chuẩn GDPT 2018.
+      * Nâng cấp `PassageContextBox` với nút `Xem toàn văn / Thu gọn` và tăng trần chiều cao lên `max-h-[460px]`.
+      * Cập nhật CSDL PostgreSQL `v_eval_content."Materials"` chuyên đề Toán 10 (Đường thẳng trong mặt phẳng toạ độ) từ 722 ký tự lên 4,270 ký tự toàn văn chuẩn mực (đầy đủ VTCP, VTPT, phương trình tham số, chính tắc, tổng quát, đoạn chắn, vị trí tương đối, góc, khoảng cách, ví dụ và bẫy đề thi ĐGNL).
     + Phục hồi tự động chùm đọc hiểu 118–120 môn Lịch sử; tối ưu hóa hiển thị dạng bài tìm lỗi sai Tiếng Anh (in đậm + gạch chân); nâng cấp thuật toán Line-Following trong PdfPig chống xé lẻ chữ cái đơn.
+    + Đã build lại và deploy thành công container Docker `v-eval-web-client`.
