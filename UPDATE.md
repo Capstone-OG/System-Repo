@@ -1,14 +1,12 @@
 # NHẬT KÝ CẬP NHẬT (UPDATE LOG) - V-EVAL CAPSTONE SYSTEM REPO
 
-## [20/11/2026]
+## [21/11/2026]
 - **V-Eval-Web_Client**:
-  - **Kết Nối CSDL Thời Gian Thực Toàn Diện & Chuẩn Hóa Dữ Liệu Động Cho Phân Hệ Giáo Viên (`TeacherDashboardView.jsx`, `TeacherScheduleView.jsx`, `AiTutorModerationView.jsx`, `Sidebar.jsx`, `App.jsx`, `practiceService.js`)**:
-    - *Bản đồ ma trận học tập 2D (`TeacherDashboardView.jsx`)*: Chuẩn hóa bộ chọn lớp học phụ trách, khắc phục lỗi bất đồng bộ mã định danh (`classId` thay vì `id`), kết nối dữ liệu thật từ endpoint `GET /api/practice/classes` và `GET /api/practice/classes/{classId}/heatmap`. Hiển thị trực tiếp danh sách học sinh trong lớp, điểm năng lực, trạng thái cần hỗ trợ, chuyên đề phân hóa và bảng ma trận tiến độ học tập chi tiết từ PostgreSQL.
-    - *Thời khóa biểu & Điểm danh chuyên cần (`TeacherScheduleView.jsx`)*: Bổ sung bộ chọn Lớp học phụ trách, tự động tải danh sách ca dạy thực tế từ endpoint `GET /api/practice/schedules/classes/{classId}/sessions` và `GET /api/practice/schedules/teachers/{teacherId}/schedule`. Loại bỏ hoàn toàn các giá trị mặc định tĩnh; liên kết trực tiếp sĩ số học sinh và tính toán tỷ lệ điểm danh theo thời gian thực; kết nối danh sách học sinh từ ma trận lớp để hiển thị chính xác họ tên trong Modal điểm danh và lưu trữ trực tiếp lên máy chủ thông qua endpoint `POST /api/practice/schedules/sessions/{sessionId}/attendances`.
-    - *Kiểm duyệt Gia sư AI Socratic (`AiTutorModerationView.jsx`)*: Loại bỏ hoàn toàn mảng mẫu tĩnh giả lập (`SEED_INTERACTIONS`) và các công thức cố định trước đây; kết nối trực tiếp vào 50 phiên đối thoại thực tế từ CSDL backend qua endpoint `GET /api/practice/ai-tutor/interactions`; hiển thị chính xác nội dung câu hỏi khảo thí, phương án lựa chọn, tiến trình đối thoại Socratic giữa học sinh và trợ lý AI, cùng trạng thái gắn cờ kiểm duyệt sư phạm.
-    - *Menu Sidebar & Điều Hướng (`Sidebar.jsx`, `App.jsx`)*: Tối giản menu của Giáo viên thành 3 khối nghiệp vụ rõ ràng: **Quản Lý Lớp Học** (`Lớp học & Tiến độ`, `Thời khóa biểu & Điểm danh`, `Lịch sử làm bài`), **Học Liệu & Đề Thi** (`Khung chương trình`, `Sách giáo khoa`, `Đề thi & AI Bloom`), **Kiểm Duyệt & AI** (`Kiểm duyệt gia sư AI`). Đảm bảo mục `Thời khóa biểu & Điểm danh` hiển thị trang trọng trên Sidebar và định tuyến mượt mà.
-  - **Kiểm Thử & Biên Dịch**: `npm run build` thành công trong 1.22s (`3079 modules`, `0 Error`).
+  - **Tái Cấu Trúc Ma Trận Thời Khóa Biểu Tuần 8 Cột (Weekly Timetable Matrix Grid) (`TeacherScheduleView.jsx`)**:
+    - *Giao diện ma trận tuần 8 cột chuẩn học viện & đại học*: Thiết kế bảng ma trận gồm Cột 1 (Slot 1-6) và 7 cột Thứ trong tuần (Thứ 2 - Chủ nhật kèm ngày DD/MM). Tự động nhận diện và làm nổi bật ngày hiện tại ("Hôm nay") bằng viền và nền xanh ngọc dịu nhẹ; các ô trống hiển thị dấu gạch ngang `-` thanh lịch.
+    - *Thẻ ca học chi tiết*: Hiển thị tên lớp, trạng thái chuyên cần (Có mặt / Chưa điểm danh), giờ học, phòng học, chế độ Offline, tên giảng viên, nhãn chuyên đề và sĩ số học sinh; tích hợp nút mở Modal điểm danh chuyên cần và nút xếp nhóm học tập vi mô 3–5 em.
+    - *Điều hướng tuần & chuyển chế độ xem*: Hỗ trợ điều hướng tuần trước/tuần này/tuần sau; banner phát hiện thông minh chuyển nhanh đến tuần có ca dạy gần nhất; chuyển đổi linh hoạt giữa `Lưới tuần` (Matrix Grid) và `Danh sách` (Agenda Cards).
+    - *Duy trì kết nối CSDL thời gian thực*: Tích hợp 100% dữ liệu động từ backend qua `practiceService` (lớp học, ca dạy, học sinh và lưu điểm danh trực tiếp).
+  - **Kiểm Thử & Biên Dịch**: `npm run build` thành công 100% trong 1.42s (`3079 modules`, `0 Error`).
 - **V-Eval-Practice_Service**:
-  - **Triển Khai API Hậu Kiểm Liêm Chính Bài Thi Thử (Core Flow 3 - BR-20) & Thẩm Định Sư Phạm Giáo Viên (`MockExamsController.cs`, `GetFlaggedSubmissionsQuery.cs`, `IMockExamRepository.cs`, `MockExamRepository.cs`, `FlaggedMockExamDto.cs`)**:
-    - Bổ sung endpoint `GET /api/practice/mock-exams/flagged-reviews?classId={classId}` truy vấn toàn bộ các phiên thi thử có dấu hiệu vi phạm liêm chính (`IntegrityStatus` là `FLAGGED_FOR_REVIEW` hoặc `UNDER_REVIEW`, hoặc `TabDepartureCount > 3`).
-    - Mở rộng `MockExamRepository.GetFlaggedSubmissionsAsync` liên thông CSDL PostgreSQL `v_eval_practice."MockExamSubmissions"`, phục vụ hàng đợi thẩm duyệt của giáo viên (`dotnet build`: 0 lỗi, 0 cảnh báo).
+  - **Duy Trì Vận Hành Ổn Định Các Phân Hệ Lịch Dạy & Điểm Danh**: `dotnet build` thành công toàn bộ solution (`0 Warning`, `0 Error`).
