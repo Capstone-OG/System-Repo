@@ -22,12 +22,27 @@
     - Xóa bỏ các nhãn `(A)`, `(B)`, `(C)`, `(D)` lơ lửng trên câu hỏi; định dạng từ cần tìm lỗi sai thành **in đậm + gạch chân** (`font-bold underline`).
     - Nâng cấp `STORAGE_KEY` lên `v3` để trình duyệt tự động xóa cache cũ và kích hoạt logic phục hồi.
   - **Kiểm Thử & Biên Dịch**: `npm run build` thành công 100% trong 1.29s (`3081 modules`, `0 Error`).
+  - **Hotfix Giao Diện PLAR & Kho Tri Thức SGK PLAR (`PlarNodeStudioPanel.jsx`, CSDL PostgreSQL `v_eval_content."Materials"`)**:
+    - Khắc phục triệt để lỗi khung lý thuyết trong PLAR bị giới hạn chiều cao / chỉ xem được đoạn đầu:
+      * Tích hợp trực tiếp module tri thức SGK `getDefaultLessonTheory` và `getSavedTextbookData` vào Pha Learn của PLAR.
+      * Loại bỏ hoàn toàn mọi rào cản chiều cao (`overflow-visible`), hiển thị đầy đủ 100% định nghĩa, công thức KaTeX, phương pháp giải chuẩn GDPT 2018.
+      * Nâng cấp `PassageContextBox` với nút `Xem toàn văn / Thu gọn` và tăng trần chiều cao lên `max-h-[460px]`.
+      * Cập nhật CSDL PostgreSQL `v_eval_content."Materials"` chuyên đề Toán 10 (Đường thẳng trong mặt phẳng toạ độ) từ 722 ký tự lên 4,270 ký tự toàn văn chuẩn mực.
+    - Đã build lại và deploy thành công container Docker `v-eval-web-client`.
+- **V-Eval-Content_Service**:
+  - **Hotfix Toàn Hệ Thống: Phân Lập Môn Học Tuyệt Đối (Subject Boundary Isolation) Trong Chu Trình PLAR (`ContentGrpcService.cs`, `SubjectTaxonomyHelper.cs`, `ContentGrpcServiceSubjectIsolationTests.cs`)**:
+    - Khắc phục triệt để lỗi học sinh học chặng Toán học nhưng nhận câu hỏi môn Ngữ văn.
+    - Thiết lập quy tắc **Subject Boundary Isolation**: Khoanh vùng câu hỏi chuẩn xác theo môn học (`targetSubject`), lọc sạch câu hỏi khác môn trong đề thi tổng hợp, xóa bỏ hoàn toàn bước fallback quét bừa toàn bộ bảng `Questions` hay fallback theo Domain chung.
+    - Đóng gói thư viện phân loại môn học `SubjectTaxonomyHelper` hỗ trợ chuẩn 9–10 môn GDPT 2018; bổ sung unit tests kiểm tra phân lập môn học đạt 16/16 test passed 100%.
 - **V-Eval-Practice_Service**:
   - **Đồng Bộ Danh Tính Họ Tên Học Sinh Thực Tế Cho Ma Trận Nhiệt Lớp Học (`GetClassHeatmapQueryHandler.cs`, `IIdentityGrpcClient.cs`)**:
     - Tiêm `IIdentityGrpcClient` vào `GetClassHeatmapQueryHandler`, gọi gRPC `GetStudentNamesAsync` sang Identity Service để truy vấn họ tên người dùng từ bảng `v_eval_identity."Users"`.
     - Thay thế hoàn toàn mã định danh giả lập `Học sinh #...` bằng danh tính thực tế: `Nguyễn Hoàng An`, `Trần Ngọc Mai`, `Phạm Tấn Lộc`, `Mai Thành Nhân`, `Trần Thái Thịnh`, `Lê Hoàng Long`.
     - Tự động bỏ qua bộ đệm cache khi phát hiện dữ liệu cũ và tái đồng bộ vào MemoryCache.
     - `dotnet build`: Hoàn thành 100%, 0 lỗi, 0 cảnh báo; `dotnet test`: 20/20 unit tests Passed.
+  - **Hotfix Pha Apply Chu Trình PLAR (`GetNextQuestionQueryHandler.cs`)**:
+    - Chuẩn hóa truy vấn câu hỏi thích ứng Pha Apply (Pha A): Bỏ fallback GUID giả, truyền `examId: null` để Content Service cấp phát câu hỏi thích ứng phong phú từ L1 đến L4 chuẩn theo dạng bài `skillId` và cây kỹ năng của môn học đó.
+    - Kiểm thử `dotnet test --no-restore` đạt 20/20 test passed 100%.
 - **V-Eval-Ai_Engine**:
   - Chuyển sang thuật toán **Line-Following (Nearest-Neighbor Horizontal Chain)** trong `ExtractOrderedPageText`: loại bỏ 100% tình trạng xé lẻ chữ cái đơn (`o`, `g`, `n`, `u`, `V`, `i`, `đ`) và chống trộn dòng khi trang scan bị nghiêng.
   - Mở rộng nhận diện câu hỏi số trần (`91.`, `92.`, `118.`, `119.`, `120.`), chống chùm đọc hiểu nuốt câu hỏi con.
