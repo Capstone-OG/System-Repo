@@ -2,6 +2,9 @@
 
 ## [21/11/2026]
 - **V-Eval-Web_Client**:
+  - **Loại Bỏ 2 Nút Thu Gọn Sidebar Trùng Lặp Ở Mép Brand Header & Navbar (`Sidebar.jsx`, `AccountNavbar.jsx`)**:
+    - Triệt tiêu 2 nút thu gọn/mở rộng sidebar (`PanelLeftClose`/`PanelLeftOpen`) nằm kề nhau gây rối mắt giữa Sidebar và Top Navbar.
+    - Giữ nguyên nút menu điều hướng responsive mobile (`Menu`), làm phẳng và thoáng đãng thanh tiêu đề desktop.
   - **Tối Giản Cảnh Báo Sư Phạm Thành Nút Bấm Popup (Pedagogical Alerts Modal) (`TeacherDashboardView.jsx`)**:
     - Gom danh sách thẻ cảnh báo trải dài thô xuống màn hình thành 1 dải mỏng nhẹ và 1 nút bấm: `Xem danh sách chuyên đề ({count})`.
     - Khi bấm, hiển thị Modal danh sách chuyên đề cuộn mượt (`max-h-[85vh]`), hiển thị chi tiết tỷ lệ hiểu bài, số học sinh chưa đạt và nút mở nhanh tạo nhóm bồi dưỡng vi mô 3–5 em.
