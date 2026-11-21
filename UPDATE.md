@@ -2,6 +2,12 @@
 
 ## [21/11/2026]
 - **V-Eval-Web_Client**:
+  - **Chuẩn Hóa Dữ Liệu Động Toàn Diện & Triệt Tiêu Giá Trị Tĩnh Cho Phân Hệ Giáo Viên (`TeacherScheduleView.jsx`, `AiTutorModerationView.jsx`, `ClassMicroGroupsModal.jsx`, `TeacherStudentDrillDownModal.jsx`, `practiceService.js`)**:
+    - Xóa bỏ giá trị tĩnh `'Teacher Khôi'`, `'P.301'`, nhận diện hình thức linh hoạt (`Online` / `Offline`) theo phòng học.
+    - Chuyển đổi thẻ "GraphRAG Monitor" sang tính toán tự động tỷ lệ tin cậy và số lượng bẫy tư duy từ cơ sở dữ liệu thực.
+    - Kích hoạt cơ chế tự động đóng gói 5 câu hỏi thích ứng trực tiếp từ Content Service API khi phát phiếu bài tập vi mô; tích hợp lệnh in thực tế `window.print()`.
+    - Thay thế mô phỏng `setTimeout` bằng hệ thống lưu trữ bền vững lịch sử dặn dò sư phạm theo từng học sinh; hiển thị danh sách dặn dò gần đây.
+    - Xóa bỏ dữ liệu giả lập `_source: 'seed_fallback'` trong `forceAggregateClassHeatmap`.
   - **Loại Bỏ 2 Nút Thu Gọn Sidebar Trùng Lặp Ở Mép Brand Header & Navbar (`Sidebar.jsx`, `AccountNavbar.jsx`)**:
     - Triệt tiêu 2 nút thu gọn/mở rộng sidebar (`PanelLeftClose`/`PanelLeftOpen`) nằm kề nhau gây rối mắt giữa Sidebar và Top Navbar.
     - Giữ nguyên nút menu điều hướng responsive mobile (`Menu`), làm phẳng và thoáng đãng thanh tiêu đề desktop.
@@ -11,7 +17,7 @@
   - **Tối Giản & Tái Cấu Trúc Ma Trận Thời Khóa Biểu Tuần 8 Cột (Weekly Timetable Matrix Grid) (`TeacherScheduleView.jsx`)**:
     - Loại bỏ khối banner hero xanh đen cồng kềnh giúp giao diện phẳng đồng điệu; đưa nút làm mới (`RefreshCw`) vào thanh công cụ.
     - Xây dựng bảng ma trận 8 cột (Slot 1-6 + Thứ 2 đến Chủ nhật), làm nổi bật ngày hiện tại, ô trống hiển thị `-`, thẻ ca học đầy đủ thông tin sư phạm kèm modal điểm danh trực tiếp tại lớp.
-  - **Kiểm Thử & Biên Dịch**: `npm run build` thành công 100% trong 1.32s (`3079 modules`, `0 Error`).
+  - **Kiểm Thử & Biên Dịch**: `npm run build` thành công 100% trong 1.49s (`3079 modules`, `0 Error`).
 - **V-Eval-Practice_Service**:
   - **Đồng Bộ Danh Tính Họ Tên Học Sinh Thực Tế Cho Ma Trận Nhiệt Lớp Học (`GetClassHeatmapQueryHandler.cs`, `IIdentityGrpcClient.cs`)**:
     - Tiêm `IIdentityGrpcClient` vào `GetClassHeatmapQueryHandler`, gọi gRPC `GetStudentNamesAsync` sang Identity Service để truy vấn họ tên người dùng từ bảng `v_eval_identity."Users"`.
