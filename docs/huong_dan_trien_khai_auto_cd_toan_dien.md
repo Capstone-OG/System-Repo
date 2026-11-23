@@ -42,7 +42,7 @@ Tất cả các thành phần trong hệ sinh thái triển khai trên máy ch�
 | **Thư mục dự án gốc** | `/data/Capstone` | Chứa `docker-compose.yml`, thư mục con `All Services/`, scripts và configs |
 | **Thư mục Runner** | `/home/thai-thinh/actions-runner` | Nơi chứa mã nguồn nhị phân và dữ liệu runtime của GitHub Runner |
 | **Dịch vụ nền Runner** | `/home/thai-thinh/.config/systemd/user/actions.runner.service` | Đơn vị systemd user daemon quản lý tiến trình runner tự khởi động cùng máy |
-| **Script triển khai trung tâm** | `/data/Capstone/Scripts/deploy_service.sh` | Script shell nhận tham số mục tiêu, đồng bộ Git và rebuild Docker |
+| **Script triển khai trung tâm** | `/data/Capstone/Scripts/deploy/deploy_service.sh` | Script shell nhận tham số mục tiêu, đồng bộ Git và rebuild Docker |
 | **File khóa đồng thời** | `/tmp/veval-deploy.lock` | Khóa nhị phân `flock` chống race condition khi nhiều commit merge cùng lúc |
 | **File biến môi trường** | `/data/Capstone/.env` | Chứa các secret API keys và chuỗi kết nối `DATABASE_URL` an toàn |
 | **Cấu hình Cloudflare Tunnel** | `/home/thai-thinh/.cloudflared/config.yml` | Cấu hình định tuyến domain `veval.io.vn` và `api.veval.io.vn` |
@@ -141,10 +141,10 @@ systemctl --user status actions.runner.service
 
 ## 4. Chi Tiết Script Triển Khai Trung Tâm (`Scripts/deploy_service.sh`)
 
-Script triển khai nằm tại `/data/Capstone/Scripts/deploy_service.sh`. Cú pháp vận hành:
+Script triển khai nằm tại `/data/Capstone/Scripts/deploy/deploy_service.sh`. Cú pháp vận hành:
 
 ```bash
-/data/Capstone/Scripts/deploy_service.sh <target>
+/data/Capstone/Scripts/deploy/deploy_service.sh <target>
 ```
 
 ### Bảng ánh xạ tham số mục tiêu:

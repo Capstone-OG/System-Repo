@@ -28,5 +28,5 @@ jobs:
     steps:
       - name: Execute Deployment Script
         run: |
-          /data/Capstone/Scripts/deploy_service.sh system
+          /data/Capstone/Scripts/deploy/deploy_service.sh system
 

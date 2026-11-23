@@ -18,7 +18,11 @@ fi
 
 # Detect Capstone Root Directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CAPSTONE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [ "$(basename "$SCRIPT_DIR")" = "deploy" ]; then
+  CAPSTONE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+else
+  CAPSTONE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
 
 # Ensure flock lock to prevent concurrent deployments
 LOCK_FILE="/tmp/veval-deploy.lock"
