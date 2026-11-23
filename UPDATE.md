@@ -2,12 +2,14 @@
 
 ## [23/11/2026]
 - **V-Eval-Web_Client**:
+  - **Tối Ưu Hóa Trải Nghiệm Người Dùng & Loại Bỏ Thuật Ngữ Kỹ Thuật Khung Chương Trình Cho Phân Hệ Giảng Viên (`CurriculumExplorerView.jsx`, `UnifiedNodeDetailView.jsx`, `ExamBankView.jsx`, `ExamWorkspaceHeader.jsx`, `TextbookStandardView.jsx`, `TextbookIngestView.jsx`)**:
+    + *Tái cấu trúc giao diện Tra cứu Khung chương trình*: Loại bỏ nhãn kỹ thuật `(Read-only)`, thay thế badge thành `Khung chương trình chuẩn`; đổi thanh tìm kiếm sang `Tìm kiếm chương, bài học, dạng bài...`; chuyển đổi nhãn phân loại năng lực sang thuật ngữ sư phạm (`Cần bổ trợ`, `Cần củng cố`, `Đã nắm vững`).
+    + *Chuẩn hóa danh sách chương & bài học*: Đổi tiêu đề thành `Danh sách chương & bài học`, ẩn nút quản trị `+ Thêm Chương` với role Giảng viên, loại bỏ hoàn toàn các thông số kỹ thuật nội bộ như trọng số phần trăm `Trọng số: ...%` và số trang phân đoạn `Đã nạp SGK (x trang)`.
+    + *Chuẩn hóa hiển thị chi tiết sư phạm*: Loại bỏ nhãn kỹ thuật trọng số và khớp trang SGK DB; chuẩn hóa 3 khối kiến thức thành `Lý Thuyết Trọng Tâm Chuẩn SGK`, `Phương Pháp Giải & Mô Hình Minh Họa Trực Quan`, `Ngân Hàng Câu Hỏi Luyện Tập`; bộ lọc nhận thức hiển thị nhãn sư phạm đầy đủ (`Tất cả`, `Nhận biết`, `Thông hiểu`, `Vận dụng`, `Vận dụng cao`) thay vì mã kỹ thuật L1-L4.
+    + *Đồng bộ loại bỏ nhãn `(Read-only)`*: Cập nhật đồng bộ trên Kho đề thi (`ExamBankView.jsx`), Xem đề thi (`ExamWorkspaceHeader.jsx`), SGK chuẩn (`TextbookStandardView.jsx`) và Tra cứu tài liệu (`TextbookIngestView.jsx`).
   - **Tối Ưu Hóa Giao Diện & Đồng Bộ 100% Dữ Liệu Học Sinh Thực Tế Cho Buổi Học Offline (TCH-02) (`TeacherScheduleView.jsx`, `OfflineSessionPreparationModal.jsx`, `offlineSessionStore.js`, `tests/offlineSessionStore.test.js`)**:
-    + *Tái thiết kế Modal Chuẩn bị Buổi học*: Loại bỏ toàn bộ các khối chữ giải thích quy tắc mang tính giáo điều và thuật ngữ kỹ thuật nội bộ (như `Mô hình lớp học đảo ngược`, `Giảng viên tự quyết 100% không cần Director duyệt`, `ZPD`, `Vi mô`, `Heatmap`, `WS-ZPD-ENG-01`).
-    + Giao diện phân tách 2 tab gọn gàng, tự nhiên: `1. Chữa bài chung cả lớp` (gợi ý kỹ năng làm sai nhiều + câu hỏi mẫu) và `2. Nhóm học tập tại bàn` (Bàn 1, Bàn 2 kèm học sinh và phiếu bài tập).
-    + *Đồng bộ trực tiếp 100% danh sách học sinh thật từ CSDL*: Kết nối API `practiceService.getClassHeatmap(session.classId)` và `practiceService.getSessionAttendances(session.sessionId)` để tải danh sách học sinh thực tế (`Trần Thái Thịnh`, `Trần Ngọc Mai`, `Mai Thành Nhân`, `Lê Hoàng Long`, `Nguyễn Hoàng An`, `Phạm Tấn Lộc`), tự động chia bàn học cân đối; tự động phát hiện và thanh lọc cache cũ lỗi thời.
-    + *Tinh giản thẻ ca học Thời khóa biểu*: Rút gọn thành 2 mục trực quan `1. Chữa bài chung` và `2. Nhóm tại bàn`; nút hành động đổi thành `Chuẩn bị buổi học` thân thiện với người dùng.
+    + Tái thiết kế Modal Chuẩn bị Buổi học, loại bỏ toàn bộ thuật ngữ kỹ thuật nội bộ (`Mô hình lớp học đảo ngược`, `ZPD`, `Vi mô`, `Heatmap`).
+    + Đồng bộ 100% danh sách học sinh thật từ CSDL (`Trần Thái Thịnh`, `Trần Ngọc Mai`, `Mai Thành Nhân`, `Lê Hoàng Long`, `Nguyễn Hoàng An`, `Phạm Tấn Lộc`), chia bàn học cân đối; tự động thanh lọc cache cũ.
   - **Chuẩn Hóa Phân Quyền Maker - Checker Cho Role Teacher (`TextbookIngestView.jsx`, `TextbookStudioView.jsx`, `CurriculumStudioEditor.jsx`, `ExamWorkspaceHeader.jsx`, `App.jsx`)**:
-    + *Nạp tài liệu SGK*: Áp dụng cơ chế **Chỉ xem (Read-only)** cho Giảng viên, ẩn form upload PDF và bóc tách AI cấp hệ thống.
-    + *Studio Biên soạn SGK & Đề thi*: Hiển thị banner `Chế độ Soạn thảo (Maker) — Gửi duyệt lên Giám đốc Học thuật`, chuyển đổi nút lưu thành `Lưu bản nháp` và `Gửi duyệt (PENDING_REVIEW)`, ẩn quyền tự xuất bản và xóa học liệu cấp hệ thống.
-  - **Kiểm Thử & Biên Dịch**: `npm run build` hoàn thành 100% trong 1.15s (`3083 modules`, `0 Error`); toàn bộ **30/30 unit tests passed 100%** (`tests/*.test.js` 22/22, `examStateBridge.test.js` 6/6, `offlineSessionStore.test.js` 2/2).
+    + Áp dụng cơ chế phân quyền Maker cho Giảng viên: Biên soạn bản nháp và gửi duyệt (`PENDING_REVIEW`), ẩn nút tự xuất bản và xóa học liệu toàn hệ thống.
+  - **Kiểm Thử & Biên Dịch**: `npm run build` hoàn thành 100% trong 1.18s (`3083 modules`, `0 Error`); toàn bộ **24/24 unit tests passed 100%** (`tests/*.test.js`).
