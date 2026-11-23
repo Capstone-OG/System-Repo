@@ -91,18 +91,23 @@ else
 fi
 
 # 2. Deploy via Docker Compose
+ENV_FLAG=""
+if [ -f "Configs/.env" ]; then
+  ENV_FLAG="--env-file Configs/.env"
+fi
+
 if [ "$TARGET" = "system" ]; then
   echo "🔍 Validating docker compose configuration..."
-  docker compose config --quiet
+  docker compose $ENV_FLAG config --quiet
   echo "✅ docker-compose.yml configuration is valid! System repo updated."
 else
   echo "🚀 Building and restarting service(s): $COMPOSE_SERVICES..."
   # Selective rebuild: --no-deps ensures veval-tunnel and other running containers remain untouched
-  docker compose up -d --build --no-deps $COMPOSE_SERVICES
+  docker compose $ENV_FLAG up -d --build --no-deps $COMPOSE_SERVICES
 
   echo "⏳ Verifying container health..."
   sleep 3
-  docker compose ps $COMPOSE_SERVICES
+  docker compose $ENV_FLAG ps $COMPOSE_SERVICES
 fi
 
 # 3. Prune unused images to preserve disk space
