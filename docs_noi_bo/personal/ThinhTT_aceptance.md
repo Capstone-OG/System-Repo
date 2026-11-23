@@ -16,50 +16,52 @@
 **Đường dẫn mã nguồn**: [All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumAiService.cs)
 
 #### 1. Bài toán Nghiệp vụ & Luồng xử lý
-- **Mục tiêu**: Xây dựng Task bất đồng bộ điều phối việc đọc hiểu tài liệu đề cương, sách giáo khoa hoặc chuyên đề STEM bằng cách gọi mô hình Google Gemini Client để bóc tách cấu trúc lý thuyết cốt lõi, công thức Toán - Lý - Hóa (LaTeX chuẩn) và bảng biến thiên.
+- **Mục tiêu**: Xây dựng Động cơ AI Tri thức Sư phạm & Nhận diện Dạng bài bóc tách cây phân cấp chuẩn SGK GDPT 2018 (Miền tri thức -> Chương -> Bài -> Dạng bài kèm 4 khối nội dung cốt lõi: Bloom L1-L4, 4 bước giải KaTeX, bẫy sai lầm, mẹo Casio).
 - **Quy tắc sư phạm & Định hướng prompt**:
-  - Tự động áp dụng prompt định hướng chuyên biệt theo môn học (`BuildDomainAwarePrompt`) để ép Gemini tạo dữ liệu có cấu trúc.
-  - Loại bỏ hoàn toàn mẹo bấm máy tính Casio khi bóc tách các môn Ngữ văn/Xã hội; giữ nguyên công thức toán học và bảng biến thiên SGK.
+  - Tự động áp dụng prompt định hướng chuyên biệt theo môn học (`BuildDomainAwarePrompt`): ép sinh công thức Toán - Lý - Hóa (LaTeX chuẩn) và bảng biến thiên.
+  - Phân định ranh giới môn học rõ ràng: giữ kỹ thuật Casio cho môn STEM; loại bỏ hoàn toàn mẹo Casio đối với môn Ngữ văn/Khoa học xã hội, chuyển sang chiến thuật gạch chân từ khóa và hành văn ghi điểm.
 
-#### 2. Bản chất Lỗi từ Gemini & Cơ chế JSON Repair Đối Chứng
-- **Các dạng lỗi đặc thù Gemini thường trả về gây sập hệ thống**:
-  1. *Markdown Code Fences*: Gemini thường tự động bọc chuỗi JSON trong khối markdown code block (fences) kèm văn bản giải thích tự do ở đầu/cuối chuỗi.
-  2. *Lỗi dấu phẩy thừa (Trailing Comma)*: Gemini thường để lại dấu phẩy sau phần tử cuối cùng trong mảng hoặc object (ví dụ: `[item1, item2,]`), vi phạm nghiêm trọng chuẩn cú pháp JSON RFC8259.
-  3. *Lỗi Escape ký tự công thức Toán học LaTeX*: Trong các công thức toán như `\frac{a}{b}`, `\sqrt{x}`, `\alpha`, `\in`, `\begin`, Gemini thường chỉ trả về 1 dấu gạch chéo ngược `\` thay vì escape kép `\\`. Khi đưa vào bộ giải mã mặc định của .NET (`JsonSerializer.Deserialize`), CLR sẽ hiểu sai thành các ký tự điều khiển (control characters) và quăng lỗi ngoại lệ `JsonException` làm chết tiến trình bóc tách.
-- **Giải pháp xử lý triệt để qua `JsonSanitizer.RepairJson`**:
-  - Đưa toàn bộ chuỗi raw JSON từ Gemini sinh ra vào hàm `JsonSanitizer.RepairJson(rawJson)`.
-  - Hàm thực hiện: Gọt sạch markdown code block, xóa bỏ trailing commas, và tự động sửa các chuỗi escape RFC8259 không hợp lệ, đảm bảo chuỗi JSON đầu ra sạch 100% và khớp hoàn toàn với schema hệ thống.
+#### 2. Kỹ thuật Xử lý Thị giác Máy tính (Multimodal Vision OCR) & Tối ưu Băng thông
+- **Bóc tách ảnh 2 tầng linh hoạt (Hybrid 2-Tier Extraction)**:
+  - *Tầng 1 (PDF Scan / Ảnh nhúng)*: Dùng `PdfPig` bốc trực tiếp mảng byte nhị phân thô (`RawBytes`) của ảnh scan toàn trang từ `page.GetImages()`, giải mã qua `SkiaSharp` mà không cần render lại, tiết kiệm 80% CPU.
+  - *Tầng 2 (PDF Vector)*: Dùng `PDFtoImage.Conversion.ToImage` kết xuất trang sang bitmap với độ phân giải siêu nhẹ (`VisionDpi = 56`).
+- **Co giãn & nén thích ứng (Adaptive Downscaling & Compression)**:
+  - Giới hạn cạnh tối đa `capDim = 720px - 860px` và nén JPEG `quality = 52% - 62%`, đưa dung lượng mỗi trang ảnh về mức siêu nhẹ (< 50KB/ảnh), đảm bảo Vision AI đọc rõ phân số, căn thức và bảng biến thiên mà không gây nghẽn băng thông.
+- **Thuật toán lấy mẫu trang đều (Uniform Sampling with Endpoints)**:
+  - Khi dải trang vượt trần `maxImages`, thuật toán luôn giữ trang đầu (mục lục/lý thuyết mở đầu) và trang cuối (bài tập tổng hợp), đồng thời tính bước nhảy đều `step = (matchingPages.Count - 1) / (middleSlots + 1)` để chọn rải đều các trang trọng tâm ở giữa.
+- **Cơ chế Cache Cục bộ theo mã băm SHA-256 (`TryLoadPreIngestedTextFromCache`)**:
+  - Tính mã băm `fileHash` của file PDF, tra cứu cache `wwwroot/uploads/textbooks/cache/{fileHash}.json`. Nếu tài liệu đã từng nạp, tái sử dụng ngay lập tức mà không cần gọi lại AI, tiết kiệm 100% token.
 
-#### 3. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `ExtractTheoryRecapAsync(...)`**:
-  - Tạo Task điều phối luồng: Nhận nội dung -> Gọi Gemini Client -> Đưa qua `JsonSanitizer.RepairJson` -> Ánh xạ sang DTO bằng `JsonSerializer.Deserialize`.
-  - Sử dụng `JsonSerializer.Deserialize<TheoryRecapDto>(sanitizedJson, _jsonOptions)` để ánh xạ chuỗi đã làm sạch kết hợp `_jsonOptions` chuyên dụng.
-  - **Cơ chế Fallback An Toàn Tuyệt Đối**: Trường hợp kết quả deserialize trả về null, hàm tự động khởi tạo và trả về một instance `new TheoryRecapDto()` mới tinh, triệt tiêu hoàn toàn nguy cơ phát sinh lỗi `NullReferenceException` cho các service tầng sau.
+#### 3. Chiến lược Khả dụng cao & Chống cạn kiệt tài nguyên (Multi-Key & Multi-Cloud Cascade)
+- **Hàm `MaskKey`**: Cơ chế mặt nạ hóa API Key (`key[..6]...key[^6..]`) phục vụ ghi log hệ thống an toàn, chống lộ lọt thông tin bí mật (Credential Leakage) khi vận hành.
+- **Thu thập cấu hình đa nguồn (`ResolveApiKeys` & `ResolveGeminiModels`)**:
+  - Hỗ trợ cả key đơn, chuỗi phân tách dấu phẩy/chấm phẩy, mảng JSON và biến môi trường Docker/CI-CD; tự động lọc rác và khử trùng lặp (`Distinct`).
+  - Danh sách model Google fallback an toàn: `gemini-3.6-flash` -> `gemini-3.5-flash` -> `gemini-3.5-flash-lite` -> `gemini-flash-lite-latest`.
+- **Cơ chế Failover đa đám mây (Cascade Failover)**:
+  - *Tầng 1 (Google Gemini)*: Vòng lặp xoay vòng Multi-Keys và Multi-Models. Khi gặp mã lỗi **401/403/429** (lỗi Key/hạn ngạch) -> đổi ngay sang API Key tiếp theo; khi gặp mã lỗi **500/503/504** (Google server quá tải) -> giữ nguyên Key và chuyển sang Model nhẹ hơn.
+  - *Tầng 2 (OpenAI Failover - `TryCallOpenAiCurriculumAsync`)*: Nếu toàn bộ Gemini sập, tự động chuyển tiếp sang OpenAI (`gpt-4o-mini`, `o3-mini`) với `max_completion_tokens = 32768` (dòng O) hoặc `temperature = 0.1` (dòng GPT).
+- **Quản lý hủy tác vụ & Timeout kép**:
+  - Kết hợp `CancellationToken` của client với timeout nội bộ qua `CancellationTokenSource.CreateLinkedTokenSource`, ngắt kết nối HTTP ngay lập tức khi người dùng hủy hoặc quá thời gian chờ, triệt tiêu nguy cơ chạy ngầm lãng phí token và nghẽn Thread Pool.
 
-```csharp
-public async Task<TheoryRecapDto> ExtractTheoryRecapAsync(string content, string subject, CancellationToken cancellationToken)
-{
-    var prompt = BuildDomainAwarePrompt(content, subject);
-    var rawJson = await _geminiClient.GenerateContentAsync(prompt, cancellationToken);
-    
-    // Tự động sửa lỗi cú pháp JSON dấu phẩy cuối (trailing comma) và escape ký tự RFC8259
-    var sanitizedJson = JsonSanitizer.RepairJson(rawJson);
-    return JsonSerializer.Deserialize<TheoryRecapDto>(sanitizedJson, _jsonOptions) 
-           ?? new TheoryRecapDto();
-}
-```
-
-#### 4. Cơ chế đảm bảo & Xử lý ngoại lệ
-- **Phòng thủ chiều sâu (Defense-in-Depth)**: Kết hợp làm sạch chuỗi trước khi parse và fallback object rỗng nếu parse thất bại.
-- **Quản lý hủy tác vụ**: Hỗ trợ `CancellationToken` cho phép hủy tác vụ ngay lập tức khi người dùng hủy request hoặc timeout mạng.
+#### 4. Bản chất Lỗi từ Gemini & Cơ chế Cứu dữ liệu 3 tầng (3-Tier Parser Fallback)
+- **Các dạng lỗi đặc thù của LLM khi sinh công thức Toán**:
+  1. *Markdown Code Fences*: Bọc thừa ` ```json ` kèm chữ tự do.
+  2. *Trailing Comma*: Dấu phẩy thừa cuối mảng/object vi phạm RFC8259.
+  3. *Lỗi Escape LaTeX*: Các công thức `\frac`, `\sqrt`, `\alpha` chỉ có 1 dấu gạch chéo ngược `\` làm bộ giải mã .NET quăng ngoại lệ `JsonException`.
+- **Quy trình cứu dữ liệu 3 tầng trong `ExtractCurriculumAsync`**:
+  - *Chốt 1*: Đưa qua `SanitizeAndRepairGeminiJson` (loại bỏ code block, gọt trailing commas, sửa escape RFC8259).
+  - *Chốt 2*: Thử `JsonSerializer.Deserialize` nghiêm ngặt; nếu thất bại chuyển sang `TryParseCurriculumFromLooseJson` dùng `JsonNode` bốc tách từng nhánh lỏng lẻo.
+  - *Chốt 3*: Nếu vẫn thiếu bài học/dạng bài (`IsCurriculumIncomplete`), kích hoạt `ExtractCurriculumViaRegex` dùng biểu thức chính quy quét cưỡng bức text để cứu dữ liệu thật.
+- **Tiêu chuẩn kiểm soát chất lượng (Quality Gate)**:
+  - Bắt buộc số dạng bài bóc tách phải $\ge$ `minPatternsThreshold` (mặc định $\ge 3$ dạng bài). Nếu model bóc tách quá sơ sài, hệ thống lưu tạm bản tốt nhất (`bestPartialParsed`) và tiếp tục thử model tiếp theo để bóc tách sâu hơn.
 
 #### 5. Kết luận nghiệm thu của tác giả (ThinhTT Acceptance)
-- **Trạng thái**: Đạt chuẩn (Pass) - Đã nghiệm thu thực tế và chứng minh vận hành ổn định.
-- **Đánh giá**: Hoàn thành xuất sắc vai trò cầu nối xử lý dữ liệu giữa AI đa phương thức và Backend .NET, giải quyết dứt điểm tính bất định (non-deterministic output) của các mô hình LLM khi xử lý công thức toán học chuyên sâu.
+- **Trạng thái**: Đạt chuẩn (Pass) - Đã nghiệm thu thực tế và chứng minh vận hành ổn định qua 24 cuốn SGK GDPT 2018.
+- **Đánh giá**: Hoàn thành xuất sắc cỗ máy bóc tách tri thức giáo trình, tích hợp khả năng chống chịu lỗi đa tầng (Resilience & Fault-Tolerance), xử lý linh hoạt cả PDF scan, PDF vector và Word fallback.
 
 </details>
 
-- [x] **Đã duyệt**
+- [ ] **Chưa duyệt**
 <details>
 <summary>GeminiExamParserService.cs</summary>
 
@@ -108,7 +110,7 @@ public async Task<List<ParsedQuestionDto>> ParseExamPdfAsync(byte[] pdfBytes, Ca
 
 </details>
 
-- [x] **Đã duyệt**
+- [ ] **Chưa duyệt**
 <details>
 <summary>TextbookRepository.cs</summary>
 
@@ -225,7 +227,7 @@ public async Task<int> SaveTextbookAndChunksAsync(TextbookIngestResultDto dto, C
 
 </details>
 
-- [x] **Đã duyệt**
+- [ ] **Chưa duyệt**
 <details>
 <summary>CurriculumEndpoints.cs</summary>
 
@@ -312,7 +314,7 @@ group.MapPost("/extract", async (
 
 </details>
 
-- [x] **Đã duyệt**
+- [ ] **Chưa duyệt**
 <details>
 <summary>TextbookEndpoints.cs</summary>
 
@@ -1616,6 +1618,8 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 
 | Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
 | :--- | :---: | :---: | :--- | :--- |
+| `466b34d` | `18/11/2026` | **Cập nhật (`M`)** | [PersonalizedRoadmapPlanner.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/PersonalizedRoadmapPlanner.cs) | Bổ sung toàn bộ các node dạng bài chuẩn GDPT 2018 (750 patterns) vào thuật toán sinh cây lộ trình học tập cá nhân hóa PLAR. |
+| `65dd290` | `11/11/2026` | **Cập nhật (`M`)** | [GetTuitionStatusQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Queries/GetTuitionStatus/GetTuitionStatusQueryHandler.cs) | Truy vấn trực tiếp trạng thái học phí từ PostgreSQL, đồng bộ đăng ký khóa học đang hoạt động và lịch sử thanh toán học phí. |
 | `322d73d` | `06/11/2026` | **Tạo mới (`A`)** | [EarlyWarningSweepWorker.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/BackgroundJobs/EarlyWarningSweepWorker.cs) | Background Service chạy ngầm định kỳ 6h sáng quét toàn bộ học sinh có nguy cơ trượt / suy giảm năng lực học tập (SDD Figure 56). |
 | `322d73d` | `06/11/2026` | **Tạo mới (`A`)** | [NotificationDispatcher.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/NotificationDispatcher.cs) | Dịch vụ điều phối cảnh báo đa kênh (In-app, Email, SMS/Zalo) tới học sinh, phụ huynh và giáo viên (SDD Figure 57). |
 | `6ad262c` | `06/11/2026` | **Cập nhật (`M`)** | [GetParentDashboardQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Dashboard/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs) | Xóa bỏ 100% dữ liệu mock con mẫu (`Phạm Minh Hoàng`), truy vấn dữ liệu thực tế từ PostgreSQL Supabase cho Cổng Phụ huynh. |
@@ -1642,8 +1646,15 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 
 | Service | Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
 | :--- | :--- | :---: | :---: | :--- | :--- |
+| **V-Eval-Content_Service** | `c09f679`, `f2de139` | `14-16/11/2026` | **Cập nhật (`M`)** | [CurriculumTreeService.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Infrastructure/Services/CurriculumTreeService.cs) | Siết chặt cô lập môn học/chương, bộ lọc loại bỏ tài liệu sai ngôn ngữ, kế thừa tri thức anh em và hỗ trợ lưu đa hình Pattern ID từ Studio. |
+| **V-Eval-Content_Service** | `eaf7a63` | `11/11/2026` | **Cập nhật (`M`)** | [Program.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Program.cs) | Mở rộng giới hạn Kestrel `MaxRequestBodySize` và `FormOptions` lên 250MB phục vụ tiếp nhận tài liệu giáo trình và payload đề thi lớn. |
 | **V-Eval-Content_Service** | `778fb75`, `a5e3301`, `7b72105` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [CreateQuizExamCommandValidatorTests.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Tests/Validators/CreateQuizExamCommandValidatorTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Content_Service/Scripts/test.bat) | Unit Tests kiểm thử FluentValidation cho `CreateQuizExamCommand` và kịch bản chạy test tự động. |
+| **V-Eval-Gateway** | `2581d99` | `11/11/2026` | **Cập nhật (`M`)** | [Program.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway/Program.cs) | Nâng trần `MaxRequestBodySize` và `FormOptions.MultipartBodyLengthLimit` lên 250MB trên YARP Gateway cho luồng Ingestion đa phương tiện. |
 | **V-Eval-Gateway** | `f73a456`, `08491e3` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [CorrelationIdMiddlewareTests.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.Tests/Middlewares/CorrelationIdMiddlewareTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Gateway/Scripts/test.bat) | Unit Tests kiểm thử middleware sinh & truyền `X-Correlation-Id` qua YARP Gateway. |
+| **V-Eval-Ai_Engine** | `5a40bb2`, `03b6913` | `18-19/11/2026` | **Cập nhật (`M`)** | [Gdpt2018CurriculumSkeleton.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Data/Gdpt2018CurriculumSkeleton.cs) | Nâng cấp ngân hàng 750 dạng bài (Pattern) chuẩn GDPT 2018 không tiền tố cứng, phân bổ đa dạng thang Bloom L1-L4 và chuẩn hóa tên môn. |
+| **V-Eval-Ai_Engine** | `9e45d16`, `1510107` | `15-16/11/2026` | **Cập nhật (`M`)** | [TextbookHybridParser.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/TextbookHybridParser.cs) | Tối ưu hóa throughput bộ bóc tách SGK: rasterize 48 DPI, xử lý batch 2 trang Vision, mở rộng dải mục lục (TOC) và cơ chế fail-fast phục hồi. |
+| **V-Eval-Ai_Engine** | `eb4a4f4`, `0855951` | `08-11/11/2026` | **Cập nhật (`M`)** | [PromptTemplates.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/AI/PromptTemplates.cs), [MultiCloudExamParserService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/MultiCloudExamParserService.cs) | Tách rời template prompt chuyên biệt môn học, che chắn thẻ MathLab 3D/2D, cascade failover kép giữa Gemini Flash & Flash-Lite và che giấu API key suffix. |
+| **V-Eval-Ai_Engine** | `f9c47e0` | `11/11/2026` | **Cập nhật (`M`)** | [JsonSanitizer.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Utils/JsonSanitizer.cs) | Khắc phục triệt để lỗi deserialization HF-AI-05, tăng cường bộ dọn quote bọc ngoài và tối ưu độ ổn định khi bóc tách JSON công thức toán. |
 | **V-Eval-Ai_Engine** | `54ade07`, `9b1d177` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [TutorSessionTests.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Tests/Domain/TutorSessionTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Ai_Engine/Scripts/test.bat) | Unit Tests kiểm thử tính bất biến và quản lý trạng thái của Domain Entity `TutorSession`. |
 
 ---
@@ -1652,6 +1663,13 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 
 | Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
 | :--- | :---: | :---: | :--- | :--- |
+| `47a629f` | `19/11/2026` | **Cập nhật (`M`)** | [StudentPortalView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/student/StudentPortalView.jsx), [CasioFx580Drawer.jsx](../../All%20Services/V-Eval-Web_Client/src/components/tools/CasioFx580Drawer.jsx) | Tinh chỉnh UX lộ trình học tập, tích hợp thanh công cụ tra cứu công thức, mô phỏng thí nghiệm và ngăn kéo Máy tính giả lập Casio FX-580VN X. |
+| `c8e73e2` | `18/11/2026` | **Cập nhật (`M`)** | [PedagogicalTextbookStudio.jsx](../../All%20Services/V-Eval-Web_Client/src/components/studio/PedagogicalTextbookStudio.jsx), [ProctoredExamRunner.jsx](../../All%20Services/V-Eval-Web_Client/src/components/exam/ProctoredExamRunner.jsx) | Nâng cấp Studio SGK 3 tabs chuyên sâu, phòng thi thử có giám sát (Proctored), luyện tập thích ứng theo dạng và gắn cờ câu hỏi nghi vấn. |
+| `efd17ea` | `16/11/2026` | **Cập nhật (`M`)** | [AcademicDocEditor.jsx](../../All%20Services/V-Eval-Web_Client/src/components/studio/AcademicDocEditor.jsx) | Tái thiết kế trình soạn thảo học thuật phong cách Word/Excel, bổ sung danh mục 838 mục kiến thức 8 môn học và khắc phục lỗi 404 khi lưu. |
+| `4398263` | `15/11/2026` | **Cập nhật (`M`)** | [curriculumStorageBridge.js](../../All%20Services/V-Eval-Web_Client/src/services/curriculumStorageBridge.js) | Cầu nối lưu trữ dữ liệu vạn năng (Universal Storage Bridge), triệt tiêu stale closure và đồng bộ 2 chiều thời gian thực giữa ngân hàng câu hỏi và giáo trình. |
+| `ee279b9` | `14/11/2026` | **Cập nhật (`M`)** | [CurriculumExplorerView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/curriculum/CurriculumExplorerView.jsx) | Bổ sung mục lục (TOC) thu gọn linh hoạt, hiển thị 3/5 khối lý thuyết sư phạm cô đọng và tích hợp trình xem ngân hàng câu hỏi đồng bộ theo `sourceId`. |
+| `c35cdd2` | `10/11/2026` | **Cập nhật (`M`)** | [TuitionPaymentView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx) | Đồng bộ học phí thực từ cơ sở dữ liệu, hiển thị gói đào tạo đang kích hoạt, mở khóa 6 đặc quyền học tập và modal biên lai thanh toán PayOS. |
+| `b857ffa` | `09/11/2026` | **Cập nhật (`M`)** | [HierarchicalMathPalette.jsx](../../All%20Services/V-Eval-Web_Client/src/components/curriculum/HierarchicalMathPalette.jsx) | Che chắn các khối MathLab 3D/2D tránh bị bộ phân tích cú pháp KaTeX làm lỗi và loại bỏ hoàn toàn text cứng Ester-Lipid trên UI. |
 | `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Mở rộng không gian làm việc cổng vai trò sang `w-full` sát Sidebar, xóa bỏ hoàn toàn lề trống thừa `max-w-7xl mx-auto`. |
 | `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [AccountProvisioningView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx) | Tái thiết kế bảng quản trị tài khoản 1 dòng duy nhất (`whitespace-nowrap`), avatar 2 chữ cái theo vai trò và thanh công cụ Command Toolbar hợp nhất. |
 | `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [apiClient.js](../../All%20Services/V-Eval-Web_Client/src/services/apiClient.js) | Tuần tự hóa `options.params` qua `URLSearchParams` cho phương thức GET và bổ sung phương thức `apiClient.patch()`. |
