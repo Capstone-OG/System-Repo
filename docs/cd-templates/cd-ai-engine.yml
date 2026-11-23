@@ -1,0 +1,38 @@
+name: Continuous Deployment (AI Engine & RAG)
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-ai-engine-prod
+  cancel-in-progress: false
+
+jobs:
+  ci-verify:
+    name: Verify AI Engine Build & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore & Build & Test
+        run: |
+          dotnet restore
+          dotnet test --no-restore -c Release
+
+  deploy-ubuntu:
+    name: Deploy AI Engine & RAG to Ubuntu Server
+    needs: ci-verify
+    runs-on: [self-hosted, veval-prod]
+    steps:
+      - name: Trigger Selective Deployment
+        run: |
+          /data/Capstone/Scripts/deploy_service.sh ai-engine
+

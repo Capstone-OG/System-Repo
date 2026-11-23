@@ -1,0 +1,38 @@
+name: Continuous Deployment (API Gateway)
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-gateway-prod
+  cancel-in-progress: false
+
+jobs:
+  ci-verify:
+    name: Verify Gateway Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore & Build
+        run: |
+          dotnet restore
+          dotnet build --no-restore -c Release
+
+  deploy-ubuntu:
+    name: Deploy Gateway to Ubuntu Server
+    needs: ci-verify
+    runs-on: [self-hosted, veval-prod]
+    steps:
+      - name: Trigger Selective Deployment
+        run: |
+          /data/Capstone/Scripts/deploy_service.sh gateway
+

@@ -1,0 +1,32 @@
+name: Continuous Deployment (Ubuntu Server)
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-system-prod
+  cancel-in-progress: false
+
+jobs:
+  ci-verify:
+    name: Verify System Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Syntax
+        run: |
+          docker compose config --quiet
+
+  deploy-ubuntu:
+    name: Deploy System Repo Configuration
+    needs: ci-verify
+    runs-on: [self-hosted, veval-prod]
+    steps:
+      - name: Execute Deployment Script
+        run: |
+          /data/Capstone/Scripts/deploy_service.sh system
+

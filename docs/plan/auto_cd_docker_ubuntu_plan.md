@@ -40,7 +40,7 @@ flowchart LR
 ## 3. Lộ Trình Triển Khai 4 Giai Đoạn
 
 ### Giai đoạn 1: Cài đặt GitHub Self-Hosted Runner trên Ubuntu (Làm 1 lần ~5 phút)
-1. Đảm bảo thư mục dự án trên Ubuntu (ví dụ `/home/thai-thinh/CapStone`) đã clone đủ `System-Repo` và 6 repo con trong `All Services/`, tất cả đang ở nhánh `main`.
+1. Đảm bảo thư mục dự án trên Ubuntu (`/data/Capstone`) đã clone đủ `System-Repo` và 6 repo con trong `All Services/`, tất cả đang ở nhánh `main`.
 2. Cấp quyền Docker không cần `sudo` cho user chạy Runner:
    ```bash
    sudo usermod -aG docker thai-thinh
@@ -79,7 +79,7 @@ Tạo 1 script duy nhất trong `System-Repo` để mọi repo gọi chung:
 ### Giai đoạn 3: File Workflow `.github/workflows/cd-main.yml` Cho 7 Repo
 Mỗi repo có 1 file workflow kích hoạt khi `push` vào `main` gồm 2 job:
 1. **`ci-verify` (`runs-on: ubuntu-latest`)**: Chạy build/test (`npm run build`, `dotnet test`, `docker compose config`). Nếu lỗi sẽ dừng ngay, không deploy.
-2. **`deploy-ubuntu` (`needs: ci-verify`, `runs-on: [self-hosted, veval-prod]`)**: Gọi trực tiếp `/home/thai-thinh/CapStone/Scripts/deploy_service.sh <target>`.
+2. **`deploy-ubuntu` (`needs: ci-verify`, `runs-on: [self-hosted, veval-prod]`)**: Gọi trực tiếp `/data/Capstone/Scripts/deploy_service.sh <target>`.
 
 ### Giai đoạn 4: Kiểm Thử & Nghiệm Thu
 1. Chạy thử thủ công `./Scripts/deploy_service.sh web-client` trên Ubuntu để kiểm chứng thời gian rebuild và xác nhận `https://veval.io.vn` nhận bản mới.
