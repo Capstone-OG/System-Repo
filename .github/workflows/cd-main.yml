@@ -19,7 +19,8 @@ jobs:
 
       - name: Validate Docker Compose Syntax
         run: |
-          docker compose --env-file Configs/.env.example config --quiet
+          cp Configs/.env.example Configs/.env
+          docker compose --env-file Configs/.env config --quiet
 
   deploy-ubuntu:
     name: Deploy System Repo Configuration
