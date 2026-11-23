@@ -154,12 +154,10 @@ CapStone/
 
 ## 🚀 KHỞI CHẠY HỆ THỐNG (QUICK START)
 
-### 1. Khởi chạy toàn bộ hệ sinh thái qua Docker (1-Click):
-Chạy trực tiếp script thực thi tại thư mục gốc:
+### 1. Khởi chạy toàn bộ hệ sinh thái qua Docker:
+Chạy script thực thi trong thư mục `Scripts/run_docker/`:
 ```bash
-./start_docker.sh
-# Hoặc shortcut:
-./start.sh
+./Scripts/run_docker/run_docker.sh
 ```
 Trên Windows (CMD / PowerShell):
 ```cmd
@@ -168,7 +166,7 @@ Scripts\run_docker\run_docker.bat
 
 ### 2. Khởi chạy môi trường phát triển Local (7 Cửa sổ Terminal độc lập):
 ```bash
-./start_local.sh
+./Scripts/run_local/run_local.sh
 ```
 Trên Windows (CMD / PowerShell):
 ```cmd

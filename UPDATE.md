@@ -1,37 +1,11 @@
-# V-Eval System-Repo — Cập Nhật Tiến Độ
+# UPDATE - SYSTEM REPO
 
-## [23/11/2026] - Công Cụ Bổ Sung Ngân Hàng Câu Hỏi Tự Động & Đồng Bộ Tiến Độ Phiên Làm Việc
-
-- **Script Bổ Sung Ngân Hàng Câu Hỏi Theo Từng Dạng Bài (`Scripts/seed_questions_batch.py`)**:
-  - Viết script Python chuẩn không cần thư viện ngoài (chỉ dùng stdlib Python 3.11), tự nạp toàn bộ cây kỹ năng GDPT 2018 từ `V-Eval-Content_Service` (`GET /api/content/curriculum`), kiểm tra số câu hiện có của từng dạng bài và dùng Gemini API (tự động fallback `gemini-3.5-flash-lite` -> `gemini-3.6-flash` -> `gemini-3.8-flash`) sinh bổ sung các câu hỏi còn thiếu (Bloom L1-L4, lọc trùng nội dung, hỗ trợ resume) rồi lưu trực tiếp qua `POST /api/content/questions`.
-  - Đã kiểm thử & chèn thành công hơn 2,188 câu hỏi mới vào CSDL PostgreSQL.
-- **Đồng Bộ Phiên Bản Các Service Liên Quan**:
-  - `V-Eval-Practice_Service`: Cố định `StepOrder` bất biến khi đọc lộ trình & triển khai luồng phê duyệt lộ trình 2 cấp (`DRAFT_PENDING_TEACHER` -> `PENDING_DIRECTOR_APPROVAL` -> `ACTIVE`).
-  - `V-Eval-Content_Service`: Xáo trộn ngẫu nhiên & chống trùng lặp theo nội dung (`ContentLatex`) trong gRPC `GetMilestoneQuiz`.
-  - `V-Eval-Web_Client`: Nút `Nháp Toán`, sửa hiển thị `MathText.jsx`, tối ưu thanh lọc lộ trình, thiết kế lại thẻ Pha Reflect & Hoàn thành chặng, ẩn dấu nháy caret trên text thường và bổ sung trang `RoadmapApprovalStudioView.jsx` cho Giảng viên & Director.
 ## [23/11/2026]
-- **V-Eval-Web_Client**:
-  - **Khắc Phục Lỗi Mất Ngữ Cảnh Khi Nhấn "Xem Nhóm Phụ Đạo" Từ Thời Khóa Biểu (`TeacherScheduleView.jsx`, `ClassMicroGroupsModal.jsx`)**:
-    + Khắc phục triệt để hiện tượng khi nhấn "Xem nhóm phụ đạo" từ thẻ Thời khóa biểu thì modal lại hiển thị thông tin nhóm chung chung (Reading Comprehension / Pronoun) và hiện nút "Lên lịch" thay vì ca học đã lên.
-    + Cập nhật `mappedRemedial` và `handleOpenMicroGroups` trong `TeacherScheduleView.jsx` truyền toàn vẹn ngữ cảnh: `focusSkill`, `focusSkillId`, `targetGroupId`, `targetStudentIds`, `initialMembers`.
-    + Nâng cấp `ClassMicroGroupsModal.jsx`: tích hợp cơ chế đối chiếu lịch phụ đạo đa tiêu chí (theo `groupId`, `targetGroupId` hoặc theo `focusArea`/`topic`), đảm bảo khi mở modal từ Thời khóa biểu, hệ thống luôn hiển thị đúng 100% chuyên đề bồi dưỡng, học sinh trong nhóm và huy hiệu lịch học đã lên.
-  - **Cô Lập Hoàn Toàn Lịch Học Nhóm Phụ Đạo Giữa Các Chuyên Đề Khác Nhau (`ClassMicroGroupsModal.jsx`, `remedialSessionStore.js`, `tests/classMicroGroups.test.js`, `tests/remedialSessionStore.test.js`)**:
-    + Chuẩn hóa chuỗi slug tiếng Việt (`skillSlug`) từ tên chuyên đề để tạo mã nhóm định danh riêng biệt `GRP-${skillSlug}-01` (ví dụ: `GRP-giai-quyet-van-de-h-01` tách biệt tuyệt đối với `GRP-dang-1-co-che-sinh-h-01`).
-    + Dữ liệu lịch phụ đạo lưu trữ trong Local Storage được cô lập 100% theo từng chuyên đề kỹ năng, không bao giờ bị ghi đè hay hiển thị chéo.
-  - **Chuẩn Hóa Khung 6 Slot Thời Khóa Biểu Đồng Bộ Hệ Thống (`ClassMicroGroupsModal.jsx`, `remedialSessionStore.js`)**:
-    + Khai báo bộ hằng số `STANDARD_ACADEMIC_SLOTS` đồng bộ với 6 ca học chuẩn: Slot 1 (07:30–09:30), Slot 2 (09:45–11:45), Slot 3 (13:00–15:00), Slot 4 (15:15–17:15), Slot 5 (18:00–20:00), Slot 6 (20:15–22:30).
-    + Thay thế các nút ca học tự do bằng lưới chọn 6 Slot học chuẩn (3x2), tự động điền `startTime`, `endTime`, `slotNo` và gợi ý phòng phụ đạo P.204.
-  - **Đồng Bộ Hai Chiều & Hiển Thị Thẻ Phụ Đạo Chuyên Biệt Trên Thời Khóa Biểu Giảng Viên (`TeacherScheduleView.jsx`)**:
-    + Nạp các ca phụ đạo từ `remedialSessionStore`, ánh xạ chính xác vào ngày học và slot tương ứng.
-    + Tích hợp event listener phản ứng tức thời (`veval:remedial-session-scheduled`, `veval:remedial-session-deleted`), tự động cập nhật thời khóa biểu ngay khi Giảng viên tạo hoặc hủy lịch mà không cần tải lại trang.
-    + Thiết kế thẻ phụ đạo màu tím Pastel nổi bật với huy hiệu `⚡ Phụ đạo vi mô` ở cả 2 chế độ Weekly Grid và Agenda View.
-  - **Lọc Chuẩn Xác Đối Tượng Học Sinh Bồi Dưỡng Chuyên Đề & Ngăn Ngừa Gom Cả Lớp (`ClassMicroGroupsModal.jsx`, `TeacherDashboardView.jsx`)**:
-    + Lọc chuẩn xác theo học sinh thực tế chưa đạt (< 50%) thay vì kéo cả lớp; với 4 học sinh chưa đạt tự động tạo đúng 1 bàn bồi dưỡng 4 bạn; tích hợp nút chuyển đổi phạm vi `🎯 Chỉ học sinh chưa đạt` vs `👥 Cả lớp`.
-    + Đồng bộ số liệu hiển thị cảnh báo sư phạm ngoài danh sách (`57% (4 học sinh)`), triệt tiêu mâu thuẫn số liệu.
-  - **Kiểm Thử & Biên Dịch**:
-    + 36/36 unit tests passed 100% (`tests/classMicroGroups.test.js`, `tests/remedialSessionStore.test.js`, ...).
-    + `npm run build`: Hoàn thành 100% trong 1.28s (`3086 modules transformed`, `0 Error`).
-
-- **V-Eval-Ai_Engine**:
-  - **Cấu Hình Supabase Transaction Mode Pooler Cho RAG Service (`rag-service/.env`)**:
-    + Chuyển đổi cổng `DATABASE_URL` từ `5432` (Session Mode - giới hạn 15 clients) sang `6543` (Transaction Mode), giải quyết triệt để lỗi `FATAL: (EMAXCONNSESSION) max clients reached in session mode - max clients are limited to pool_size: 15`.
+- **Triển Khai Hoàn Tất Toàn Diện Hệ Thống Tự Động Hóa CD (Continuous Deployment) Lên Máy Chủ Ubuntu Docker (`veval.io.vn`) & Tinh Gọn Cấu Trúc Gốc**:
+  - **Docker Compose & Quản Lý Môi Trường Tập Trung**: Gỡ bỏ volume bind-mount tĩnh `dist` của `v-eval-web-client` trong [docker-compose.yml](./docker-compose.yml) để Nginx phục vụ trực tiếp bản build bên trong image Docker; chuyển toàn bộ file cấu hình `.env` và `.env.example` vào thư mục tập trung [Configs/](./Configs/); cập nhật `docker-compose.yml` nạp `env_file: ./Configs/.env`; kiểm thử cú pháp hợp lệ 100% (`docker compose --env-file Configs/.env config --quiet`).
+  - **Tinh Gọn Thư Mục Gốc & Chuẩn Hóa Bộ Script**: Dọn sạch toàn bộ các file shell/batch shortcut lơ lửng ở thư mục gốc (`start_docker.sh`, `start.sh`, `start_local.sh`, `sync_config.sh`, `sync_config.bat`); chuyển đổi [Scripts/run_docker/run_docker.sh](./Scripts/run_docker/run_docker.sh) thành script chạy độc lập, tự động nhận diện `Configs/.env`; cập nhật hướng dẫn khởi chạy trong [README.md](./README.md).
+  - **Script Triển Khai Trung Tâm (`Scripts/deploy/deploy_service.sh`)**: Xây dựng script triển khai trung tâm có tích hợp `flock /tmp/veval-deploy.lock` chống race-condition; hỗ trợ selective rebuild độc lập cho 7 mục tiêu (`web-client`, `gateway`, `identity`, `content`, `practice`, `ai-engine`, `system`) với cờ `--no-deps` giúp bảo vệ tuyệt đối container `veval-tunnel` (Zero-Downtime); tự động dọn dẹp image rác bằng `docker image prune -f`.
+  - **Cài Đặt & Vận Hành GitHub Self-Hosted Runner Cấp Organization**: Tải, giải nén và cấu hình thành công GitHub Actions Runner v2.338.2 cấp Organization `Capstone-OG` với các nhãn `veval-prod` và `ubuntu-server`; kích hoạt dịch vụ chạy ngầm bền vững qua `systemd --user` (`actions.runner.service`) kết hợp `Linger=yes` đảm bảo tự khởi động cùng máy chủ và kết nối outbound HTTPS liên tục với GitHub.
+  - **Quy Chuẩn Workflow CD Cho Cả 7 Repositories**: Thiết lập trực tiếp file workflow `.github/workflows/cd-main.yml` cho toàn bộ 7 repo gồm `System-Repo` và 6 microservices (`V-Eval-Web_Client`, `V-Eval-Gateway`, `V-Eval-Identity_Service`, `V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Ai_Engine`) với đầy đủ 2 stage `ci-verify` (Cloud Ubuntu + nạp gRPC) và `deploy-ubuntu` (Self-hosted Runner `veval-prod`).
+  - **Tài Liệu Kỹ Thuật Toàn Diện A-Z**: Biên soạn cẩm nang triển khai hoàn chỉnh tại [docs/huong_dan_trien_khai_auto_cd_toan_dien.md](./docs/huong_dan_trien_khai_auto_cd_toan_dien.md) bao gồm sơ đồ luồng Mermaid, bảng danh mục đường dẫn tuyệt đối chuẩn, trọn bộ câu lệnh cài đặt từ A đến Z, nguyên lý hoạt động của script và sổ tay xử lý sự cố.
+  - **Kiểm Thử Thực Tế Vận Hành (E2E Verification)**: Thực thi kiểm thử thực tế `./Scripts/deploy/deploy_service.sh web-client` đạt kết quả hoàn hảo, container `v_eval_web_client` được build và recreate trong 26 giây, toàn bộ các service khác và tunnel Cloudflare giữ nguyên kết nối online liên tục.
