@@ -1,7 +1,8 @@
 # UPDATE LOG — V-Eval System-Repo
 
-## [24/11/2026] Hoàn thiện trọn bộ 10 hạng mục Feedback UI/UX (MUI), CSDL khóa câu hỏi lỗi, Studio trực tiếp & MathLive WYSIWYG
+## [24/11/2026] Hoàn thiện phân quyền Gia sư AI cấp lớp, 10 hạng mục Feedback UI/UX (MUI), CSDL khóa câu hỏi lỗi & MathLive WYSIWYG
 - **Frontend (`V-Eval-Web_Client`)**:
+  - Triển khai phân quyền & giới hạn phạm vi kiểm duyệt Gia sư AI theo lớp học phụ trách và danh sách học sinh thực tế (`AiTutorModerationView.jsx`, `aiTutorScoping.js`); loại bỏ tùy chọn "Tất cả lớp" của Giảng viên, ẩn panel xét duyệt câu hỏi gắn cờ khỏi Giảng viên (dành riêng cho Giám đốc Học thuật). Thêm test `tests/aiTutorScoping.test.js`, hoàn thành toàn bộ 114/114 unit tests và Vite build 100%.
   - Triển khai MUI (`@mui/material`), làm sạch thuật ngữ kỹ thuật, đồng bộ Kết quả & Lịch sử Chẩn đoán (`DiagnosticSkillOverviewCard`), mở khóa `Đã nắm vững`, lưu/khôi phục trạng thái Preview theo DB & giữ nguyên trang hiện tại khi F5 (`sessionStorage`).
   - Sổ tay lỗi sai ôn theo dạng, Lịch sử & Phòng thi thử chia cụm 7 câu (`AttemptAnswerReviewList`), Camera giám sát chụp ảnh định kỳ (`upload-snapshot`), Sổ tay Gia sư AI dạng Drawer kéo-thả, và 3 cổng Non-Blocking Roadmap Approval.
   - Tinh giản Sidebar (icon trơn không nền khi thu gọn, ẩn icon khi mở rộng), bỏ nền màu icon Navbar & bỏ thanh footer toàn trang; tinh giản Khung chương trình (full-view không cuộn lồng, bo góc `10px`, bỏ nhãn Bloom, mở sẵn Lý thuyết trọng tâm).
