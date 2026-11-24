@@ -22,3 +22,12 @@
     - Kích hoạt kiểm thử thực tế `./Scripts/deploy_service.sh web-client`: container `v_eval_web_client` được build và recreate thành công trong 26 giây.
     - Toàn bộ các service khác và tunnel Cloudflare tiếp tục vận hành liên tục không gián đoạn (Zero-Downtime).
 
+
+## [24/11/2026]
+- Triển khai trọn bộ 10 hạng mục feedback trên `V-Eval-Web_Client` (dùng MUI), `V-Eval-Practice_Service`, `V-Eval-Gateway` và `V-Eval-Ai_Engine`.
+- Đã kiểm thử `vite build` (Web Client) và `py_compile` (AI Engine) sạch 100%; cập nhật đầy đủ `UPDATE.md` và `docs/daily.md` cho toàn bộ service liên quan.
+
+### [24/11/2026 - Cập nhật chiều] Hoàn thiện DB Flag Locking, Studio trực tiếp & MathLive WYSIWYG
+- Cập nhật DB khóa câu hỏi bị gắn cờ (`is_flagged`/`flag_reason`/`flagged_at`) và lưu trạng thái Pha Preview (`preview_submission_json`).
+- Tinh giản Sidebar, Navbar, Footer, Khung chương trình (full-view không cuộn lồng, bo góc `10px`, bỏ nhãn Bloom, tự mở Lý thuyết trọng tâm).
+- Vào thẳng Full Studio (`CurriculumStudioEditor`), tự thu gọn sidebar khi mở Studio, và tích hợp MathLive WYSIWYG (thanh công thức cố định, đồng bộ màu V-Eval, nút đóng bàn phím nổi).
