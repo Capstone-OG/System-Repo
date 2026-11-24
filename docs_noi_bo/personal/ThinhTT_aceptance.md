@@ -55,6 +55,20 @@
 - **Tiêu chuẩn kiểm soát chất lượng (Quality Gate)**:
   - Bắt buộc số dạng bài bóc tách phải $\ge$ `minPatternsThreshold` (mặc định $\ge 3$ dạng bài). Nếu model bóc tách quá sơ sài, hệ thống lưu tạm bản tốt nhất (`bestPartialParsed`) và tiếp tục thử model tiếp theo để bóc tách sâu hơn.
 
+#### 4.5. Bảng Tổng Hợp Các Hàm Chính & Công Dụng (`CurriculumAiService.cs`)
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `ExtractCurriculumAsync(...)` | Hàm tổng chỉ huy: đọc PDF/DOCX/Text, kích hoạt Vision OCR 56 DPI, kiểm tra Cache SHA-256, xoay vòng Gemini Multi-Key/Model, Quality Gate và Failover sang OpenAI. |
+| `AnalyzePatternAsync(...)` | Phân tích chuyên sâu bản chất sư phạm của từng Dạng bài (Bloom L1-L4, 4 bước giải KaTeX, bẫy sai lầm, kỹ thuật Casio). |
+| `GeneratePatternQuestionsAsync(...)` | Sinh câu hỏi luyện tập 4 phương án A-B-C-D bám sát 100% dạng bài kèm mapping đa chuẩn `camelCase`/`snake_case` và Regex fallback. |
+| `ExtractDownscaledPageImages(...)` | Cắt lát ảnh 2 tầng (bốc `RawBytes` từ PdfPig nếu scan; render 56 DPI qua `PDFtoImage` nếu vector), resize `720-860px` & nén JPEG `52-62%` bằng SkiaSharp, lấy mẫu trang đều. |
+| `TryLoadPreIngestedTextFromCache(...)` | Tính mã băm SHA-256 của PDF để tái sử dụng kết quả đã bóc tách trong `wwwroot/uploads/textbooks/cache/{hash}.json`, tiết kiệm 100% token. |
+| `TryCallOpenAiCurriculumAsync(...)` | Tầng Cloud dự phòng sang OpenAI (`gpt-4o-mini`, `gpt-4o`, `o3-mini`) với JSON Mode và timeout kép `CreateLinkedTokenSource`. |
+| `ResolveApiKeys()` & `ResolveGeminiModels()` | Thu thập API key & chuỗi model ưu tiên từ `appsettings.json` và biến môi trường, lọc rác và khử trùng lặp. |
+| `MaskKey(string key)` | Che phần giữa API Key (`key[..6]...key[^6..]`) phục vụ ghi log an toàn chống rò rỉ Credential. |
+| `SanitizeAndRepairGeminiJson(...)` & `RepairTruncatedJson(...)` | Gọt markdown fences, xóa comment/trailing comma, phục hồi lệnh LaTeX ASCII, escape kép `\\` bằng State Machine Tokenizer và vá ngoặc đóng khi JSON bị cắt cụt. |
+| `TryParseCurriculumFromLooseJson(...)` & `ExtractCurriculumViaRegex(...)` | Bộ cứu dữ liệu tầng 2 (`JsonNode`) và tầng 3 (Regex quét Chương/Bài/Dạng) khi `JsonSerializer.Deserialize` thất bại hoặc thiếu dữ liệu. |
+
 #### 5. Kết luận nghiệm thu của tác giả (ThinhTT Acceptance)
 - **Trạng thái**: Đạt chuẩn (Pass) - Đã nghiệm thu thực tế và chứng minh vận hành ổn định qua 24 cuốn SGK GDPT 2018.
 - **Đánh giá**: Hoàn thành xuất sắc cỗ máy bóc tách tri thức giáo trình, tích hợp khả năng chống chịu lỗi đa tầng (Resilience & Fault-Tolerance), xử lý linh hoạt cả PDF scan, PDF vector và Word fallback.
@@ -63,50 +77,81 @@
 
 - [ ] **Chưa duyệt**
 <details>
-<summary>GeminiExamParserService.cs</summary>
+<summary>MultiCloudExamParserService.cs</summary>
 
-**Đường dẫn mã nguồn**: [All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/GeminiExamParserService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/GeminiExamParserService.cs)
+**Đường dẫn mã nguồn**: [All Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/MultiCloudExamParserService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/MultiCloudExamParserService.cs)
 
 #### 1. Bài toán Nghiệp vụ & Luồng xử lý
-- **Mục tiêu cốt lõi**: Bóc tách và số hóa trực tiếp nội dung đề thi từ file PDF hoặc ảnh scan bằng thị giác máy tính (Vision AI).
-- **Cơ chế cắt lát ảnh tối ưu**: Cắt trực tiếp nội dung file ra từng đoạn ảnh nhỏ với thông số kỹ thuật rõ ràng: độ phân giải **`DPI = 96`** và chất lượng nén **`Quality = 70`**. Việc này đảm bảo ảnh vừa đủ độ sắc nét để nhận diện chính xác từng công thức Toán - Lý - Hóa, vừa kiểm soát dung lượng (<80 KB/ảnh) nhằm tránh nghẽn băng thông và vượt hạn ngạch gói miễn phí.
-- **Phân định rõ ranh giới nghiệp vụ & Đối tượng xử lý**:
-  - **Chuyên xử lý đề thi trắc nghiệm**: Tập trung chủ yếu vào dạng đề thi quy mô lớn (đề thi ĐGNL 120–150 câu hỏi) hoặc các tài liệu dạng có câu hỏi (`question`, phương án A-B-C-D, đáp án và lời giải).
-  - **Không duyệt bài giảng lý thuyết**: Phân tách rõ ràng với `CurriculumAiService` (nơi chuyên duyệt đề cương và bài giảng); service này không làm nhiệm vụ duyệt lý thuyết tổng quát mà chuyên sâu 100% vào việc bóc tách các câu hỏi đề thi có cấu trúc.
+- **Mục tiêu cốt lõi**: Bóc tách, số hóa và tự động giải (Auto-Solve) các bộ đề thi quy mô lớn (ĐGNL 120–150 câu hỏi hoặc đề THPT Quốc gia) từ file PDF scan hoặc vector bằng thị giác máy tính đa đám mây (Multi-Cloud Vision AI: Gemini + OpenAI + Local PdfPig).
+- **Cơ chế xử lý theo cụm 2 trang ảnh (Page-Batched High-Clarity Vision)**:
+  - Render từng cụm 2 trang PDF thành ảnh JPEG sắc nét để gửi vào chuỗi mô hình Vision.
+  - Phân tích đồng thời cả cấu trúc bài đọc hiểu (Passages chùm câu hỏi) và các câu hỏi đơn lẻ (Single Questions), đọc chuẩn xác bảng biến thiên, đồ thị KaTeX và gạch chân tiếng Anh.
+  - **Tự động giải & phân loại**: AI tự động giải chọn đáp án đúng (`correctOption`), viết lời giải chi tiết KaTeX (`solutionLatex`) và gắn thẻ năng lực/môn học.
+- **Phân định rõ ranh giới nghiệp vụ**: Chuyên sâu 100% vào việc bóc tách đề thi có cấu trúc trắc nghiệm (câu hỏi, phương án A-B-C-D, lời giải); hoàn toàn tách biệt với luồng bóc tách sách giáo khoa/đề cương trong `CurriculumAiService`.
 
-#### 2. Cơ chế Fallback Model Xoay Vòng
-- **Luồng xử lý qua Fallback Model**:
-  - Từng đoạn ảnh sau khi cắt nén được chuyển tới mô hình Vision AI.
-  - Hệ thống áp dụng cơ chế Fallback Model xoay vòng đa tầng (hỗ trợ cả OpenAI GPT-4o / GPT-4o-mini và các phiên bản Google Gemini Flash / Flash-Lite cùng danh sách Multi-Keys dự phòng).
-  - Nếu mô hình chính gặp sự cố kết nối, quá tải rate limit hoặc không trích xuất đủ số lượng câu hỏi tối thiểu, hệ thống tự động fallback sang mô hình kế tiếp để xử lý ảnh và trả về danh sách DTO câu hỏi đầy đủ.
+#### 2. Kiến trúc Chống Chịu Lỗi Đa Tầng (3-Tier Multi-Cloud Cascade Failover)
+- **Tầng 1 (Luồng chính - SGK-Unified Page-Batched Gemini Vision)**:
+  - Gọi hàm `ParseExamWithPageBatchedVisionAsync`: Xoay vòng Multi-Keys và danh sách model Gemini Flash / Flash-Lite theo lô 2 trang.
+  - Tự động map hình ảnh cắt từ PDF (`_imageExtractor.MapImagesToExam`) vào từng câu hỏi tương ứng.
+- **Tầng 2 (Dự phòng Cloud 1 - OpenAI Vision)**:
+  - Nếu toàn bộ Gemini quá tải hoặc không trích xuất được câu hỏi nào, tự động kích hoạt `TryCallOpenAiAsync` (thử lần lượt `gpt-4o-mini`, `gpt-4o`, `o3-mini`) với prompt `ExamIngestionVerbatimOcr.prompt.txt`.
+- **Tầng 3 (Dự phòng Cục bộ - Local Fallback Parser với PdfPig)**:
+  - Nếu cả hai đám mây (Google & OpenAI) đều mất mạng, hết hạn ngạch hoặc không có API Key, hệ thống tự động fallback về `RunLocalFallbackParserAsync` (chạy C# thuần với thư viện `PdfPig` và Regex bóc tách text cục bộ 100% offline).
 
 #### 3. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `ParseExamPdfAsync(...)`**: Cắt ảnh nhỏ với `DPI = 96`, `Quality = 70` và điều phối Fallback Model xử lý các bộ đề lớn lên tới 150 câu.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `ParsePdfAsync(...)` | Hàm tổng chỉ huy bóc tách đề thi 3 tầng: Page-Batched Gemini Vision -> OpenAI Vision Fallback -> Local `PdfPig` Parser offline. |
+| `ParseExamWithPageBatchedVisionAsync(...)` | Chia đề thi thành từng cụm 2 trang ảnh JPEG sắc nét, xoay vòng Multi-Key/Model Gemini để đọc KaTeX, bảng biểu, gạch chân tiếng Anh và tự động giải đề (Auto-Solve). |
+| `RenderExamPageJpegBase64(...)` | Kết xuất trang PDF sang ảnh JPEG Base64 tối ưu dung lượng bằng `PDFtoImage` + `SkiaSharp`. |
+| `BuildExamBatchVisionPrompt(...)` | Dựng prompt sư phạm cho từng lô 2 trang để giữ ngữ cảnh liên trang và ép cấu trúc JSON chuẩn. |
+| `MergeBatchExamResults(...)` & `ScoreQuestionQuality(...)` | Hợp nhất kết quả các lô trang, chống trùng lặp câu hỏi theo điểm chất lượng và giữ nguyên cấu trúc chùm đọc hiểu (Passages). |
+| `TryCallOpenAiAsync(...)` | Tầng dự phòng Cloud 1 gọi OpenAI GPT-4o Vision khi toàn bộ Gemini lỗi/quá tải. |
+| `RunLocalFallbackParserAsync(...)` | Tầng dự phòng cục bộ 100% offline dùng `PdfPigLocalExamParser` khi mất kết nối Cloud. |
+| `ClassifyQuestionsToNodesAsync(...)` & `ClassifyQuestionLexically(...)` | Phân loại câu hỏi vào đúng node kỹ năng/dạng bài GDPT 2018 bằng Gemini hoặc khớp từ vựng (Lexical Overlap) dự phòng. |
+| `SanitizeJsonForLatex(...)`, `CleanExamDto(...)` & `NormalizeCorrectOption(...)` | Làm sạch công thức LaTeX, chuẩn hóa đáp án đúng về ký tự `A/B/C/D` và dọn rác DTO. |
 
 ```csharp
-public async Task<List<ParsedQuestionDto>> ParseExamPdfAsync(byte[] pdfBytes, CancellationToken cancellationToken)
+public async Task<ParsedExamDto> ParsePdfAsync(
+    byte[] pdfBytes,
+    string fileName,
+    Action<string>? onProgress = null,
+    string? webRootPath = null,
+    string? examId = null,
+    CancellationToken cancellationToken = default)
 {
-    // Cắt từng đoạn ảnh nhỏ tối ưu chuẩn DPI 96 và Quality 70
-    var images = await _pdfExtractor.ExtractLowDpiImagesAsync(pdfBytes, dpi: 96, quality: 70);
-    var results = new List<ParsedQuestionDto>();
-
-    // Điều phối Fallback Model xử lý ảnh đề thi (chủ yếu dạng đề 120-150 câu)
-    foreach (var img in images)
+    // 1. Luồng chính: Page-Batched Gemini Vision AI (Lô 2 trang, đọc KaTeX & Auto-solve)
+    if (apiKeys.Count > 0 && geminiModels.Count > 0)
     {
-        var pageQuestions = await ExecuteWithFallbackModelAsync(img, cancellationToken);
-        results.AddRange(pageQuestions);
+        var batchedResult = await ParseExamWithPageBatchedVisionAsync(
+            pdfBytes, fileName, totalPages, apiKeys, geminiModels, onProgress, cancellationToken);
+        if (batchedResult != null && (batchedResult.SingleQuestions.Count + batchedResult.Passages.Sum(p => p.Questions.Count)) > 0)
+        {
+            CleanExamDto(batchedResult);
+            _imageExtractor.MapImagesToExam(batchedResult, localImages, webRootPath, examId);
+            return batchedResult;
+        }
     }
-    return results;
+
+    // 2. Dự phòng Cloud: OpenAI GPT-4o Vision
+    if (!string.IsNullOrEmpty(openAiKey))
+    {
+        var openAiResult = await TryCallOpenAiAsync(...);
+        if (openAiResult != null) return openAiResult;
+    }
+
+    // 3. Dự phòng cục bộ Offline 100%: PdfPig Local Parser
+    return await RunLocalFallbackParserAsync(pdfBytes, fileName, localImages, webRootPath, examId, cancellationToken);
 }
 ```
 
 #### 4. Cơ chế đảm bảo & Xử lý ngoại lệ
-- **Tối ưu hóa tài nguyên**: Chuẩn hóa `DPI = 96` và `Quality = 70` triệt tiêu nguy cơ tràn bộ nhớ (Out-Of-Memory) và lỗi `HTTP 429 Too Many Requests`.
-- **Độ tin cậy cao**: Cơ chế xoay vòng Fallback Model và Multi-Key đảm bảo tiến trình bóc tách không bị đứt gãy giữa chừng ngay cả khi mạng chập chờn.
+- **Zero-Failure Guarantee (Cam kết không sập)**: Nhờ có tầng 3 `PdfPigLocalExamParser` chạy offline, hệ thống đảm bảo luôn trả về kết quả đề thi cho người dùng trong mọi tình huống mạng/cloud.
+- **Tách template prompt rời (`ExamIngestionVerbatimOcr.prompt.txt`)**: Dễ dàng tinh chỉnh prompt nhận diện đề thi mà không cần biên dịch lại code backend.
 
 #### 5. Kết luận nghiệm thu của tác giả (ThinhTT Acceptance)
-- **Trạng thái**: Đạt chuẩn (Pass) - Đã nghiệm thu thực tế với các bộ đề thi lớn 120–150 câu.
-- **Đánh giá**: Hoàn thành xuất sắc bài toán số hóa đề thi tự động, phân định rõ ràng với luồng duyệt bài giảng, đảm bảo tốc độ và độ chính xác nguyên văn (100% verbatim OCR).
+- **Trạng thái**: Đã sẵn sàng rà soát & nghiệm thu.
+- **Đánh giá**: Bước tiến hóa vượt bậc từ `GeminiExamParserService` cũ sang `MultiCloudExamParserService` mới, tích hợp cơ chế Page-Batched 2 trang, tự động giải đề (Auto-Solve) và bảo vệ 3 tầng hoàn chỉnh.
 
 </details>
 
@@ -139,7 +184,18 @@ public async Task<List<ParsedQuestionDto>> ParseExamPdfAsync(byte[] pdfBytes, Ca
      - **Nguyên lý**: Điểm cắt chunk luôn ưu tiên ngắt khi kết thúc dòng phân đoạn (`\n\n`), dấu chấm kết thúc câu (`.`), tiêu đề mục (`#`, `##`), và tuyệt đối không cắt ngang giữa chừng một công thức Toán học đang mở thẻ.
 
 #### 3. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `SaveTextbookAndChunksAsync(...)`**: Mở kết nối, khởi tạo Transaction và thực thi nạp nguyên khối cả tài liệu nguồn lẫn toàn bộ danh sách chunks vào schema `v_eval_ai`.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `GetOrCreateSourceAsync(...)` | Kiểm tra theo `file_hash` (SHA-256) xem SGK đã tồn tại chưa; nếu có trả về `source_id` cũ (chống trùng lặp), chưa có thì khởi tạo bản ghi cha trong `KnowledgeSources`. |
+| `SavePageChunkAsync(...)` | Lưu tức thời từng chunk của từng trang vào `KnowledgeVectorChunks` ngay khi OCR xong (phục vụ Resumable Checkpoint). |
+| `UpdateSourceProgressAsync(...)` | Cập nhật tiến độ số trang, tổng ký tự, tổng chunks và trạng thái `vector_status` (`PROCESSING`/`COMPLETED`) lên bảng cha. |
+| `GetChunksBySourceIdAsync(...)` | Truy xuất danh sách toàn bộ chunks của 1 tài liệu theo thứ tự `page_number ASC, chunk_index ASC` phục vụ mở rộng ngữ cảnh lân cận. |
+| `SaveTextbookAndChunksAsync(...)` | Mở Transaction ACID nạp nguyên khối cả `KnowledgeSources` và toàn bộ `KnowledgeVectorChunks`; tự động `RollbackAsync` khi lỗi. |
+| `ResetSourceChunksAsync(...)` | Xóa sạch chunks cũ của 1 tài liệu khi người dùng yêu cầu nạp lại từ đầu (`forceReingest`). |
+| `GetIngestedSourcesWithSummaryAsync()` | Lấy danh sách toàn bộ các SGK đã nạp kèm thống kê trang/chunks hiển thị trên Studio. |
+| `DeleteSourceAsync(Guid sourceId)` | Xóa tài liệu nguồn và các chunks liên quan khỏi schema `v_eval_ai`. |
+
+- **Đoạn code tiêu biểu `SaveTextbookAndChunksAsync(...)`**:
 
 ```csharp
 public async Task<int> SaveTextbookAndChunksAsync(TextbookIngestResultDto dto, CancellationToken cancellationToken = default)
@@ -247,7 +303,15 @@ public async Task<int> SaveTextbookAndChunksAsync(TextbookIngestResultDto dto, C
 - Bộ nhớ luồng dữ liệu được bao bọc trong khối `using (fileStream)` để bảo đảm giải phóng RAM ngay khi hoàn thành tác vụ.
 
 #### 3. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Route `POST /api/ai-engine/curriculum/extract`**: Tiếp nhận, validate và điều phối bóc tách khung chương trình bằng Minimal API.
+| Hàm / Endpoint chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `MapCurriculumEndpoints(app)` | Hàm mở rộng (Extension Method) đăng ký nhóm Minimal API `/api/ai-engine/curriculum`. |
+| `POST /extract` | Tiếp nhận đa hình (`multipart/form-data` upload PDF/Word hoặc `application/json` text thô hỗ trợ cả `camelCase` & `snake_case`), validate đầu vào, quản lý `using (fileStream)` và gọi `ExtractCurriculumAsync`. |
+| `POST /analyze-pattern` | Tiếp nhận `AnalyzePatternRequestDto` (bắt buộc `PatternName`), gọi `AnalyzePatternAsync` phân tích sâu Bloom L1-L4, 4 bước giải, bẫy sai lầm và Casio. |
+| `POST /generate-questions` | Tiếp nhận `GeneratePatternQuestionsRequestDto`, gọi `GeneratePatternQuestionsAsync` sinh thêm câu hỏi rèn luyện bám sát 100% dạng bài. |
+| `GET /api/ai-engine/view-curriculum` & `GET /view` | Phục vụ trang giao diện xem trước HTML tĩnh (`wwwroot/view-curriculum.html`) cho đội ngũ phát triển kiểm thử trực quan 4 khối sư phạm. |
+
+- **Đoạn code tiêu biểu `POST /api/ai-engine/curriculum/extract`**:
 
 ```csharp
 group.MapPost("/extract", async (
@@ -361,14 +425,23 @@ group.MapPost("/extract", async (
      - Bắn callback `onProgress(step, percent)` về `ITextbookJobManager` để cập nhật `job.Percent`, `job.CurrentPage`. Khi Frontend polling endpoint `GET /jobs/{jobId}`, người dùng thấy tiến trình tăng dần theo từng trang thực tế.
   6. *Bước 6 - Hoàn tất tác vụ*: Cập nhật trạng thái Job sang `COMPLETED` (`jobManager.CompleteJob(job.JobId, result)`) hoặc bắt lỗi `jobManager.FailJob(...)` nếu phát sinh sự cố.
 
-#### 3. Danh Sách Các Endpoint Bổ Trợ Trong `TextbookEndpoints.cs`
-- `POST /api/ai-engine/textbooks/upload-pdf`: Tiếp nhận file SGK (tối đa 250MB), tính SHA-256 Single-Pass, kiểm tra trùng lặp và kích hoạt Background Job (trả về HTTP 202 Accepted).
-- `GET /api/ai-engine/textbooks/active-job`: Kiểm tra xem có tác vụ nào đang chạy hay không (phục vụ đồng bộ trạng thái khi người dùng F5 hoặc chuyển trang).
-- `GET /api/ai-engine/textbooks/checkpoint/{fileHash}`: Tra cứu trạng thái checkpoint nạp dở dang của tệp theo mã băm SHA-256.
-- `GET /api/ai-engine/textbooks/jobs/{jobId}`: Polling tiến độ theo thời gian thực (trả về `Status`, `Percent`, `CurrentPage`, `TotalPages`, `Result`).
-- `GET /api/ai-engine/textbooks/chunks/{sourceId}` & `/chunks-by-hash/{fileHash}`: Tra cứu danh sách toàn bộ các Vector Chunks đã bóc tách của tài liệu.
-- `POST /api/ai-engine/textbooks/save-db`: Lưu hàng loạt (Batch Save) các Vector Chunks vào Supabase Database (Schema `v_eval_ai`).
-- `GET /api/ai-engine/textbooks/ping-vision`: Kiểm tra kết nối và đo độ trễ mạng thực tế của các mô hình Vision AI (Gemini Flash-Lite, Gemini Flash) trước khi nạp sách.
+#### 3. Danh Sách Các Endpoint & Hàm Chính Trong `TextbookEndpoints.cs`
+| Hàm / Endpoint chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `MapTextbookEndpoints(app)` | Đăng ký toàn bộ nhóm Minimal API `/api/ai-engine/textbooks`. |
+| `POST /upload-pdf` | Tiếp nhận file SGK tối đa 250MB, tính SHA-256 Single-Pass `CryptoStream`, chống nạp trùng, khởi chạy `Task.Run` ngầm độc lập DI Scope và trả về HTTP `202 Accepted`. |
+| `GET /active-job` | Kiểm tra job đang chạy hiện tại giúp Frontend khôi phục thanh tiến trình sau khi F5. |
+| `GET /checkpoint/{fileHash}` | Tra cứu trạng thái trang dừng gần nhất theo mã băm SHA-256 để nạp nối tiếp. |
+| `GET /jobs/{jobId}` | Endpoint Polling thời gian thực trả về `Status`, `Percent`, `CurrentPage`, `TotalPages`, `Result`. |
+| `GET /chunks/{sourceId}` & `/chunks-by-hash/{fileHash}` | Trả về toàn bộ các Vector Chunks đã bóc tách của tài liệu theo `sourceId` hoặc `fileHash`. |
+| `POST /synthesize-curriculum/{fileHash}` | Tổng hợp khung chương trình chuẩn GDPT 2018 từ dữ liệu chunks đã nạp của cuốn SGK. |
+| `GET /taxonomy` | Trả về cây phân loại chuẩn môn học/khối lớp GDPT 2018. |
+| `GET /sources` & `DELETE /sources/{sourceId}` | Liệt kê danh sách SGK đã nạp và xóa nguồn tài liệu khỏi hệ thống. |
+| `POST /scan-skeleton` | Quét nhanh mục lục (TOC) và khung xương chương/bài của cuốn sách trước khi nạp sâu. |
+| `POST /generate-exercises` | Sinh bộ bài tập rèn luyện trực tiếp từ nội dung SGK đã nạp. |
+| `POST /save-db` | Lưu hàng loạt (Batch Save) các Vector Chunks vào schema `v_eval_ai` trên Supabase. |
+| `GET /ping-vision` | Kiểm tra kết nối và đo độ trễ mạng thực tế của các model Vision AI trước khi chạy job lớn. |
+| `GET /api/ai-engine/view-textbook` | Phục vụ giao diện kiểm thử tĩnh `view-textbook.html`. |
 
 #### 4. Hàm chính & Đoạn code đáp ứng nghiệp vụ
 - **Hàm `MapTextbookEndpoints(app)` - Tuyến tiếp nhận và điều phối Background Job**:
@@ -464,7 +537,11 @@ group.MapPost("/upload-pdf", async (
 - **Quy tắc nghiệp vụ**: Không cho phép tạo phiên gia sư thiếu `StudentId` hoặc `QuestionId`; hỗ trợ đóng phiên (`CloseSession()`) khi học sinh đã nắm vững bài.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `AddMessage(role, content)`**: Bổ sung tin nhắn vào danh sách tin nhắn nội bộ được bảo vệ (Encapsulated List).
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `TutorSession(string studentId, string questionId)` | Constructor kiểm tra tính bất biến (cấm rỗng `studentId`/`questionId`), khởi tạo `SessionId`, `CreatedAt` và đặt `IsActive = true`. |
+| `AddMessage(string role, string content)` | Thêm một lượt hội thoại (`DialogueMessage`) kèm mốc thời gian UTC vào danh sách nội bộ `_messages` được đóng gói an toàn qua `IReadOnlyCollection`. |
+| `EndSession()` | Kết thúc phiên gia sư Socratic bằng cách chuyển trạng thái `IsActive = false`. |
 
 ```csharp
 public class TutorSession
@@ -510,7 +587,9 @@ public class TutorSession
   - Đóng gói thành đề thi mới và lưu vào bảng `MockExams`.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `Handle(CreateQuizExamCommand, CancellationToken)`**: Lõi đóng gói đề thi thích ứng.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Handle(CreateQuizExamCommand request, CancellationToken)` | Xác thực danh sách `SkillIds`, truy vấn ngẫu nhiên câu hỏi đang kích hoạt (`IsActive`) theo ma trận độ khó Bloom, đóng gói thành đề `MockExam` lưu DB và trả về `Result<QuizExamResponseDto>`. |
 
 ```csharp
 public async Task<Result<QuizExamResponseDto>> Handle(CreateQuizExamCommand request, CancellationToken cancellationToken)
@@ -555,7 +634,13 @@ public async Task<Result<QuizExamResponseDto>> Handle(CreateQuizExamCommand requ
 - **Quy tắc nghiệp vụ**: Bắt buộc có đủ 4 phương án, chỉ định duy nhất 1 đáp án đúng (`A`, `B`, `C`, `D`), tự động tính mã băm chống trùng lặp.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `CreateQuestion(...)` & `GetQuestionsBySkill(...)`**: Điều phối MediatR Commands & Queries.
+| Hàm / Endpoint chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `CreateQuestion([FromBody] CreateQuestionRequestDto)` (`POST`) | Tiếp nhận và gửi `CreateQuestionCommand` qua MediatR để tạo câu hỏi mới kèm 4 phương án A-B-C-D và đáp án đúng. |
+| `UpdateQuestion(Guid id, [FromBody] UpdateQuestionRequestDto)` (`PUT /{id}`) | Cập nhật nội dung LaTeX, phương án, độ khó Bloom hoặc lời giải chi tiết của câu hỏi. |
+| `DeleteQuestion(Guid id)` (`DELETE /{id}`) | Xóa mềm (Soft Delete) hoặc vô hiệu hóa câu hỏi khỏi ngân hàng đề. |
+| `GetQuestionById(Guid id)` (`GET /{id}`) | Truy vấn chi tiết 1 câu hỏi theo `QuestionId`. |
+| `GetQuestionsBySkill(Guid skillId, ...)` (`GET /by-skill/{skillId}`) | Lọc và phân trang danh sách câu hỏi theo kỹ năng/dạng bài phục vụ Studio và luyện tập. |
 
 ```csharp
 [HttpPost]
@@ -588,7 +673,10 @@ public async Task<IActionResult> CreateQuestion([FromBody] CreateQuestionCommand
 - **Quy tắc nghiệp vụ**: Chuyển đổi mọi dạng biểu diễn hợp lệ về ký tự in hoa `'A'`, `'B'`, `'C'`, `'D'`.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `Read(...)`**: Xử lý đa hình token JSON đầu vào.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Read(ref Utf8JsonReader, Type, JsonSerializerOptions)` (cho `char` và `char?`) | Đọc đa hình token JSON đầu vào (chuỗi `"A"`, `"Đáp án B"`, số nguyên `0..3` -> `'A'..'D'`), chuẩn hóa về 1 ký tự in hoa an toàn. |
+| `Write(Utf8JsonWriter, char / char?, JsonSerializerOptions)` | Tuần tự hóa ngược ký tự đáp án (`'A'..'D'`) ra chuỗi JSON chuẩn 1 ký tự (hoặc `null` nếu nullable). |
 
 ```csharp
 public override char Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -625,7 +713,13 @@ public override char Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSer
 - **Quy tắc nghiệp vụ**: Cung cấp `domain_code` chuẩn (`DOM_LANG`, `DOM_MATH`, `DOM_NAT_SCI`, `DOM_SOC_SCI`) để Practice Service chạy gom nhóm học sinh.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **RPC `GetSkillsTree` & `GetExamAnswerKey`**: Định nghĩa hợp đồng protobuf.
+| RPC chính (`ContentGrpc`) | Công dụng cốt lõi |
+| :--- | :--- |
+| `GetSkillsTree` | Đồng bộ toàn bộ cây kỹ năng chuẩn, quan hệ tiên quyết (`prerequisite_ids`) và `domain_code` sang Practice Service để chạy đồ thị lộ trình và K-Means. |
+| `GetQuestionsByDifficulty` | Truy vấn danh sách câu hỏi theo kỹ năng và dải độ khó IRT/Bloom cho động cơ luyện tập thích ứng (ZPD). |
+| `GetQuestionDetail` | Lấy chi tiết nội dung, đáp án và lời giải của 1 câu hỏi qua kênh nhị phân HTTP/2. |
+| `GetExamAnswerKey` | Cung cấp bảng đáp án chuẩn từ server phục vụ Practice Service chấm điểm bài khảo sát chống gian lận. |
+| `GetMilestoneQuiz` | Lấy bộ đề kiểm tra chốt chặng (Milestone Quiz) để đánh giá vượt chặng trên lộ trình PLAR. |
 
 ```protobuf
 service ContentGrpc {
@@ -661,7 +755,9 @@ message SkillNode {
 - **Quy tắc nghiệp vụ**: Đảm bảo các chỉ mục (indexes) trên `SkillId`, `DifficultyLevel`, `IsActive` để tăng tốc độ truy vấn sinh đề thích ứng.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `OnModelCreating(ModelBuilder)`**: Thiết lập schema và ràng buộc toàn vẹn quan hệ.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `OnModelCreating(ModelBuilder modelBuilder)` | Thiết lập schema mặc định `v_eval_content`, ánh xạ bảng/khóa chính/khóa ngoại và tạo Composite Index (`SkillId`, `DifficultyLevel`, `IsActive`) tăng tốc truy vấn ngân hàng câu hỏi. |
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -703,7 +799,11 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
   - Đảm bảo sĩ số mỗi nhóm luôn nằm nghiêm ngặt trong khoảng từ 3 đến 5 học sinh.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `Partition(...)`**: Điều phối thuật toán chia nhóm và xác định điểm yếu chung.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Partition(List<StudentSkillProfileItem> students, ...)` | Hàm điều phối chính: tính số cụm `k`, chạy Constrained K-Means ép sĩ số từng bàn từ 3–5 học sinh kèm bước tái cân bằng (re-balancing) nếu cụm bị lẻ. |
+| `CreateGroupResult(...)` | Đóng gói kết quả từng nhóm vi mô (`GroupName`, danh sách `StudentIds`, tính điểm trung bình 4 miền và truy tìm tập điểm yếu chung `CommonWeakSkillIds` có `MasteryScore < 0.60`). |
+| `EuclideanDistance(double[] a, double[] b)` | Tính khoảng cách Euclid trên không gian vector 4 chiều `[Lang, Math, NatSci, SocSci]` để đo độ tương đồng năng lực giữa học sinh và tâm cụm (centroid). |
 
 ```csharp
 public List<MicroGroupResult> Partition(List<StudentSkillProfileItem> students, Dictionary<Guid, string>? skillNameMap = null, int preferredGroupSize = 4)
@@ -743,7 +843,12 @@ public List<MicroGroupResult> Partition(List<StudentSkillProfileItem> students, 
 - **Quy tắc nghiệp vụ**: Xác thực đáp án chính thức từ Content Service qua gRPC, tính tổng điểm trên thang 30 và lưu trữ vết làm bài không thể can thiệp.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `Handle(...)`**: Thực hiện chấm điểm và lưu vào cơ sở dữ liệu `practice.exam_submissions`.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Handle(SubmitDiagnosticCommand request, CancellationToken)` | Chấm điểm bài khảo sát chẩn đoán bằng đáp án chuẩn từ Content gRPC, lưu telemetry thời gian làm bài, tính điểm theo miền/kỹ năng và cập nhật năng lực khởi tạo cho học sinh. |
+| `ToSkillGuid(string? rawSkillId)` & `ToDeterministicGuid(string input)` | Chuyển đổi linh hoạt mã kỹ năng (GUID chuẩn hoặc mã chuỗi như `sk_math_01`) sang `Guid` tất định (MD5 deterministic) để đồng bộ khóa ngoại không bị lỗi parse. |
+| `NormalizeDomainCode(string? domainId, string? domainName)` | Chuẩn hóa tên/ID miền tri thức về 4 mã miền chuẩn (`DOM_LANG`, `DOM_MATH`, `DOM_NAT_SCI`, `DOM_SOC_SCI`) phục vụ báo cáo và phân cụm. |
+| `GetDefaultDomainName(string domainCode)` | Ánh xạ ngược từ mã miền chuẩn sang tên hiển thị tiếng Việt chuẩn học thuật. |
 
 ```csharp
 public async Task<Result<DiagnosticSubmissionResponseDto>> Handle(SubmitDiagnosticCommand request, CancellationToken cancellationToken)
@@ -788,7 +893,9 @@ public async Task<Result<DiagnosticSubmissionResponseDto>> Handle(SubmitDiagnost
 - **Quy tắc nghiệp vụ**: Cập nhật `CurrentWorksheetId` cho nhóm và thông báo cho các thành viên trong nhóm.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `Handle(...)`**: Gán đề bài tập cho nhóm.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Handle(AssignGroupWorksheetCommand request, CancellationToken)` | Xác thực nhóm học tập vi mô (`ClassGroups`), gọi/liên kết phiếu bài tập thích ứng (API 19 Content Service) theo điểm yếu chung của nhóm, cập nhật `CurrentWorksheetId` và lưu DB. |
 
 ```csharp
 public async Task<Result<bool>> Handle(AssignGroupWorksheetCommand request, CancellationToken cancellationToken)
@@ -821,27 +928,26 @@ public async Task<Result<bool>> Handle(AssignGroupWorksheetCommand request, Canc
 - **Mục tiêu**: Quản lý các câu hỏi học sinh làm sai, tự động tính toán thời điểm cần ôn lại theo thuật toán SuperMemo-2 (SM-2) để củng cố trí nhớ dài hạn.
 - **Quy tắc nghiệp vụ**: Tăng khoảng thời gian lặp lại (`IntervalDays`) và hệ số dễ (`EaseFactor`) khi học sinh làm lại đúng, reset chu kỳ nếu tiếp tục làm sai.
 
-#### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `RecordReviewResult(bool isCorrect, int qualityRating)`**: Cập nhật trạng thái vòng đời lỗi sai.
+#### 2. Thành phần lõi & Cấu trúc dữ liệu đáp ứng nghiệp vụ
+| Thành phần chính | Công dụng cốt lõi |
+| :--- | :--- |
+| Entity `MistakeNotebook` | Lưu trữ trạng thái phản tư nhận thức (`CognitiveErrorTag`: `CARELESS`/`MISREAD_QUESTION`/`MISSING_CONCEPT`, `StudentNotes`) và các tham số lặp lại ngắt quãng SM-2 (`NextReviewDate`, `ReviewCount`, `ConsecutiveCorrectReviews >= 3 -> IsMastered`, `IntervalDays`, `EaseFactor = 2.50`). |
+| Static Class `MistakeLifecycleState` | Định nghĩa 6 hằng số vòng đời chuẩn hóa: `NewMistake`, `DueForReview`, `Reviewing`, `Retained`, `Relapsed`, `Mastered` (khớp State Machine SDD). |
 
 ```csharp
-public void RecordReviewResult(bool isCorrect, int qualityRating)
+public class MistakeNotebook
 {
-    LastReviewedAt = DateTime.UtcNow;
-    if (isCorrect)
-    {
-        Repetitions++;
-        IntervalDays = Repetitions == 1 ? 1 : Repetitions == 2 ? 6 : (int)Math.Round(IntervalDays * EaseFactor);
-        EaseFactor = Math.Max(1.3, EaseFactor + (0.1 - (5 - qualityRating) * (0.08 + (5 - qualityRating) * 0.02)));
-        LifecycleState = MistakeLifecycleState.Mastered;
-    }
-    else
-    {
-        Repetitions = 0;
-        IntervalDays = 1;
-        LifecycleState = MistakeLifecycleState.ReviewPending;
-    }
-    NextReviewDueAt = DateTime.UtcNow.AddDays(IntervalDays);
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid StudentId { get; set; }
+    public Guid QuestionId { get; set; }
+    public Guid SkillId { get; set; }
+    public string Status { get; set; } = MistakeLifecycleState.NewMistake;
+    public string? CognitiveErrorTag { get; set; } // CARELESS | MISREAD_QUESTION | MISSING_CONCEPT
+    public DateTime NextReviewDate { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(1), DateTimeKind.Utc);
+    public int ConsecutiveCorrectReviews { get; set; } = 0; // >= 3 -> IsMastered = true
+    public int IntervalDays { get; set; } = 1;
+    public double EaseFactor { get; set; } = 2.50;
+    public bool IsMastered { get; set; } = false;
 }
 ```
 
@@ -863,17 +969,22 @@ public void RecordReviewResult(bool isCorrect, int qualityRating)
 - **Mục tiêu**: Đảm bảo công thức toán học BKT cập nhật độ thuần thục `P(L_t)` sau mỗi câu trả lời đúng/sai hoạt động chính xác tuyệt đối trong dịch vụ Practice.
 - **Quy tắc nghiệp vụ**: Kiểm tra tính hội tụ: trả lời đúng liên tiếp xác suất tiến dần về 1.0, trả lời sai xác suất giảm nhưng không bao giờ rơi về 0 tuyệt đối nhờ hệ số đoán mò `P(G)` và trượt chân `P(S)`.
 
-#### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `UpdateMastery_CorrectAnswer_ShouldIncreaseProbability()`**: Kiểm thử tự động xUnit.
+#### 2. Hàm kiểm thử chính & Công dụng
+| Hàm Unit Test (`xUnit`) | Công dụng kiểm chứng |
+| :--- | :--- |
+| `ComputePosterior_WhenAnswerIsCorrect_ShouldIncreaseMasteryProbability()` | Kiểm chứng khi học sinh trả lời đúng câu hỏi trung bình (`b = 0.0`) trong thời gian hợp lý (`30s`), xác suất thuần thục hậu nghiệm `PosteriorPlt` tăng cao hơn `PriorPlt` và `IsLuckyGuess = false`. |
+| `ComputePosterior_WhenLuckyGuessPenaltyApplies_ShouldLimitPltGrowth()` | Kiểm chứng luật nghiệp vụ BR-08: trả lời đúng câu khó (`b = 0.80`) quá nhanh (`< 5s`) sẽ bật cờ `IsLuckyGuess = true` và hãm tốc độ tăng `PosteriorPlt` so với làm bài nghiêm túc (`40s`). |
 
 ```csharp
 [Fact]
-public void UpdateMastery_CorrectAnswer_ShouldIncreaseProbability()
+public void ComputePosterior_WhenLuckyGuessPenaltyApplies_ShouldLimitPltGrowth()
 {
-    double initialPrior = 0.30;
-    var result = BktEngine.CalculatePosterior(initialPrior, isCorrect: true, pSlip: 0.1, pGuess: 0.2, pTransit: 0.15);
-    Assert.True(result > initialPrior);
-    Assert.InRange(result, 0.05, 0.95);
+    // Rule BR-08: Answered correctly in < 5s for advanced question (b >= 0.50)
+    var penalizedResult = _sut.ComputePosterior(0.30, isCorrect: true, timeSpentSeconds: 3, itemDifficultyB: 0.80);
+    var normalResult = _sut.ComputePosterior(0.30, isCorrect: true, timeSpentSeconds: 40, itemDifficultyB: 0.80);
+
+    Assert.True(penalizedResult.IsLuckyGuess);
+    Assert.True(penalizedResult.PosteriorPlt < normalResult.PosteriorPlt);
 }
 ```
 
@@ -903,7 +1014,9 @@ public void UpdateMastery_CorrectAnswer_ShouldIncreaseProbability()
   - Kiểm tra thời gian sống còn lại của token: nếu `<= 5 phút`, đính kèm response header `X-Token-Refresh-Required: true`.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `AddClaimsTransform(...)`**: Bộ biến đổi request/response của YARP.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `AddClaimsTransform(this TransformBuilderContext context)` | Xóa trắng các header `X-User-*` từ bên ngoài để chống giả mạo danh tính (Anti-Header-Spoofing), bóc tách JWT Claims (`sub`, `role`, `campus_id`) gắn vào Proxy Request, và chèn header `X-Token-Refresh-Required: true` nếu token sắp hết hạn (`<= 5 phút`). |
 
 ```csharp
 headers.Remove("X-User-Id");
@@ -941,7 +1054,9 @@ if (user.Identity?.IsAuthenticated == true)
 - **Quy tắc nghiệp vụ**: Áp dụng thuật toán Fixed Window (100 request/phút) cho API thông thường và Sliding Window (60 request/phút chia 6 segments) cho các endpoint nhạy cảm; trả về mã HTTP 429 Too Many Requests khi vượt ngưỡng.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `AddGatewayRateLimiting(...)`**: Cấu hình chính sách giới hạn tần suất.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `AddGatewayRateLimiter(this IServiceCollection services)` | Đăng ký các chính sách giới hạn tần suất (Fixed Window 100 req/phút, Sliding Window 60 req/phút, hàng đợi `QueueLimit`) vào DI container để bảo vệ các service AI/Content phía sau trước tấn công spam/DoS. |
 
 ```csharp
 options.AddFixedWindowLimiter("fixed-policy", opt =>
@@ -971,7 +1086,9 @@ options.AddFixedWindowLimiter("fixed-policy", opt =>
 - **Quy tắc nghiệp vụ**: Nếu request chưa có `X-Correlation-Id`, Gateway tự động sinh GUID mới và gắn vào request header lẫn response header.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `InvokeAsync(HttpContext)`**: Gắn và chuyển tiếp Correlation ID.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `InvokeAsync(HttpContext context)` | Đọc hoặc tự sinh mới `X-Correlation-Id` (GUID) cho mỗi HTTP Request đi qua Gateway, gắn vào Response Header và đẩy vào `LogContext` để truy vết log phân tán xuyên suốt các microservices. |
 
 ```csharp
 public async Task InvokeAsync(HttpContext context)
@@ -1007,7 +1124,11 @@ public async Task InvokeAsync(HttpContext context)
 - **Quy tắc nghiệp vụ**: Các microservice phía sau chỉ chấp nhận request mang đúng khóa bí mật do Gateway phát hành.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `ValidateRoute(...)` & `Apply(...)`**: Đăng ký logic transform vào pipeline YARP.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `ValidateRoute(TransformRouteValidationContext)` | Kiểm tra tính hợp lệ cấu hình route của YARP Reverse Proxy khi khởi động. |
+| `ValidateCluster(TransformClusterValidationContext)` | Kiểm tra tính hợp lệ cấu hình cluster đích của YARP. |
+| `Apply(TransformBuilderContext context)` | Áp dụng `AddClaimsTransform()` và tự động chèn header bí mật nội bộ `X-Internal-Secret` vào mọi request chuyển tiếp để chống bypass Gateway. |
 
 ```csharp
 public void Apply(TransformBuilderContext context)
@@ -1045,7 +1166,11 @@ public void Apply(TransformBuilderContext context)
 - **Quy tắc nghiệp vụ**: Trả về đối tượng `Result.Success(value)` hoặc `Result.Failure(error)` với phân loại rõ ràng qua `ErrorType`.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Class `Result` & `Result<TValue>`**: Định nghĩa cấu trúc kết quả đóng gói.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Result.Success()` / `Result.Success<TValue>(TValue)` | Khởi tạo kết quả thành công bất biến kèm giá trị trả về (nếu có), không cần ném ngoại lệ kiểm soát luồng. |
+| `Result.Failure(Error)` / `Result.Failure(IEnumerable<Error>)` | Đóng gói đơn lỗi hoặc danh sách nhiều lỗi validation (`ErrorType`) để trả về cho tầng Controller ánh xạ sang HTTP 400/404/409. |
+| `Result<TValue>.Success(...)` & `Result<TValue>.Failure(...)` | Phiên bản Generic mang dữ liệu DTO kèm trạng thái thành công/thất bại chuẩn hóa cho mọi CQRS Handler. |
 
 ```csharp
 public class Result
@@ -1080,7 +1205,9 @@ public class Result
 - **Quy tắc nghiệp vụ**: Tự động hash mật khẩu bằng BCrypt độ an toàn cao (`workFactor: 11`), gán vai trò (`Student`, `Teacher`, `CampusManager`) và sinh bản ghi hồ sơ tương ứng trong schema `profile`.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `Handle(ProvisionUserCommand, ...)`**: Lõi cấp phát tài khoản và khởi tạo hồ sơ.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `Handle(ProvisionUserCommand request, CancellationToken)` | Kiểm tra trùng email, băm mật khẩu tạm bằng BCrypt, tạo đồng thời bản ghi tài khoản `User` (`iam`) và hồ sơ vai trò (`profile`) trong 1 giao dịch Unit of Work, trả về `Result<UserAdminDto>`. |
 
 ```csharp
 public async Task<Result<UserDto>> Handle(ProvisionUserCommand request, CancellationToken cancellationToken)
@@ -1118,7 +1245,9 @@ public async Task<Result<UserDto>> Handle(ProvisionUserCommand request, Cancella
 - **Quy tắc nghiệp vụ**: Cấu hình EF Core 9 ánh xạ chính xác từng bảng về schema tương ứng.
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **Hàm `OnModelCreating(...)`**: Phân định ranh giới schema.
+| Hàm chính | Công dụng cốt lõi |
+| :--- | :--- |
+| `OnModelCreating(ModelBuilder modelBuilder)` | Phân tách ranh giới dữ liệu bảo mật thành 2 schema độc lập (`iam` cho `Users`, `Roles`, `RefreshTokens`; `profile` cho `Students`, `Teachers`, `Parents`, `AcademicDirectors`) và thiết lập khóa ngoại Cascade Delete. |
 
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -1151,22 +1280,37 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 - **Quy tắc nghiệp vụ**: Kiểm tra token có bị thu hồi trong bảng `RefreshTokens` hay không; trả về `IsValid: false` nếu tài khoản đang bị khóa (`IsActive: false`).
 
 #### 2. Hàm chính & Đoạn code đáp ứng nghiệp vụ
-- **RPC `ValidateToken(...)`**: Xử lý xác thực token nhị phân.
+| RPC chính (`IdentityGrpcService`) | Công dụng cốt lõi |
+| :--- | :--- |
+| `ValidateUserPermission(...)` | Kiểm tra tài khoản tồn tại, đang hoạt động (`IsActive`), đối chiếu quyền `RequiredRole` và trả về `RoleName`, `CampusId` qua kênh gRPC nội bộ. |
+| `GetStudentProfileSummary(...)` | Truy vấn hồ sơ tóm tắt của 1 học sinh (`FullName`, `CampusName`, `TargetScore`, `ExamDate`, `StudyHoursDay`, `SchoolName`) cho Practice Service hoạch định lộ trình PLAR. |
+| `GetStudentsByIds(...)` | Truy vấn hàng loạt thông tin danh sách học sinh theo mảng `StudentIds` (phục vụ màn hình quản lý lớp học và gom nhóm vi mô). |
+| `GetParentStudents(...)` | Lấy danh sách toàn bộ học sinh đã liên kết với 1 tài khoản Phụ huynh (`ParentStudentRelations`) cho Cổng Phụ huynh. |
+| `GetTeacherProfile(...)` | Truy vấn thông tin hồ sơ giáo viên (`FullName`, `Email`, `Phone`, `Specialty`, `CampusName`). |
+| `LinkParentStudent(...)` | Thực hiện liên kết tài khoản Phụ huynh - Học sinh theo email học sinh, tự động khởi tạo hồ sơ `Parent` nếu chưa có và chống tạo quan hệ trùng lặp. |
 
 ```csharp
-public override async Task<ValidateTokenResponse> ValidateToken(ValidateTokenRequest request, ServerCallContext context)
+public override async Task<ValidatePermissionResponse> ValidateUserPermission(
+    ValidatePermissionRequest request, ServerCallContext context)
 {
-    var principal = _jwtProvider.ValidateToken(request.Token);
-    if (principal == null) return new ValidateTokenResponse { IsValid = false };
+    if (!Guid.TryParse(request.UserId, out var userGuid))
+        return new ValidatePermissionResponse { IsValid = false, IsActive = false };
 
-    var userId = principal.FindFirst("sub")?.Value;
-    var user = await _userRepository.GetByIdAsync(Guid.Parse(userId));
+    var user = await _context.Users
+        .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+        .FirstOrDefaultAsync(u => u.UserId == userGuid);
 
-    return new ValidateTokenResponse
+    if (user == null || !user.IsActive)
+        return new ValidatePermissionResponse { IsValid = false, IsActive = false };
+
+    bool hasRole = string.IsNullOrWhiteSpace(request.RequiredRole) ||
+                   user.UserRoles.Any(ur => string.Equals(ur.Role.RoleName, request.RequiredRole, StringComparison.OrdinalIgnoreCase));
+
+    return new ValidatePermissionResponse
     {
-        IsValid = user != null && user.IsActive,
-        UserId = user?.Id.ToString() ?? string.Empty,
-        Role = user?.Role ?? string.Empty
+        IsValid = hasRole,
+        IsActive = user.IsActive,
+        RoleName = user.UserRoles.FirstOrDefault()?.Role.RoleName ?? string.Empty
     };
 }
 ```
@@ -1682,5 +1826,103 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
 | `dc30a70` | `05/11/2026` | **Cập nhật (`M`)** | [ForgotPasswordModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/auth/ForgotPasswordModal.jsx) | Nâng cấp lưới 6 ô OTP chuẩn Fintech, đếm ngược 60s, kiểm tra độ mạnh mật khẩu và đối soát OTP đặt lại mật khẩu. |
 | `389d856` | `04/11/2026` | **Tạo mới (`A`)** | [PayOsCheckoutModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/modals/PayOsCheckoutModal.jsx) | Modal thanh toán học phí VietQR PayOS, tự động polling kiểm tra trạng thái 3s và hiệu ứng mở khóa chặng 1 PLAR. |
 | `389d856` | `04/11/2026` | **Tạo mới (`A`)** | [TuitionPaymentView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx) | Màn hình đóng học phí trực tuyến 3 gói đào tạo chuẩn ĐGNL kết nối trực tiếp Cổng Practice. |
+
+---
+
+## 10. DANH MỤC TOÀN DIỆN HÀM CHÍNH & CÔNG DỤNG CÁC FILE LOGIC BACKEND CÒN LẠI (ĐẦY ĐỦ 5 PHÂN HỆ)
+
+> [!NOTE]
+> Tổng hợp toàn bộ các file logic Backend còn lại do `ThinhTT` (`Thinhtran2412`) thiết kế và triển khai trên nhánh `main` (ngoài 24 file hạt nhân đã phân tích sâu ở Mục 1–5), giúp ôn tập nhanh tên hàm thực tế và công dụng cốt lõi khi bảo vệ đồ án.
+
+---
+
+### 10.1. V-Eval-Ai_Engine (11 file logic bổ sung)
+
+| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
+| :--- | :--- | :--- |
+| [ExamEndpoints.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/ExamEndpoints.cs) | `MapExamEndpoints`, `POST /upload-pdf`, `GET /jobs/{jobId}`, `POST /exams/classify-nodes`, `GET /view-exam`, `GET /view-diagnostic`, `GET /view-tutor-mentor` | Tiếp nhận upload đề thi PDF chạy ngầm (Background Job), polling tiến độ, phân loại câu hỏi vào cây kỹ năng và phục vụ các trang studio kiểm thử. |
+| [AiGrpcService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/GrpcServices/AiGrpcService.cs) | `ChatSocraticTutor`, `IndexTheoreticalDocument` | Server gRPC streaming hội thoại gia sư Socratic theo từng token và đánh chỉ mục tài liệu lý thuyết vào Vector DB. |
+| [CurriculumTaxonomyRegistry.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumTaxonomyRegistry.cs) | `GetTaxonomyRoot`, `GetStandardSkeletonChapters`, `DetectBookEdition`, `DetectGradeNumber`, `ClassifyAndEnrichChunk`, `ExtractAndNormalizeImagePlaceholders`, `GetTaxonomyPromptReference`, `SynthesizeCurriculumFromChunks` | Quản trị bộ khung chuẩn 750 dạng bài GDPT 2018 (nhận diện bộ sách KNTT/CTST/Cánh Diều, khối lớp 10–12), gắn nhãn chunk và tổng hợp khung chương trình. |
+| [PdfPigTextbookParserService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs) | `ParseAndIngestTextbookAsync`, `SynthesizeCurriculumFromChunks`, `IsCorruptedFontEncoding`, `ScanTextbookSkeletonAsync`, `GeneratePatternExercisesAsync` | Bóc tách SGK theo lô 2 trang, phát hiện font lỗi CID/InDesign, cắt chunk gối đầu `1000/200`, quét khung xương mục lục và sinh bài tập theo dạng. |
+| [PdfPigLocalExamParser.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigLocalExamParser.cs) | `Parse`, `ParsePageRange`, `CleanPuaSymbols`, `ParseExamText` | Bộ bóc tách đề thi 100% offline bằng C# thuần + PdfPig làm tầng dự phòng cuối khi cả Gemini và OpenAI đều gián đoạn. |
+| [PdfImageExtractor.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfImageExtractor.cs) | `ExtractImages`, `MapImagesToExam` | Rút trích hình vẽ đồ thị/hình học từ PDF bằng hybrid PDFium-PdfPig và ánh xạ đúng ảnh vào từng câu hỏi trong đề thi. |
+| [PromptTemplateService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PromptTemplateService.cs) | `RenderPromptAsync`, `RenderPrompt` | Đọc và nội suy biến `{{key}}` cho các file `.prompt.txt` tách rời khỏi code C#. |
+| [SocraticTutorService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/SocraticTutorService.cs) | `StreamSocraticDialogueAsync` | Điều phối gia sư AI Socratic (gợi mở từng bước, không mớm đáp án trực tiếp) trả về luồng bất đồng bộ `IAsyncEnumerable<string>`. |
+| [QdrantVectorDbService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/QdrantVectorDbService.cs) | `IndexTheoreticalDocumentAsync`, `SearchSimilarChunksAsync` | Lưu vector embedding và tìm kiếm ngữ nghĩa top-K chunks liên quan phục vụ RAG. |
+| [InMemoryExamJobManager.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/InMemoryExamJobManager.cs) | `CreateJob`, `UpdateJobProgress`, `CompleteJob`, `FailJob`, `GetJob` | Quản lý vòng đời trạng thái job bóc tách đề thi chạy nền an toàn đa luồng (`ConcurrentDictionary`). |
+| [InMemoryTextbookJobManager.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/InMemoryTextbookJobManager.cs) | `CreateJob`, `UpdateJobProgress`, `CompleteJob`, `FailJob`, `GetJob`, `GetJobByFileHash`, `GetActiveJob`, `GetAllJobs` | Quản lý vòng đời job nạp SGK, hỗ trợ chống nạp trùng theo `fileHash` và khôi phục thanh tiến trình khi người dùng F5. |
+
+---
+
+### 10.2. V-Eval-Content_Service (14 file logic bổ sung)
+
+| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
+| :--- | :--- | :--- |
+| [CurriculumController.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Controllers/CurriculumController.cs) | `GetCurriculumTree` (`GET`), `ImportCurriculum` (`POST /import`), `UpdatePattern` (`PUT /patterns/{id}`), `CreateNode`/`UpdateNode`/`DeleteNode` | Quản trị toàn bộ cây chương trình GDPT 2018 (Miền -> Chương -> Bài -> Dạng bài) và đồng bộ từ SGK Studio. |
+| [DiagnosticController.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Controllers/DiagnosticController.cs) | `GetDiagnosticTest` (`GET /diagnostic-test`) | Cung cấp bộ đề khảo sát năng lực đầu vào cân bằng 4 miền kiến thức cho học sinh mới. |
+| [MockExamsController.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Controllers/MockExamsController.cs) | `GetExams`, `GetExamById`, `ImportExam` (`POST /import`), `PublishExam` (`PATCH/PUT /{id}/publish`), `DeleteExam`, `CreateQuizExam` (`POST /quiz`) | Quản lý trọn vòng đời đề thi thử ĐGNL (import từ AI Engine, xuất bản, xóa) và API 19 tạo phiếu bài tập thích ứng cho nhóm vi mô. |
+| [ContentGrpcService.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Services/ContentGrpcService.cs) | `ResolveDomainCode`, `InferSubjectName`, `GetSkillsTree`, `GetQuestionsByDifficulty`, `GetExamAnswerKey`, `GetQuestionDetail`, `GetMilestoneQuiz` | Hiện thực 5 RPC gRPC tốc độ cao kèm cơ chế cô lập môn học/chương và lọc bỏ câu hỏi sai ngôn ngữ. |
+| [SubjectTaxonomyHelper.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Common/Helpers/SubjectTaxonomyHelper.cs) | `ResolveDomainCode`, `InferSubjectName`, `IsContentLanguageMismatch` | Chuẩn hóa mã miền/môn học và phát hiện câu hỏi lạc ngôn ngữ (ví dụ câu Tiếng Anh lọt vào bộ đề Ngữ văn/Toán). |
+| [ImportMockExamCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Commands/ImportMockExam/ImportMockExamCommandHandler.cs) | `Handle(ImportMockExamCommand, CancellationToken)` | Nhập nguyên bộ đề thi (chùm đọc hiểu `Passages`, câu đơn, đáp án, hình ảnh) vào cơ sở dữ liệu Content. |
+| [PublishMockExamCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Commands/PublishMockExam/PublishMockExamCommandHandler.cs) | `Handle(PublishMockExamCommand, CancellationToken)` | Chuyển trạng thái đề thi sang `Published` để mở cho học sinh vào thi thử. |
+| [DeleteMockExamCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Commands/DeleteMockExam/DeleteMockExamCommandHandler.cs) | `Handle(DeleteMockExamCommand, CancellationToken)` | Xóa đề thi thử và liên kết câu hỏi khỏi hệ thống. |
+| [GetMockExamsQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Queries/GetMockExams/GetMockExamsQueryHandler.cs) & [GetMockExamByIdQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Queries/GetMockExamById/GetMockExamByIdQueryHandler.cs) | `Handle(GetMockExamsQuery)`, `Handle(GetMockExamByIdQuery)` | Truy vấn danh sách tổng quan đề thi và chi tiết đầy đủ chùm đọc hiểu/câu hỏi của 1 đề thi. |
+| [CreateQuestionCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Commands/CreateQuestion/CreateQuestionCommandHandler.cs), [UpdateQuestionCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Commands/UpdateQuestion/UpdateQuestionCommandHandler.cs), [DeleteQuestionCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Commands/DeleteQuestion/DeleteQuestionCommandHandler.cs) | `Handle(...)` | Bộ CQRS Command Handlers xử lý thêm mới, cập nhật nội dung/độ khó Bloom và xóa mềm câu hỏi trong ngân hàng. |
+| [GetQuestionByIdQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Queries/GetQuestionById/GetQuestionByIdQueryHandler.cs) & [GetQuestionsBySkillQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Queries/GetQuestionsBySkill/GetQuestionsBySkillQueryHandler.cs) | `Handle(...)` | Truy vấn chi tiết 1 câu hỏi và phân trang danh sách câu hỏi theo `SkillId`. |
+| [DiagnosticExamSeeder.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Infrastructure/Persistence/Seeds/DiagnosticExamSeeder.cs) | `SeedDiagnosticExamAsync(ContentDbContext, ILogger)` | Khởi tạo tự động bộ đề thi chẩn đoán năng lực chuẩn cân bằng 4 miền khi triển khai môi trường mới. |
+
+---
+
+### 10.3. V-Eval-Practice_Service (26 file logic bổ sung — Core Flow 2, 3, 5, 6, PayOS & Lịch học)
+
+| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
+| :--- | :--- | :--- |
+| [PaymentsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/PaymentsController.cs) | `CreatePaymentLink`, `ProcessPayOsWebhook`, `GetStatus`, `GetTransactions`, `GetPaymentsByStudent`, `GetMyPayments`, `GetTuitionStatusByStudent` | Cổng API thanh toán học phí PayOS VietQR, tiếp nhận Webhook tự động và tra cứu trạng thái/lịch sử đóng học phí. |
+| [PayOsPaymentService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/PayOsPaymentService.cs) | `CreatePaymentLinkAsync`, `VerifyWebhookDataAsync`, `GetPaymentLinkInformationAsync` | Tích hợp trực tiếp API PayOS: ký số HMAC-SHA256 tạo link VietQR, xác thực chữ ký Webhook chống giả mạo và đồng bộ trạng thái đơn hàng. |
+| [CreatePaymentLinkCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/CreatePaymentLink/CreatePaymentLinkCommandHandler.cs) & [ProcessPayOsWebhookCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/ProcessPayOsWebhook/ProcessPayOsWebhookCommandHandler.cs) | `Handle(CreatePaymentLinkCommand)`, `Handle(ProcessPayOsWebhookCommand)` | Sinh `OrderCode`, tạo giao dịch `PENDING`; khi nhận Webhook hợp lệ đảm bảo Idempotency, cập nhật `PAID` và tự động mở khóa chặng 1 lộ trình PLAR trong 1 ACID Transaction. |
+| [PaymentRepository.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/PaymentRepository.cs) | `GetByOrderCodeAsync`, `GetActiveRegistrationAsync`, `HasActiveTuitionAsync`, `AddPaymentAsync`, `AddTransactionAsync`, `AddClassEnrollmentAsync` | Quản lý truy vấn đơn thanh toán, đăng ký khóa học, ghi nhận lịch sử giao dịch và tự động xếp lớp sau thanh toán. |
+| [RoadmapsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/RoadmapsController.cs) | `GenerateRoadmap`, `GetMyRoadmap`, `GetNodeDetail`, `GetReviewQueue`, `GetRoadmapById`, `TeacherReviewRoadmap`, `DirectorDecision` | Điều phối toàn bộ vòng đời lộ trình cá nhân hóa PLAR từ lúc sinh lộ trình, giáo viên rà soát cho tới Giám đốc Học thuật phê duyệt. |
+| [GenerateRoadmapCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Commands/GenerateRoadmap/GenerateRoadmapCommandHandler.cs) | `Handle`, `InferGradeLevel`, `ExtractChapterNumber`, `ExtractLessonNumber`, `GetSubjectSortOrder` | Hoạch định cây lộ trình học tập cá nhân hóa tích hợp đầy đủ 750 dạng bài GDPT 2018 theo thứ tự môn/lớp/chương/bài và mức độ ưu tiên lỗ hổng. |
+| [RoadmapApprovalWorkflow.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Approval/RoadmapApprovalWorkflow.cs) | `Handle(GetRoadmapReviewQueueQuery)`, `Handle(GetRoadmapByIdQuery)`, `Handle(TeacherReviewRoadmapCommand)`, `Handle(DirectorDecisionCommand)` | Hiện thực quy trình duyệt lộ trình 2 cấp (Giáo viên tinh chỉnh -> Giám đốc Học thuật phê duyệt kích hoạt). |
+| [MilestoneBinder.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/MilestoneBinder.cs) | `BindMilestones(...)` | Gắn kết các tài nguyên học tập và chốt kiểm tra (Milestone Quiz) vào từng node trên đồ thị lộ trình. |
+| [ZpdQuestionSelector.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Adaptive/ZpdQuestionSelector.cs) | `ConvertPltToTheta`, `CalculateIrt2PlProbability`, `SelectNextQuestion` | Động cơ chọn câu hỏi thích ứng theo Vùng phát triển gần (ZPD): đổi xác suất `P(L_t)` sang năng lực `theta`, tính xác suất đúng IRT 2PL để chọn câu hỏi vừa sức nhất. |
+| [StartStageCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/StartStage/StartStageCommandHandler.cs), [SubmitPreviewCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/SubmitPreview/SubmitPreviewCommandHandler.cs), [SubmitAnswerCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/SubmitAnswer/SubmitAnswerCommandHandler.cs), [ReflectCompleteCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/ReflectComplete/ReflectCompleteCommandHandler.cs) | `Handle(...)` | Điều phối vòng lặp 4 pha học tập thích ứng PLAR: Khởi động chặng -> Khảo sát sơ bộ (Preview) -> Luyện tập cập nhật BKT theo từng câu -> Phản tư nhận thức chốt chặng. |
+| [GetNextQuestionQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Queries/GetNextQuestion/GetNextQuestionQueryHandler.cs) & [GetRemedialPackageQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Queries/GetRemedialPackage/GetRemedialPackageQueryHandler.cs) | `Handle(...)`, `MapDifficultyToParamB` | Lấy câu hỏi tiếp theo chuẩn ZPD và đóng gói bộ học liệu bổ trợ (Remedial) khi học sinh trượt chặng. |
+| [ClassesController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/ClassesController.cs) | `GetClasses`, `CreateClassWithSchedule`, `AssignTeacher`, `EnrollOrTransferStudent`, `AutoClusterThematicClasses`, `AutoPartitionMicroGroups`, `GetClassMicroGroups`, `AssignGroupWorksheet` | Quản lý lớp học offline, phân công giáo viên, xếp học sinh, gom nhóm vi mô K-Means 3–5 bạn và giao phiếu bài tập theo nhóm. |
+| [AutoPartitionMicroGroupsCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Commands/AutoPartitionMicroGroups/AutoPartitionMicroGroupsCommandHandler.cs) & [GetClassMicroGroupsQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Queries/GetClassMicroGroups/GetClassMicroGroupsQueryHandler.cs) | `Handle(...)` | Gọi thuật toán `ClassMicroClusterer`, lưu các nhóm vi mô vào DB và truy xuất danh sách bàn học kèm điểm yếu chung. |
+| [EarlyWarningsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/EarlyWarningsController.cs), [EarlyWarningSweepWorker.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/BackgroundJobs/EarlyWarningSweepWorker.cs), [EarlyWarningSweepService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/EarlyWarningSweepService.cs) | `GetMyAlerts`, `GetAlertsDashboard`, `ResolveAlert`, `ScheduleCounseling`, `ExecuteEarlyWarningSweep`, `ExecuteSweepAsync` | Quét định kỳ 6h sáng toàn hệ thống phát hiện sớm học sinh có nguy cơ tụt hạng/không đạt mục tiêu ĐGNL và đặt lịch tư vấn can thiệp. |
+| [NotificationDispatcher.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/NotificationDispatcher.cs) | `DispatchAlertAsync` | Điều phối gửi thông báo cảnh báo học tập đa kênh (In-app, Email, SMS/Zalo) tới học sinh, phụ huynh và giáo viên. |
+| [AcademicTermsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/AcademicTermsController.cs), [CoursesController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/CoursesController.cs), [SchedulesController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/SchedulesController.cs), [ScheduleService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/ScheduleService.cs) | `GetAcademicTermsAsync`, `CreateCourseAsync`, `SaveClassSchedulesAsync`, `GenerateClassSessionsAsync`, `RescheduleClassSessionAsync`, `GetSessionAttendancesAsync`, `SubmitSessionAttendances` | Quản trị học kỳ, danh mục khóa học, cấu hình lịch học cố định hàng tuần, sinh buổi học tự động, dời lịch và điểm danh từng buổi. |
+| [SubmitMockExamCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/SubmitMockExam/SubmitMockExamCommandHandler.cs) | `Handle(SubmitMockExamCommand, CancellationToken)` | Chấm điểm bài thi thử ĐGNL toàn diện, lưu kết quả và đồng bộ câu sai vào Sổ tay lỗi sai. |
+| [SubmitDailyReviewCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Mistakes/Commands/SubmitDailyReview/SubmitDailyReviewCommandHandler.cs) & [GetDailyReviewQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Mistakes/Queries/GetDailyReview/GetDailyReviewQueryHandler.cs) | `Handle(...)` | Lấy danh sách câu hỏi đến hạn ôn tập hằng ngày từ Sổ tay lỗi sai và cập nhật lịch lặp lại SM-2 sau khi học sinh làm lại. |
+| [GetParentDashboardQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Analytics/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs) | `Handle(GetParentDashboardQuery, CancellationToken)` | Tổng hợp tiến độ học tập, điểm số và cảnh báo thực tế của con em từ PostgreSQL hiển thị trên Cổng Phụ huynh. |
+| [ContentGrpcClient.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/GrpcClients/ContentGrpcClient.cs) & [ContentHttpClient.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/HttpClients/ContentHttpClient.cs) | `GetExamAnswerKeysAsync`, `GetSkillsTreeAsync`, `GetMilestoneQuizAsync`, `GetQuestionDetailAsync`, `CreateAdaptiveQuizAsync` | Client giao tiếp gRPC/HTTP nội bộ sang Content Service để lấy bảng đáp án, cây kỹ năng và sinh phiếu bài tập thích ứng. |
+
+---
+
+### 10.4. V-Eval-Gateway (5 file logic bổ sung)
+
+| File Mã Nguồn | Các Hàm Chính | Công Dụng Cốt Lõi |
+| :--- | :--- | :--- |
+| [GatewayAuthExtensions.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Security/GatewayAuthExtensions.cs) | `AddGatewayAuthentication(services, configuration)` | Cấu hình xác thực JWT Bearer tập trung tại cửa ngõ Gateway (validate chữ ký, Issuer, Audience và ClockSkew). |
+| [GlobalExceptionMiddleware.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Middlewares/GlobalExceptionMiddleware.cs) | `InvokeAsync(HttpContext)` | Bắt toàn bộ ngoại lệ chưa xử lý tại Gateway và trả về JSON lỗi chuẩn hóa RFC 7807, không để lộ stack trace. |
+| [RequestLoggingMiddleware.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Middlewares/RequestLoggingMiddleware.cs) | `InvokeAsync(HttpContext)` | Đo thời gian xử lý (latency) và ghi log có cấu trúc cho mọi HTTP Request/Response đi qua Reverse Proxy. |
+| [DownstreamHealthCheck.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Health/DownstreamHealthCheck.cs) | `CheckHealthAsync(HealthCheckContext, CancellationToken)` | Kiểm tra sức khỏe định kỳ của các microservice nội bộ (Identity, Content, Practice, AI Engine) phục vụ giám sát hệ thống. |
+| [ServiceCollectionExtensions.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Extensions/ServiceCollectionExtensions.cs) & [MiddlewarePipelineExtensions.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Extensions/MiddlewarePipelineExtensions.cs) | `AddGatewayServices`, `UseGatewayMiddlewarePipeline` | Đóng gói gọn gàng việc đăng ký YARP, CORS, Auth, RateLimiter và thứ tự chuỗi Middleware của Gateway. |
+
+---
+
+### 10.5. V-Eval-Identity_Service (7 file logic bổ sung)
+
+| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
+| :--- | :--- | :--- |
+| [AuthController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/AuthController.cs) | `ValidateEmail`, `Register`, `VerifyAccount`, `Login`, `RefreshToken`, `ForgotPassword`, `VerifyResetOtp`, `ResetPassword` | Cung cấp đầy đủ bộ API xác thực tài khoản, làm mới JWT Token và quy trình quên mật khẩu 3 bước có đối soát OTP 6 số. |
+| [UsersController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/UsersController.cs) | `GetCurrentUser`, `GetUsers`, `ProvisionUser`, `ToggleStatus`, `UpdateProfile`, `ChangePassword`, `GetStudentParentLinkOverview`, `ConnectParentByCode` | Quản trị người dùng theo vai trò, Soft Delete (`ToggleStatus`), cập nhật hồ sơ cá nhân và điều phối liên kết Phụ huynh - Học sinh. |
+| [BrevoSmtpEmailService.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Services/BrevoSmtpEmailService.cs) | `SendRegistrationOtpEmailAsync`, `SendForgotPasswordOtpEmailAsync` | Gửi email mã OTP thực tế qua Brevo SMTP Relay (`MailKit`, STARTTLS port 587) với template HTML chuẩn thương hiệu V-Eval. |
+| [EmailValidationHelper.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Common/Validators/EmailValidationHelper.cs) | `ValidateFormatAndRules`, `ValidateEmailComprehensiveAsync` | Kiểm thực email đa tầng: chuẩn RFC 5322, gợi ý sửa lỗi typo phổ biến (`@mail.com` -> `@gmail.com`) và tra cứu bản ghi DNS MX trực tuyến. |
+| [ParentLinkingFeatures.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/ParentLinking/ParentLinkingFeatures.cs) | `Handle(GetStudentParentLinkOverviewQuery)`, `Handle(ConnectParentByCodeCommand)`, `Handle(CreateParentLinkRequestCommand)`, `Handle(RespondParentLinkRequestCommand)` | Xử lý liên kết 2 chiều Phụ huynh - Học sinh qua Mã học sinh `VE-XXXXXX`, mã PIN 6 số động hoặc duyệt yêu cầu kết nối. |
+| [UserRepository.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Persistence/Repositories/UserRepository.cs) | `ComputeStudentAccountCode`, `GetByEmailWithRolesAsync`, `GetByIdWithDetailsAsync`, `AddTeacherProfileAsync`, `AddAcademicDirectorProfileAsync`, `AddParentProfileAsync`, `ConnectParentToStudentByCodeAsync` | Truy vấn tổng hợp User + Role + Profile đa vai trò, sinh mã học sinh tất định `VE-XXXXXX` và thao tác bảng `ParentStudentRelations`. |
+| [DbInitializer.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Persistence/Seeds/DbInitializer.cs) | `SeedAsync(AppDbContext)` | Khởi tạo dữ liệu nền (Roles chuẩn, Campus, tài khoản quản trị mặc định) khi khởi chạy dịch vụ Identity lần đầu. |
+
 
 
