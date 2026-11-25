@@ -1,13 +1,11 @@
-# UPDATE LOG — V-Eval System-Repo
+# UPDATE - V-EVAL SYSTEM REPO
 
-## [24/11/2026] Hoàn thiện phân quyền Gia sư AI cấp lớp, 10 hạng mục Feedback UI/UX (MUI), CSDL khóa câu hỏi lỗi & MathLive WYSIWYG
-- **Frontend (`V-Eval-Web_Client`)**:
-  - Triển khai phân quyền & giới hạn phạm vi kiểm duyệt Gia sư AI theo lớp học phụ trách và danh sách học sinh thực tế (`AiTutorModerationView.jsx`, `aiTutorScoping.js`); loại bỏ tùy chọn "Tất cả lớp" của Giảng viên, ẩn panel xét duyệt câu hỏi gắn cờ khỏi Giảng viên (dành riêng cho Giám đốc Học thuật). Thêm test `tests/aiTutorScoping.test.js`, hoàn thành toàn bộ 114/114 unit tests và Vite build 100%.
-  - Triển khai MUI (`@mui/material`), làm sạch thuật ngữ kỹ thuật, đồng bộ Kết quả & Lịch sử Chẩn đoán (`DiagnosticSkillOverviewCard`), mở khóa `Đã nắm vững`, lưu/khôi phục trạng thái Preview theo DB & giữ nguyên trang hiện tại khi F5 (`sessionStorage`).
-  - Sổ tay lỗi sai ôn theo dạng, Lịch sử & Phòng thi thử chia cụm 7 câu (`AttemptAnswerReviewList`), Camera giám sát chụp ảnh định kỳ (`upload-snapshot`), Sổ tay Gia sư AI dạng Drawer kéo-thả, và 3 cổng Non-Blocking Roadmap Approval.
-  - Tinh giản Sidebar (icon trơn không nền khi thu gọn, ẩn icon khi mở rộng), bỏ nền màu icon Navbar & bỏ thanh footer toàn trang; tinh giản Khung chương trình (full-view không cuộn lồng, bo góc `10px`, bỏ nhãn Bloom, mở sẵn Lý thuyết trọng tâm).
-  - Vào thẳng Full Studio (`CurriculumStudioEditor`) từ `ExamStudioView` & `FlaggedQuestionsReviewPanel`, tự động thu gọn sidebar khi mở Studio, và tích hợp **MathLive (`VisualMathField`)** sửa công thức trực quan WYSIWYG với thanh công thức cố định không che chữ, bảng màu bàn phím đồng bộ V-Eval và nút đóng nổi (`vite build` pass 100%).
-- **Backend (`V-Eval-Practice_Service`, `V-Eval-Content_Service`, `V-Eval-Gateway`, `V-Eval-Ai_Engine`)**:
-  - `V-Eval-Practice_Service`: Fix GUID thô ở Suy diễn DAG, enrich chi tiết đáp án Thi thử, thêm cột `preview_submission_json` & 4 trường phê duyệt lộ trình + EF Migration `AddRoadmapTeacherApprovalFields` + auto `ALTER TABLE IF NOT EXISTS`, API `PUT /api/v1/roadmaps/{roadmapId}/approve`.
-  - `V-Eval-Content_Service`: Chặn phát câu hỏi thiếu/lỗi đáp án (`HasBrokenOrMissingOptions`), thêm cột `is_flagged`/`flag_reason`/`flagged_at` + API `/api/content/questions/flagged`, `/flag`, `/unflag` và lọc `!q.IsFlagged` khi phát đề; bổ sung đầy đủ dữ liệu học liệu Ngữ văn 10 Ch.5 Bài 2 trên Supabase DB.
-  - `V-Eval-Gateway` & `V-Eval-Ai_Engine`: Bổ sung YARP route `/api/v1/roadmaps/{**catch-all}` và chuẩn hóa nhận xét AI thân thiện.
+## [25/11/2026] - Hoàn Thiện Studio Soạn Thảo & MathLab 2D/3D, Tối Ưu Supabase Egress (>95%) & Nhúng Vector 768 Chiều pgvector HNSW
+
+- **Hoàn Thiện Studio Soạn Thảo & Phòng Dựng Hình 2D/3D (`V-Eval-Web_Client`)**:
+  - Thiết kế lại toàn diện `InteractiveMathWorkbenchModal` (render 100% KaTeX, MUI `Select`, tùy biến kích thước/góc xoay/tọa độ, sửa trực tiếp nhãn điểm phụ, công cụ 1-click hạ đường vuông góc 3D kèm ký hiệu góc vuông).
+  - Tối ưu `CurriculumStudioEditor`, `WordStyleFormulaCanvas`, `VisualMathField`, `HierarchicalMathPalette` (Bàn phím soạn thảo chèn tại con trỏ, trạng thái active cho `B/I/U/S`, phân trang số gọn có nhập trang & nút cuộn nhanh, dọn gọn bảng STEM & Bảng biến thiên).
+- **Khắc Phục Triệt Để Supabase Egress (`V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Web_Client`)**:
+  - Đã deploy lên `main` và đồng bộ `develop` (Cache gRPC + `SplitQuery` + DTO projections + FE deduplication).
+- **Nhúng Vector 768 Chiều & Backfill pgvector HNSW (`V-Eval-Ai_Engine`)**:
+  - Triển khai `GeminiEmbeddingService` (`gemini-embedding-001`, 768 chiều L2-normalized) + `PgVectorDbService` (HNSW + mở rộng ngữ cảnh lân cận) và backfill hoàn tất **708/708** chunks SGK trên Supabase (`missing = 0`).
