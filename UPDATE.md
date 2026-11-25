@@ -1,12 +1,12 @@
-# UPDATE LOG — V-Eval System-Repo
+# UPDATE - V-EVAL SYSTEM REPO
 
-## [24/11/2026] Hoàn thiện trọn bộ 10 hạng mục Feedback UI/UX (MUI), CSDL khóa câu hỏi lỗi, Studio trực tiếp & MathLive WYSIWYG
-- **Frontend (`V-Eval-Web_Client`)**:
-  - Triển khai MUI (`@mui/material`), làm sạch thuật ngữ kỹ thuật, đồng bộ Kết quả & Lịch sử Chẩn đoán (`DiagnosticSkillOverviewCard`), mở khóa `Đã nắm vững`, lưu/khôi phục trạng thái Preview theo DB & giữ nguyên trang hiện tại khi F5 (`sessionStorage`).
-  - Sổ tay lỗi sai ôn theo dạng, Lịch sử & Phòng thi thử chia cụm 7 câu (`AttemptAnswerReviewList`), Camera giám sát chụp ảnh định kỳ (`upload-snapshot`), Sổ tay Gia sư AI dạng Drawer kéo-thả, và 3 cổng Non-Blocking Roadmap Approval.
-  - Tinh giản Sidebar (icon trơn không nền khi thu gọn, ẩn icon khi mở rộng), bỏ nền màu icon Navbar & bỏ thanh footer toàn trang; tinh giản Khung chương trình (full-view không cuộn lồng, bo góc `10px`, bỏ nhãn Bloom, mở sẵn Lý thuyết trọng tâm).
-  - Vào thẳng Full Studio (`CurriculumStudioEditor`) từ `ExamStudioView` & `FlaggedQuestionsReviewPanel`, tự động thu gọn sidebar khi mở Studio, và tích hợp **MathLive (`VisualMathField`)** sửa công thức trực quan WYSIWYG với thanh công thức cố định không che chữ, bảng màu bàn phím đồng bộ V-Eval và nút đóng nổi (`vite build` pass 100%).
-- **Backend (`V-Eval-Practice_Service`, `V-Eval-Content_Service`, `V-Eval-Gateway`, `V-Eval-Ai_Engine`)**:
-  - `V-Eval-Practice_Service`: Fix GUID thô ở Suy diễn DAG, enrich chi tiết đáp án Thi thử, thêm cột `preview_submission_json` & 4 trường phê duyệt lộ trình + EF Migration `AddRoadmapTeacherApprovalFields` + auto `ALTER TABLE IF NOT EXISTS`, API `PUT /api/v1/roadmaps/{roadmapId}/approve`.
-  - `V-Eval-Content_Service`: Chặn phát câu hỏi thiếu/lỗi đáp án (`HasBrokenOrMissingOptions`), thêm cột `is_flagged`/`flag_reason`/`flagged_at` + API `/api/content/questions/flagged`, `/flag`, `/unflag` và lọc `!q.IsFlagged` khi phát đề; bổ sung đầy đủ dữ liệu học liệu Ngữ văn 10 Ch.5 Bài 2 trên Supabase DB.
-  - `V-Eval-Gateway` & `V-Eval-Ai_Engine`: Bổ sung YARP route `/api/v1/roadmaps/{**catch-all}` và chuẩn hóa nhận xét AI thân thiện.
+## [25/11/2026] - Tối Ưu Supabase Egress (>95%), Nhúng Vector 768 Chiều pgvector HNSW & Hoàn Thiện UX Kho Đề MUI
+
+- **Khắc Phục Triệt Để Lỗi Egress 29.57 GB Trên Supabase (`V-Eval-Content_Service`, `V-Eval-Practice_Service`, `V-Eval-Web_Client`)**:
+  - **Content Service**: Cache `IMemoryCache` + `SemaphoreSlim` cho `GetSkillsTree` (30 phút), `GetExamAnswerKey` (15 phút), `GetSkillsLookupAsync` (30 phút, chỉ chiếu 3 cột thay vì `SELECT *`); tách 3 truy vấn độc lập trong `GetCurriculumTreeQuery` (chỉ lấy tối đa 1 câu hỏi mẫu/kỹ năng thay vì toàn bảng `Questions`); nâng TTL `CurriculumController` lên 30 phút và tự động vô hiệu hóa cache khi ghi.
+  - **Practice Service**: Kích hoạt `QuerySplittingBehavior.SplitQuery` toàn cục trên `PracticeDbContext`; cache phía client trong `ContentGrpcClient` (`GetSkillsTreeAsync` 30 phút, `GetExamAnswerKeysAsync` 15 phút); bổ sung `GetSummariesByStudentIdAsync` dùng `.AsNoTracking().Select(...)` loại bỏ `SubmissionAnswers` & `AiCommentary` trên luồng Dashboard.
+  - **Web Client**: Bổ sung TTL cache + in-flight Promise deduplication cho `contentService.getCurriculum()` (15 phút) và `practiceService.getMyRoadmap()` / `getStudentDashboard()` (30 giây).
+- **Nhúng Vector 768 Chiều & Backfill pgvector HNSW (`V-Eval-Ai_Engine`)**:
+  - Triển khai `GeminiEmbeddingService` (`gemini-embedding-001`, 768 chiều L2-normalized) + `PgVectorDbService` (HNSW `<=>` + mở rộng ngữ cảnh lân cận) và backfill hoàn tất **708/708** chunks SGK trên Supabase (`missing = 0`).
+- **Hoàn Thiện UX Kho Đề / Xem Đề MUI (`V-Eval-Web_Client`)**:
+  - Tách thẻ tiêu đề, phân trang 5 câu/trang, nút AI tạo lời giải, chuyển toàn bộ dropdown và popup đổi đề sang MUI (`npm run build` pass 0 lỗi).
