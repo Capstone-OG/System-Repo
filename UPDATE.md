@@ -1,12 +1,20 @@
 # UPDATE LOG — V-Eval System-Repo
 
-## [24/11/2026] Hoàn thiện phân quyền Gia sư AI cấp lớp, 10 hạng mục Feedback UI/UX (MUI), CSDL khóa câu hỏi lỗi & MathLive WYSIWYG
+## [24/11/2026] Thanh lọc toàn diện dữ liệu hardcode phân hệ Giảng viên (100% Real Data), Tinh gọn Dashboard & Sư phạm hóa Gia sư AI
 - **Frontend (`V-Eval-Web_Client`)**:
-  - Triển khai phân quyền & giới hạn phạm vi kiểm duyệt Gia sư AI theo lớp học phụ trách và danh sách học sinh thực tế (`AiTutorModerationView.jsx`, `aiTutorScoping.js`); loại bỏ tùy chọn "Tất cả lớp" của Giảng viên, ẩn panel xét duyệt câu hỏi gắn cờ khỏi Giảng viên (dành riêng cho Giám đốc Học thuật). Thêm test `tests/aiTutorScoping.test.js`, hoàn thành toàn bộ 114/114 unit tests và Vite build 100%.
-  - Triển khai MUI (`@mui/material`), làm sạch thuật ngữ kỹ thuật, đồng bộ Kết quả & Lịch sử Chẩn đoán (`DiagnosticSkillOverviewCard`), mở khóa `Đã nắm vững`, lưu/khôi phục trạng thái Preview theo DB & giữ nguyên trang hiện tại khi F5 (`sessionStorage`).
-  - Sổ tay lỗi sai ôn theo dạng, Lịch sử & Phòng thi thử chia cụm 7 câu (`AttemptAnswerReviewList`), Camera giám sát chụp ảnh định kỳ (`upload-snapshot`), Sổ tay Gia sư AI dạng Drawer kéo-thả, và 3 cổng Non-Blocking Roadmap Approval.
-  - Tinh giản Sidebar (icon trơn không nền khi thu gọn, ẩn icon khi mở rộng), bỏ nền màu icon Navbar & bỏ thanh footer toàn trang; tinh giản Khung chương trình (full-view không cuộn lồng, bo góc `10px`, bỏ nhãn Bloom, mở sẵn Lý thuyết trọng tâm).
-  - Vào thẳng Full Studio (`CurriculumStudioEditor`) từ `ExamStudioView` & `FlaggedQuestionsReviewPanel`, tự động thu gọn sidebar khi mở Studio, và tích hợp **MathLive (`VisualMathField`)** sửa công thức trực quan WYSIWYG với thanh công thức cố định không che chữ, bảng màu bàn phím đồng bộ V-Eval và nút đóng nổi (`vite build` pass 100%).
+  - **Thanh lọc triệt để 100% dữ liệu hardcode và fallback tĩnh trong toàn bộ phân hệ Giảng viên (Teacher Role)**:
+    - `TeacherDashboardView.jsx`: Thay thế tooltip gán cứng số 66 chuyên đề bằng số lượng chuyên đề thực tế động `${columns.length || 0}`.
+    - `AiTutorModerationView.jsx`: Xóa bỏ fallback `'class_01'` tránh rò rỉ đàm thoại; xóa bỏ `'PAT_DEFAULT'` và `'TRAP_LOGIC'`; ẩn hoàn toàn thẻ bẫy khi câu hỏi thực tế chưa được phân loại bẫy tư duy.
+    - `TeacherScheduleView.jsx`: Xóa bỏ phòng học fallback cứng `'Phòng phụ đạo P.204'` và `'Phòng P.204'`; hiển thị trung thực `'Chưa xếp phòng'` hoặc `'Trực tuyến'`.
+    - `ClassMicroGroupsModal.jsx`: Xóa bỏ phòng học mặc định `'Phòng phụ đạo vi mô P.204'`; liên kết động với phòng học thực tế của lớp (`classData?.room`).
+    - `EarlyWarningsMentorPanel.jsx`: Xóa bỏ địa điểm và điểm mục tiêu đề xuất cứng 850; tự động đề xuất dựa trên điểm mục tiêu thực tế của học sinh.
+    - `TeacherSubmissionHistoryView.jsx`: Xóa bỏ fallback tên lớp tĩnh `'Lớp nền tảng'` và điểm giả lập 780; hiển thị trung thực `'Lớp phụ trách'` và điểm số thực từ bài làm (`f.score ?? f.rawScore`).
+    - `RoadmapApprovalStudioView.jsx`: Khởi tạo điểm mục tiêu theo dữ liệu lộ trình thực tế của học sinh (`data?.targetScore`), loại bỏ hoàn toàn số 850 tĩnh.
+    - `AccountSettingsPage.jsx`: Thay thế các tham chiếu tĩnh từ `mockUser` trong bản xem trước Học bạ điện tử bằng thông tin tài khoản thực tế (`currentUser`).
+  - **Tối ưu hóa Bảng điều khiển Giảng viên (`TeacherDashboardView.jsx`)**: Thu gọn tầng trên thành Compact Executive Header và Quick Stats Strip 4 ô; bộ lọc chuyên đề thông minh chống cuộn ngang 66 cột (Top 8 trọng tâm bồi dưỡng, 4 Miền năng lực, Tất cả); bổ sung chế độ xem Thẻ học sinh trực quan.
+  - **Sư phạm hóa giao diện Kiểm duyệt Gia sư AI cho Giảng viên (`AiTutorModerationView.jsx`)**: Làm sạch 100% thuật ngữ kỹ thuật, tinh giản KPI còn 3 thẻ sư phạm thuần Việt; phân quyền giới hạn phạm vi đàm thoại strictly theo lớp và học sinh phụ trách; ẩn tab "Toàn bộ" và ẩn hoàn toàn panel xét duyệt câu hỏi bị gắn cờ khỏi Giảng viên.
+  - **Tối ưu hóa Vite Dev Server (`vite.config.js`)**: Loại bỏ `optimizeDeps.include` thủ công, triệt tiêu lỗi quét dependency scan trên Vite 8, đảm bảo HMR và reload tức thì.
+  - **Kiểm thử**: Toàn bộ 115/115 unit tests pass 100% (`pass 115, fail 0`), Vite build pass 100% trong 1.59s.
 - **Backend (`V-Eval-Practice_Service`, `V-Eval-Content_Service`, `V-Eval-Gateway`, `V-Eval-Ai_Engine`)**:
   - `V-Eval-Practice_Service`: Fix GUID thô ở Suy diễn DAG, enrich chi tiết đáp án Thi thử, thêm cột `preview_submission_json` & 4 trường phê duyệt lộ trình + EF Migration `AddRoadmapTeacherApprovalFields` + auto `ALTER TABLE IF NOT EXISTS`, API `PUT /api/v1/roadmaps/{roadmapId}/approve`.
   - `V-Eval-Content_Service`: Chặn phát câu hỏi thiếu/lỗi đáp án (`HasBrokenOrMissingOptions`), thêm cột `is_flagged`/`flag_reason`/`flagged_at` + API `/api/content/questions/flagged`, `/flag`, `/unflag` và lọc `!q.IsFlagged` khi phát đề; bổ sung đầy đủ dữ liệu học liệu Ngữ văn 10 Ch.5 Bài 2 trên Supabase DB.
