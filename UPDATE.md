@@ -1,8 +1,8 @@
 # CẬP NHẬT TIẾN ĐỘ HỆ THỐNG - V-EVAL CAPSTONE SYSTEM REPO
 
-## [26/11/2026] - Học Phí Theo 2 Đợt, Dọn Sidebar Dư & Loại Bỏ Hardcode Seed Toàn Hệ Thống
+## [26/11/2026] - Khắc Phục Tên Thí Sinh Kiểm Tra Bài Thi Bất Thường, Học Phí Theo 2 Đợt & Dọn Hardcode Seed
 
-- **V-Eval-Web_Client**: Xóa mục `Luyện tập` trùng lặp với `Luyện tập (P-L-A-R)` trong `Sidebar.jsx`; chuyển màn hình `TuitionPaymentView.jsx` sang đóng học phí theo 2 đợt (`Đợt 1` & `Đợt 2`), truyền `termId` sang PayOS. Build kiểm thử đạt 0 lỗi (`4272 modules transformed`).
-- **V-Eval-Practice_Service**: Bổ sung `TermId` cho `CreatePaymentLinkCommand`; gỡ bỏ ~456 dòng seed dữ liệu demo hardcode khỏi `Program.cs`.
+- **V-Eval-Web_Client**: Khắc phục hiển thị họ tên thí sinh, tên đề thi, thời gian nộp và điểm số tại tab *Kiểm Tra Bài Thi Bất Thường* (`TeacherDashboardView.jsx`, `TeacherProctoringReviewModal.jsx`); xóa mục `Luyện tập` trùng lặp trong `Sidebar.jsx`; chuyển `TuitionPaymentView.jsx` sang đóng học phí theo 2 đợt (`Đợt 1` & `Đợt 2`). `node --test tests/*.test.js` đạt 115/115; `npm run build` đạt 0 lỗi (`3.84s`).
+- **V-Eval-Practice_Service**: Tiêm `IIdentityGrpcClient` vào `GetFlaggedSubmissionsQueryHandler` & `GetMockExamDetailQueryHandler` để trả kèm `StudentName` và `SubmittedAt` cho hàng đợi & chi tiết bài thi bất thường (`dotnet build` 0 lỗi/0 cảnh báo, `dotnet test` 20/20 Passed); bổ sung `TermId` cho `CreatePaymentLinkCommand` và gỡ ~456 dòng seed hardcode khỏi `Program.cs`.
 - **V-Eval-Identity_Service**: Chuẩn hóa `DbInitializer.cs` (mật khẩu mặc định `Admin@2026`, không ghi đè mật khẩu khi restart).
-- **Supabase Database**: Nạp trọn bộ 6 tầng dữ liệu thực tế cho 144 tài khoản (2 cơ sở, 20 giảng viên, 60 học sinh, 60 phụ huynh), chuyển `v_eval_enrollment` sang mô hình 2 đợt học và dọn sạch bản ghi hardcode cũ.
+- **Supabase Database**: Nạp trọn bộ 6 tầng dữ liệu thực tế cho 144 tài khoản, chuyển `v_eval_enrollment` sang mô hình 2 đợt học và dọn sạch bản ghi hardcode cũ.
