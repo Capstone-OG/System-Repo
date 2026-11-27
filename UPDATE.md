@@ -1,8 +1,7 @@
 # CẬP NHẬT TIẾN ĐỘ HỆ THỐNG - V-EVAL CAPSTONE SYSTEM REPO
 
-## [26/11/2026] - Học Phí Theo 2 Đợt, Dọn Sidebar Dư & Loại Bỏ Hardcode Seed Toàn Hệ Thống
+## [27/11/2026] - Nâng Cấp Giao Diện Phòng Thi, Kết Quả Đánh Giá, Khung Chat Gia Sư AI & Phát Đề Đầu Vào Ngẫu Nhiên
 
-- **V-Eval-Web_Client**: Xóa mục `Luyện tập` trùng lặp với `Luyện tập (P-L-A-R)` trong `Sidebar.jsx`; chuyển màn hình `TuitionPaymentView.jsx` sang đóng học phí theo 2 đợt (`Đợt 1` & `Đợt 2`), truyền `termId` sang PayOS. Build kiểm thử đạt 0 lỗi (`4272 modules transformed`).
-- **V-Eval-Practice_Service**: Bổ sung `TermId` cho `CreatePaymentLinkCommand`; gỡ bỏ ~456 dòng seed dữ liệu demo hardcode khỏi `Program.cs`.
-- **V-Eval-Identity_Service**: Chuẩn hóa `DbInitializer.cs` (mật khẩu mặc định `Admin@2026`, không ghi đè mật khẩu khi restart).
-- **Supabase Database**: Nạp trọn bộ 6 tầng dữ liệu thực tế cho 144 tài khoản (2 cơ sở, 20 giảng viên, 60 học sinh, 60 phụ huynh), chuyển `v_eval_enrollment` sang mô hình 2 đợt học và dọn sạch bản ghi hardcode cũ.
+- **V-Eval-Web_Client**: Tinh gọn giao diện phòng thi (`ExamRoom.jsx`, `DiagnosticAssessmentPage.jsx`), thêm dropdown `Bảng số liệu` tự động cho Markdown table, tăng cường `MathText.jsx`; sửa lỗi tràn lưới & tương thích MUI v9 tại `DiagnosticSkillOverviewCard.jsx`; chuẩn hóa khung chat Gia sư AI (`AISocraticTutorModal.jsx`) cố định `34vw` + lịch sử trượt mượt 2 chiều `16vw` (tổng `50vw`). `node --test tests/*.test.js` pass 100%, `npm run build` đạt 0 lỗi (`1.94s`).
+- **V-Eval-Content_Service**: Cập nhật `GetDiagnosticTestQuery.cs` lọc đề `DIAGNOSTIC` đã xuất bản (`IsPublished`) và phát ngẫu nhiên trong tập đề chưa làm.
+- **Supabase `v_eval_content`**: Chuẩn hóa phân loại 91 kỹ năng Ngôn ngữ, dựng lại 3 đề đầu vào `DIAGNOSTIC` (90 câu hỏi chuẩn) và chuyển đổi 19/19 câu hỏi bảng số liệu sang Markdown Table.
