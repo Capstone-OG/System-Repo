@@ -1240,7 +1240,7 @@ public void ComputePosterior_WhenLuckyGuessPenaltyApplies_ShouldLimitPltGrowth()
 
 - [ ] **Chưa duyệt**
 <details>
-<summary>Lộ trình Cá nhân hóa PLAR (RoadmapsController, GenerateRoadmapCommandHandler, RoadmapApprovalWorkflow, MilestoneBinder)</summary>
+<summary>Lộ trình Cá nhân hóa PLAR (Phối hợp tích hợp cùng team: RoadmapsController, GenerateRoadmapCommandHandler, RoadmapApprovalWorkflow, MilestoneBinder)</summary>
 
 **Đường dẫn mã nguồn**:
 - [RoadmapsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/RoadmapsController.cs)
@@ -1257,7 +1257,7 @@ public void ComputePosterior_WhenLuckyGuessPenaltyApplies_ShouldLimitPltGrowth()
 
 - [ ] **Chưa duyệt**
 <details>
-<summary>Học tập Thích ứng ZPD & Vòng lặp 4 Pha PLAR (ZpdQuestionSelector & Stage Handlers)</summary>
+<summary>Học tập Thích ứng ZPD & Vòng lặp 4 Pha PLAR (Phối hợp tích hợp cùng team: ZpdQuestionSelector & Stage Handlers)</summary>
 
 **Đường dẫn mã nguồn**:
 - [ZpdQuestionSelector.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Adaptive/ZpdQuestionSelector.cs)
@@ -1932,6 +1932,76 @@ apiClient.interceptors.response.use(
 
 </details>
 
+- [ ] **Chưa duyệt**
+<details>
+<summary>Studio SGK, Trình soạn thảo Học thuật & Phòng thi Giám sát (PedagogicalTextbookStudio, AcademicDocEditor, ProctoredExamRunner, curriculumStorageBridge)</summary>
+
+**Đường dẫn mã nguồn**:
+- [PedagogicalTextbookStudio.jsx](../../All%20Services/V-Eval-Web_Client/src/components/studio/PedagogicalTextbookStudio.jsx)
+- [AcademicDocEditor.jsx](../../All%20Services/V-Eval-Web_Client/src/components/studio/AcademicDocEditor.jsx)
+- [ProctoredExamRunner.jsx](../../All%20Services/V-Eval-Web_Client/src/components/exam/ProctoredExamRunner.jsx)
+- [curriculumStorageBridge.js](../../All%20Services/V-Eval-Web_Client/src/services/curriculumStorageBridge.js)
+
+| Component / Module | Công dụng cốt lõi |
+| :--- | :--- |
+| `PedagogicalTextbookStudio.jsx` | Studio SGK 3 tabs chuyên sâu, luyện tập thích ứng theo dạng và gắn cờ câu hỏi nghi vấn. |
+| `AcademicDocEditor.jsx` | Trình soạn thảo học thuật phong cách Word/Excel kèm danh mục 838 mục kiến thức 8 môn học. |
+| `ProctoredExamRunner.jsx` | Phòng thi thử ĐGNL có giám sát (Proctored) chống chuyển tab và đồng bộ kết quả. |
+| `curriculumStorageBridge.js` | Cầu nối lưu trữ dữ liệu vạn năng (Universal Storage Bridge), triệt tiêu stale closure và đồng bộ 2 chiều thời gian thực giữa ngân hàng câu hỏi và giáo trình. |
+
+</details>
+
+- [ ] **Chưa duyệt**
+<details>
+<summary>Cổng Học sinh, Máy tính Casio FX-580 & Điều hướng 5 Vai trò (StudentPortalView, CasioFx580Drawer, App.jsx)</summary>
+
+**Đường dẫn mã nguồn**:
+- [StudentPortalView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/student/StudentPortalView.jsx)
+- [CasioFx580Drawer.jsx](../../All%20Services/V-Eval-Web_Client/src/components/tools/CasioFx580Drawer.jsx)
+- [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx)
+
+| Component | Công dụng cốt lõi |
+| :--- | :--- |
+| `StudentPortalView.jsx` | Không gian lộ trình học tập cá nhân hóa của học sinh tích hợp tra cứu công thức và mô phỏng thí nghiệm. |
+| `CasioFx580Drawer.jsx` | Ngăn kéo máy tính giả lập Casio FX-580VN X trực tiếp trên màn hình luyện tập STEM. |
+| `App.jsx` | Định nghĩa `ROLE_PORTAL_DEFINITIONS` phân tách 5 cổng vai trò (gồm `ACADEMIC_DIRECTOR`), Segmented Control điều hướng mượt mà và không gian làm việc full-width sát Sidebar. |
+
+</details>
+
+- [ ] **Chưa duyệt**
+<details>
+<summary>Thanh toán PayOS VietQR & Liên kết Phụ huynh–Học sinh (TuitionPaymentView, PayOsCheckoutModal, StudentParentLinkCard, ParentDashboardView)</summary>
+
+**Đường dẫn mã nguồn**:
+- [TuitionPaymentView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx)
+- [PayOsCheckoutModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/modals/PayOsCheckoutModal.jsx)
+- [StudentParentLinkCard.jsx](../../All%20Services/V-Eval-Web_Client/src/components/dashboard/StudentParentLinkCard.jsx)
+- [ParentDashboardView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx)
+
+| Component | Công dụng cốt lõi |
+| :--- | :--- |
+| `TuitionPaymentView.jsx` & `PayOsCheckoutModal.jsx` | Màn hình học phí 3 gói ĐGNL thực từ DB, thanh toán VietQR PayOS polling tự động 3s, biên lai và hiệu ứng mở khóa chặng 1 PLAR. |
+| `StudentParentLinkCard.jsx` & `ParentDashboardView.jsx` | Trung tâm liên kết Phụ huynh–Học sinh 3 phương thức (Mã `VE-XXXXXX`, PIN 6 số động, Link mời 1-Click + QR Code) và duyệt yêu cầu 2 chiều. |
+
+</details>
+
+- [ ] **Chưa duyệt**
+<details>
+<summary>Quản trị Tài khoản Soft Delete, Quên mật khẩu OTP 6 ô & Kiểm thực Email DNS MX (AccountProvisioningView, ForgotPasswordModal, emailValidator)</summary>
+
+**Đường dẫn mã nguồn**:
+- [AccountProvisioningView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx)
+- [ForgotPasswordModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/auth/ForgotPasswordModal.jsx)
+- [emailValidator.js](../../All%20Services/V-Eval-Web_Client/src/utils/emailValidator.js)
+
+| Component / Utility | Công dụng cốt lõi |
+| :--- | :--- |
+| `AccountProvisioningView.jsx` | Bảng quản trị tài khoản 1 dòng (`whitespace-nowrap`), 2 tab Đang hoạt động / Đã ngừng hoạt động (Soft Delete) kèm modal xác nhận an toàn và Command Toolbar hợp nhất. |
+| `ForgotPasswordModal.jsx` | Lưới 6 ô OTP chuẩn Fintech, đếm ngược 60s, kiểm tra độ mạnh mật khẩu và đối soát OTP đặt lại mật khẩu. |
+| `emailValidator.js` | Gợi ý sửa typo `@mail.com` -> `@gmail.com` và kiểm thực bản ghi DNS MX trực tuyến. |
+
+</details>
+
 ---
 
 
@@ -2089,206 +2159,4 @@ start "Web Client (Port 5173)" cmd /k "pushd All Services\V-Eval-Web_Client && n
    - **Frontend Web Client**: Studio soạn thảo đề cương, palette ký hiệu toán học phân cấp `createPortal`, bảng biến thiên `VariationTable`, và giao diện làm bài khảo sát kèm telemetry timer.
    - **CI/CD & DevOps Scripts**: Docker Compose, GitHub Actions và bộ kịch bản tự động hóa vận hành toàn diện.
 3. **Độ Sẵn Sàng**: Toàn bộ **34 file hạt nhân** đều đạt trạng thái **Pass**, sẵn sàng cho đợt nghiệm thu và bảo vệ đồ án Capstone.
-
----
-
-## 9. DANH SÁCH TỔNG HỢP CÁC FILE DO THINHTT ĐẨY TRỰC TIẾP LÊN CÁC NHÁNH PHÁT TRIỂN & DEVELOP (CẦN KIỂM TRA & NGHIỆM THU BỔ SUNG)
-
-> [!NOTE]
-> Danh sách dưới đây ghi nhận toàn bộ các file mã nguồn Backend, Frontend & Unit Tests do `ThinhTT` (`Thinhtran2412`) đã commit và push trực tiếp (giai đoạn `27/10/2026` – `08/11/2026` trên nhánh `develop` và `ThinhTT/feature-role-portals-and-home-theme-sync`) kèm mã commit tương ứng để phục vụ rà soát, đối chiếu và nghiệm thu theo thứ tự.
-
----
-
-### 9.1. V-Eval-Identity_Service (Brevo SMTP Relay, Verify Reset OTP, Soft Delete & Parent Registration)
-
-| Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
-| :--- | :---: | :---: | :--- | :--- |
-| `84a97dd` | `07/11/2026` | **Cập nhật (`M`)** | [GetUsersQuery.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Queries/GetUsers/GetUsersQuery.cs) | Thêm bộ lọc `bool? isActive` và tính toán đồng thời `ActiveCount` và `InactiveCount` theo thời gian thực từ PostgreSQL. |
-| `84a97dd` | `07/11/2026` | **Cập nhật (`M`)** | [ToggleUserStatusCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ToggleUserStatus/ToggleUserStatusCommand.cs) | Bổ sung tham số `targetStatus` tùy chọn hỗ trợ bật/tắt trạng thái kích hoạt tài khoản có kiểm soát (Soft Delete an toàn). |
-| `84a97dd` | `07/11/2026` | **Cập nhật (`M`)** | [UsersController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/UsersController.cs) | Cập nhật endpoint `GET /api/v1/users` (nhận `isActive`) và `PATCH /api/v1/users/{id}/toggle-status`. |
-| `6a039ce` | `07/11/2026` | **Tạo mới (`A`)** | [EmailValidationHelper.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Common/Helpers/EmailValidationHelper.cs) | Tiện ích kiểm tra email đa tầng: cú pháp RFC 5322, phát hiện typo `@mail.com` -> `@gmail.com` và tra cứu bản ghi DNS MX trực tuyến. |
-| `6a039ce` | `07/11/2026` | **Cập nhật (`M`)** | [Student.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Domain/Entities/Student.cs) | Chuyển trường `CampusId` sang dạng nullable `Guid?`, khắc phục triệt để ngoại lệ `InvalidCastException: Column 'campus_id' is null`. |
-| `1be554b` | `06/11/2026` | **Tạo mới (`A`)** | [ConnectParentStudentCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ParentLink/ConnectParentStudentCommand.cs) | Command kết nối tài khoản Phụ huynh - Học sinh qua Mã học sinh `VE-XXXXXX` hoặc mã PIN 6 số động. |
-| `1be554b` | `06/11/2026` | **Tạo mới (`A`)** | [RequestParentLinkCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ParentLink/RequestParentLinkCommand.cs) | Command gửi yêu cầu liên kết 2 chiều từ Phụ huynh tới Học sinh theo Email/SĐT. |
-| `1be554b` | `06/11/2026` | **Tạo mới (`A`)** | [RespondParentLinkRequestCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/Commands/ParentLink/RespondParentLinkRequestCommand.cs) | Command phê duyệt (`APPROVED`) hoặc từ chối yêu cầu liên kết từ màn hình Dashboard của Học sinh. |
-| `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [BrevoSmtpEmailService.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Services/BrevoSmtpEmailService.cs) | Dịch vụ gửi email OTP thực tế qua Brevo SMTP Relay (`MailKit` & `MimeKit`, STARTTLS port 587, template HTML chuẩn ĐHQG-HCM). |
-| `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [IEmailService.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Common/Interfaces/IEmailService.cs) | Hợp đồng giao diện gửi email xác thực và khôi phục mật khẩu tại tầng Application. |
-| `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [VerifyResetOtpCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Auth/Commands/VerifyResetOtp/VerifyResetOtpCommand.cs) | CQRS Command & Handler đối soát mã OTP `RESET_PASSWORD` ngay tại Bước 2 trước khi cho phép đặt lại mật khẩu mới. |
-| `352b06a` | `05/11/2026` | **Cập nhật (`M`)** | [AuthController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/AuthController.cs) | Bổ sung endpoint `POST /api/auth/verify-reset-otp` (UC 05b). |
-| `352b06a` | `05/11/2026` | **Cập nhật (`M`)** | [ForgotPasswordCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Auth/Commands/ForgotPassword/ForgotPasswordCommand.cs) | Tích hợp `IEmailService` gửi mã OTP 6 số qua Brevo SMTP khi yêu cầu quên mật khẩu. |
-| `e839f26` & `352b06a` | `04-05/11/2026` | **Cập nhật (`M`)** | [RegisterUserCommand.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Auth/Commands/Register/RegisterUserCommand.cs) | Bảo vệ kiểm tra khóa ngoại `CampusId`, hỗ trợ đăng ký vai trò Phụ huynh (`Parent`) và gửi email OTP kích hoạt tài khoản. |
-| `352b06a` | `05/11/2026` | **Cập nhật (`M`)** | [DependencyInjection.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/DependencyInjection.cs) | Đăng ký DI cho `IEmailService` -> `BrevoSmtpEmailService`. |
-| `352b06a` | `05/11/2026` | **Tạo mới (`A`)** | [RegisterUserCommandHandlerTests.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Tests/Commands/RegisterUserCommandHandlerTests.cs) | Bộ Unit Tests kiểm thử luồng đăng ký tài khoản và gửi OTP (`xUnit`, `Moq`, `FluentAssertions`). |
-| `90c27c9` & `e7a9518` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [ResultPatternTests.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Tests/Common/ResultPatternTests.cs) | Unit Tests kiểm thử `Result<T>` & `Error` cùng cấu hình [Scripts/test.bat](../../All%20Services/V-Eval-Identity_Service/Scripts/test.bat). |
-
----
-
-### 9.2. V-Eval-Practice_Service (Early Warning Worker, PayOS Payment & Unit Tests)
-
-| Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
-| :--- | :---: | :---: | :--- | :--- |
-| `466b34d` | `18/11/2026` | **Cập nhật (`M`)** | [PersonalizedRoadmapPlanner.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/PersonalizedRoadmapPlanner.cs) | Bổ sung toàn bộ các node dạng bài chuẩn GDPT 2018 (750 patterns) vào thuật toán sinh cây lộ trình học tập cá nhân hóa PLAR. |
-| `65dd290` | `11/11/2026` | **Cập nhật (`M`)** | [GetTuitionStatusQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Queries/GetTuitionStatus/GetTuitionStatusQueryHandler.cs) | Truy vấn trực tiếp trạng thái học phí từ PostgreSQL, đồng bộ đăng ký khóa học đang hoạt động và lịch sử thanh toán học phí. |
-| `322d73d` | `06/11/2026` | **Tạo mới (`A`)** | [EarlyWarningSweepWorker.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/BackgroundJobs/EarlyWarningSweepWorker.cs) | Background Service chạy ngầm định kỳ 6h sáng quét toàn bộ học sinh có nguy cơ trượt / suy giảm năng lực học tập (SDD Figure 56). |
-| `322d73d` | `06/11/2026` | **Tạo mới (`A`)** | [NotificationDispatcher.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/NotificationDispatcher.cs) | Dịch vụ điều phối cảnh báo đa kênh (In-app, Email, SMS/Zalo) tới học sinh, phụ huynh và giáo viên (SDD Figure 57). |
-| `6ad262c` | `06/11/2026` | **Cập nhật (`M`)** | [GetParentDashboardQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Dashboard/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs) | Xóa bỏ 100% dữ liệu mock con mẫu (`Phạm Minh Hoàng`), truy vấn dữ liệu thực tế từ PostgreSQL Supabase cho Cổng Phụ huynh. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PaymentsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/PaymentsController.cs) | REST Controller cung cấp các API tạo link thanh toán PayOS, nhận Webhook tự động và tra cứu trạng thái/lịch sử giao dịch học phí. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PayOsPaymentService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/PayOsPaymentService.cs) | Dịch vụ tích hợp cổng thanh toán VietQR PayOS: ký số HMAC-SHA256 tạo payment link và xác thực chữ ký Webhook chống giả mạo. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PaymentRepository.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/PaymentRepository.cs) | Repository quản lý truy vấn đơn thanh toán, giao dịch, khóa học và quản lý giao dịch ACID (`IExecutionTransaction`). |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [CreatePaymentLinkCommand.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/CreatePaymentLink/CreatePaymentLinkCommand.cs) | Command khởi tạo yêu cầu thanh toán khóa học/lộ trình PLAR. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [CreatePaymentLinkCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/CreatePaymentLink/CreatePaymentLinkCommandHandler.cs) | Handler xử lý tạo bản ghi `Payment` (`PENDING`), sinh mã `OrderCode` và gọi PayOS trả về mã VietQR. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [CreatePaymentLinkCommandValidator.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/CreatePaymentLink/CreatePaymentLinkCommandValidator.cs) | FluentValidation kiểm tra dữ liệu đầu vào khi tạo đơn thanh toán. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [ProcessPayOsWebhookCommand.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/ProcessPayOsWebhook/ProcessPayOsWebhookCommand.cs) | Command tiếp nhận payload Webhook từ PayOS. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [ProcessPayOsWebhookCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/ProcessPayOsWebhook/ProcessPayOsWebhookCommandHandler.cs) | Handler xác thực HMAC-SHA256, đảm bảo Idempotency, cập nhật `PAID`, ghi nhận `PaymentTransaction` và tự động mở khóa lộ trình PLAR trong 1 ACID Transaction. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [GetPaymentStatusQuery.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Queries/GetPaymentStatus/GetPaymentStatusQuery.cs) | Query kiểm tra trạng thái đơn hàng học phí theo `OrderCode` (hỗ trợ đồng bộ fallback từ PayOS). |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [GetPaymentTransactionsQuery.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Queries/GetPaymentTransactions/GetPaymentTransactionsQuery.cs) | Query lấy danh sách lịch sử giao dịch học phí của học sinh/phụ huynh. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [PaymentDtos.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/DTOs/PaymentDtos.cs) | Bộ DTOs cho luồng tạo link thanh toán, Webhook payload và phản hồi trạng thái giao dịch. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [IExecutionTransaction.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/IExecutionTransaction.cs), [IPaymentRepository.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Repositories/IPaymentRepository.cs), [IPayOsPaymentService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Interfaces/Services/IPayOsPaymentService.cs) | Các Interfaces trừu tượng hóa Transaction, Repository và PayOS Service tại tầng Application. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [Course.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Course.cs), [CourseRegistration.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/CourseRegistration.cs), [Payment.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Payment.cs), [PaymentTransaction.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/PaymentTransaction.cs) | 4 Domain Entities mới ánh xạ vào schema `practice` và `payment` (chuẩn hóa ERD 51 bảng). |
-| `a15be01` & `d2e9614` | `27/10` & `04/11/2026` | **Cập nhật (`M`)** | [Class.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/Class.cs), [ClassEnrollment.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/ClassEnrollment.cs), [RoadmapNode.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/RoadmapNode.cs), [MistakeNotebook.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Domain/Entities/MistakeNotebook.cs), [PracticeDbContext.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/PracticeDbContext.cs), [DependencyInjection.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/DependencyInjection.cs) | Mở rộng khoá ngoại/trạng thái kích hoạt lộ trình, hằng số `MistakeLifecycleState`, cấu hình EF Core multi-schema (`practice` + `payment`) và DI. |
-| `a15be01` | `04/11/2026` | **Tạo mới (`A`)** | [CreatePaymentLinkCommandHandlerTests.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Tests/Commands/Payments/CreatePaymentLinkCommandHandlerTests.cs), [ProcessPayOsWebhookCommandHandlerTests.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Tests/Commands/Payments/ProcessPayOsWebhookCommandHandlerTests.cs) | Bộ Unit Tests kiểm thử tạo link thanh toán, xử lý Webhook PayOS, Idempotency và Rollback Transaction khi lỗi. |
-| `e3a8bef` & `f76cfe4` | `27/10/2026` | **Tạo mới (`A`)** | [BktEngineTests.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Tests/Adaptive/BktEngineTests.cs), [SpacedRepetitionCalculatorTests.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Tests/Adaptive/SpacedRepetitionCalculatorTests.cs), [ZpdQuestionSelectorTests.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Tests/Adaptive/ZpdQuestionSelectorTests.cs) | Bộ Unit Tests kiểm thử các thuật toán lõi BKT, IRT 2PL (ZPD) và SuperMemo-2 (SM-2) cùng [Scripts/test.bat](../../All%20Services/V-Eval-Practice_Service/Scripts/test.bat) (`e1e66a4`). |
-
----
-
-### 9.3. V-Eval-Content_Service, V-Eval-Gateway & V-Eval-Ai_Engine (Unit Tests & Vector Schema)
-
-| Service | Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
-| :--- | :--- | :---: | :---: | :--- | :--- |
-| **V-Eval-Content_Service** | `c09f679`, `f2de139` | `14-16/11/2026` | **Cập nhật (`M`)** | [CurriculumTreeService.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Infrastructure/Services/CurriculumTreeService.cs) | Siết chặt cô lập môn học/chương, bộ lọc loại bỏ tài liệu sai ngôn ngữ, kế thừa tri thức anh em và hỗ trợ lưu đa hình Pattern ID từ Studio. |
-| **V-Eval-Content_Service** | `eaf7a63` | `11/11/2026` | **Cập nhật (`M`)** | [Program.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Program.cs) | Mở rộng giới hạn Kestrel `MaxRequestBodySize` và `FormOptions` lên 250MB phục vụ tiếp nhận tài liệu giáo trình và payload đề thi lớn. |
-| **V-Eval-Content_Service** | `778fb75`, `a5e3301`, `7b72105` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [CreateQuizExamCommandValidatorTests.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Tests/Validators/CreateQuizExamCommandValidatorTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Content_Service/Scripts/test.bat) | Unit Tests kiểm thử FluentValidation cho `CreateQuizExamCommand` và kịch bản chạy test tự động. |
-| **V-Eval-Gateway** | `2581d99` | `11/11/2026` | **Cập nhật (`M`)** | [Program.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway/Program.cs) | Nâng trần `MaxRequestBodySize` và `FormOptions.MultipartBodyLengthLimit` lên 250MB trên YARP Gateway cho luồng Ingestion đa phương tiện. |
-| **V-Eval-Gateway** | `f73a456`, `08491e3` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [CorrelationIdMiddlewareTests.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.Tests/Middlewares/CorrelationIdMiddlewareTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Gateway/Scripts/test.bat) | Unit Tests kiểm thử middleware sinh & truyền `X-Correlation-Id` qua YARP Gateway. |
-| **V-Eval-Ai_Engine** | `5a40bb2`, `03b6913` | `18-19/11/2026` | **Cập nhật (`M`)** | [Gdpt2018CurriculumSkeleton.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Data/Gdpt2018CurriculumSkeleton.cs) | Nâng cấp ngân hàng 750 dạng bài (Pattern) chuẩn GDPT 2018 không tiền tố cứng, phân bổ đa dạng thang Bloom L1-L4 và chuẩn hóa tên môn. |
-| **V-Eval-Ai_Engine** | `9e45d16`, `1510107` | `15-16/11/2026` | **Cập nhật (`M`)** | [TextbookHybridParser.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/TextbookHybridParser.cs) | Tối ưu hóa throughput bộ bóc tách SGK: rasterize 48 DPI, xử lý batch 2 trang Vision, mở rộng dải mục lục (TOC) và cơ chế fail-fast phục hồi. |
-| **V-Eval-Ai_Engine** | `eb4a4f4`, `0855951` | `08-11/11/2026` | **Cập nhật (`M`)** | [PromptTemplates.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/AI/PromptTemplates.cs), [MultiCloudExamParserService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/MultiCloudExamParserService.cs) | Tách rời template prompt chuyên biệt môn học, che chắn thẻ MathLab 3D/2D, cascade failover kép giữa Gemini Flash & Flash-Lite và che giấu API key suffix. |
-| **V-Eval-Ai_Engine** | `f9c47e0` | `11/11/2026` | **Cập nhật (`M`)** | [JsonSanitizer.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Utils/JsonSanitizer.cs) | Khắc phục triệt để lỗi deserialization HF-AI-05, tăng cường bộ dọn quote bọc ngoài và tối ưu độ ổn định khi bóc tách JSON công thức toán. |
-| **V-Eval-Ai_Engine** | `54ade07`, `9b1d177` | `27/10` & `02/11/2026` | **Tạo mới (`A`)** | [TutorSessionTests.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Tests/Domain/TutorSessionTests.cs), [Scripts/test.bat](../../All%20Services/V-Eval-Ai_Engine/Scripts/test.bat) | Unit Tests kiểm thử tính bất biến và quản lý trạng thái của Domain Entity `TutorSession`. |
-
----
-
-### 9.4. V-Eval-Web_Client (Role Portals, Soft Delete IAM, Segmented Navigation, Email Validator & PayOS VietQR)
-
-| Mã Commit | Ngày | Trạng thái | Đường dẫn File Mã Nguồn | Mô tả chức năng / Thay đổi chính |
-| :--- | :---: | :---: | :--- | :--- |
-| `47a629f` | `19/11/2026` | **Cập nhật (`M`)** | [StudentPortalView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/student/StudentPortalView.jsx), [CasioFx580Drawer.jsx](../../All%20Services/V-Eval-Web_Client/src/components/tools/CasioFx580Drawer.jsx) | Tinh chỉnh UX lộ trình học tập, tích hợp thanh công cụ tra cứu công thức, mô phỏng thí nghiệm và ngăn kéo Máy tính giả lập Casio FX-580VN X. |
-| `c8e73e2` | `18/11/2026` | **Cập nhật (`M`)** | [PedagogicalTextbookStudio.jsx](../../All%20Services/V-Eval-Web_Client/src/components/studio/PedagogicalTextbookStudio.jsx), [ProctoredExamRunner.jsx](../../All%20Services/V-Eval-Web_Client/src/components/exam/ProctoredExamRunner.jsx) | Nâng cấp Studio SGK 3 tabs chuyên sâu, phòng thi thử có giám sát (Proctored), luyện tập thích ứng theo dạng và gắn cờ câu hỏi nghi vấn. |
-| `efd17ea` | `16/11/2026` | **Cập nhật (`M`)** | [AcademicDocEditor.jsx](../../All%20Services/V-Eval-Web_Client/src/components/studio/AcademicDocEditor.jsx) | Tái thiết kế trình soạn thảo học thuật phong cách Word/Excel, bổ sung danh mục 838 mục kiến thức 8 môn học và khắc phục lỗi 404 khi lưu. |
-| `4398263` | `15/11/2026` | **Cập nhật (`M`)** | [curriculumStorageBridge.js](../../All%20Services/V-Eval-Web_Client/src/services/curriculumStorageBridge.js) | Cầu nối lưu trữ dữ liệu vạn năng (Universal Storage Bridge), triệt tiêu stale closure và đồng bộ 2 chiều thời gian thực giữa ngân hàng câu hỏi và giáo trình. |
-| `ee279b9` | `14/11/2026` | **Cập nhật (`M`)** | [CurriculumExplorerView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/curriculum/CurriculumExplorerView.jsx) | Bổ sung mục lục (TOC) thu gọn linh hoạt, hiển thị 3/5 khối lý thuyết sư phạm cô đọng và tích hợp trình xem ngân hàng câu hỏi đồng bộ theo `sourceId`. |
-| `c35cdd2` | `10/11/2026` | **Cập nhật (`M`)** | [TuitionPaymentView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx) | Đồng bộ học phí thực từ cơ sở dữ liệu, hiển thị gói đào tạo đang kích hoạt, mở khóa 6 đặc quyền học tập và modal biên lai thanh toán PayOS. |
-| `b857ffa` | `09/11/2026` | **Cập nhật (`M`)** | [HierarchicalMathPalette.jsx](../../All%20Services/V-Eval-Web_Client/src/components/curriculum/HierarchicalMathPalette.jsx) | Che chắn các khối MathLab 3D/2D tránh bị bộ phân tích cú pháp KaTeX làm lỗi và loại bỏ hoàn toàn text cứng Ester-Lipid trên UI. |
-| `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Mở rộng không gian làm việc cổng vai trò sang `w-full` sát Sidebar, xóa bỏ hoàn toàn lề trống thừa `max-w-7xl mx-auto`. |
-| `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [AccountProvisioningView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx) | Tái thiết kế bảng quản trị tài khoản 1 dòng duy nhất (`whitespace-nowrap`), avatar 2 chữ cái theo vai trò và thanh công cụ Command Toolbar hợp nhất. |
-| `815c1f6` | `08/11/2026` | **Cập nhật (`M`)** | [apiClient.js](../../All%20Services/V-Eval-Web_Client/src/services/apiClient.js) | Tuần tự hóa `options.params` qua `URLSearchParams` cho phương thức GET và bổ sung phương thức `apiClient.patch()`. |
-| `d4d023e` | `07/11/2026` | **Cập nhật (`M`)** | [AccountProvisioningView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/admin/AccountProvisioningView.jsx) | Triển khai phân hệ quản lý tài khoản ngừng hoạt động (Soft delete), tách biệt 2 tab Đang hoạt động vs Đã ngừng hoạt động kèm 2 modal xác nhận an toàn. |
-| `444b73c` | `07/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Tái cấu trúc thanh điều hướng Subpage sang Segmented Control hiện đại (`bg-slate-100/90`, tab nổi trắng `bg-white`) và nhận diện Cổng Giám đốc Học thuật `ACADEMIC_DIRECTOR`. |
-| `444b73c` | `07/11/2026` | **Cập nhật (`M`)** | [emailValidator.js](../../All%20Services/V-Eval-Web_Client/src/utils/emailValidator.js) | Bổ sung ánh xạ sửa lỗi typo `@mail.com` -> `@gmail.com` và tích hợp kiểm tra trực tuyến DNS MX vào modal cấp phát tài khoản. |
-| `1da817d` | `06/11/2026` | **Tạo mới (`A`)** | [StudentParentLinkCard.jsx](../../All%20Services/V-Eval-Web_Client/src/components/dashboard/StudentParentLinkCard.jsx) | Thẻ liên kết tài khoản học sinh 3 phương thức: Mã `VE-XXXXXX`, PIN 6 số động, Link mời 1-Click, QR Code và banner duyệt yêu cầu 2 chiều. |
-| `1da817d` | `06/11/2026` | **Cập nhật (`M`)** | [ParentDashboardView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/dashboard/ParentDashboardView.jsx) | Tích hợp Trung tâm Liên kết Tài khoản Học sinh 3 tab và tự động bắt tham số `?parentLinkCode=` từ link mời. |
-| `1da817d` | `06/11/2026` | **Cập nhật (`M`)** | [App.jsx](../../All%20Services/V-Eval-Web_Client/src/App.jsx) | Định nghĩa `ROLE_PORTAL_DEFINITIONS` phân tách cổng làm việc độc lập cho đủ 5 vai trò và đồng bộ bảng màu chuẩn Trang chủ (`#FDFBF7`). |
-| `dc30a70` | `05/11/2026` | **Cập nhật (`M`)** | [ForgotPasswordModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/auth/ForgotPasswordModal.jsx) | Nâng cấp lưới 6 ô OTP chuẩn Fintech, đếm ngược 60s, kiểm tra độ mạnh mật khẩu và đối soát OTP đặt lại mật khẩu. |
-| `389d856` | `04/11/2026` | **Tạo mới (`A`)** | [PayOsCheckoutModal.jsx](../../All%20Services/V-Eval-Web_Client/src/components/modals/PayOsCheckoutModal.jsx) | Modal thanh toán học phí VietQR PayOS, tự động polling kiểm tra trạng thái 3s và hiệu ứng mở khóa chặng 1 PLAR. |
-| `389d856` | `04/11/2026` | **Tạo mới (`A`)** | [TuitionPaymentView.jsx](../../All%20Services/V-Eval-Web_Client/src/components/payment/TuitionPaymentView.jsx) | Màn hình đóng học phí trực tuyến 3 gói đào tạo chuẩn ĐGNL kết nối trực tiếp Cổng Practice. |
-
----
-
-## 10. DANH MỤC TOÀN DIỆN HÀM CHÍNH & CÔNG DỤNG CÁC FILE LOGIC BACKEND CÒN LẠI (ĐẦY ĐỦ 5 PHÂN HỆ)
-
-> [!NOTE]
-> Tổng hợp toàn bộ các file logic Backend còn lại do `ThinhTT` (`Thinhtran2412`) thiết kế và triển khai trên nhánh `main` (ngoài 24 file hạt nhân đã phân tích sâu ở Mục 1–5), giúp ôn tập nhanh tên hàm thực tế và công dụng cốt lõi khi bảo vệ đồ án.
-
----
-
-### 10.1. V-Eval-Ai_Engine (11 file logic bổ sung)
-
-| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
-| :--- | :--- | :--- |
-| [ExamEndpoints.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/Endpoints/ExamEndpoints.cs) | `MapExamEndpoints`, `POST /upload-pdf`, `GET /jobs/{jobId}`, `POST /exams/classify-nodes`, `GET /view-exam`, `GET /view-diagnostic`, `GET /view-tutor-mentor` | Tiếp nhận upload đề thi PDF chạy ngầm (Background Job), polling tiến độ, phân loại câu hỏi vào cây kỹ năng và phục vụ các trang studio kiểm thử. |
-| [AiGrpcService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.API/GrpcServices/AiGrpcService.cs) | `ChatSocraticTutor`, `IndexTheoreticalDocument` | Server gRPC streaming hội thoại gia sư Socratic theo từng token và đánh chỉ mục tài liệu lý thuyết vào Vector DB. |
-| [CurriculumTaxonomyRegistry.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/CurriculumTaxonomyRegistry.cs) | `GetTaxonomyRoot`, `GetStandardSkeletonChapters`, `DetectBookEdition`, `DetectGradeNumber`, `ClassifyAndEnrichChunk`, `ExtractAndNormalizeImagePlaceholders`, `GetTaxonomyPromptReference`, `SynthesizeCurriculumFromChunks` | Quản trị bộ khung chuẩn 750 dạng bài GDPT 2018 (nhận diện bộ sách KNTT/CTST/Cánh Diều, khối lớp 10–12), gắn nhãn chunk và tổng hợp khung chương trình. |
-| [PdfPigTextbookParserService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigTextbookParserService.cs) | `ParseAndIngestTextbookAsync`, `SynthesizeCurriculumFromChunks`, `IsCorruptedFontEncoding`, `ScanTextbookSkeletonAsync`, `GeneratePatternExercisesAsync` | Bóc tách SGK theo lô 2 trang, phát hiện font lỗi CID/InDesign, cắt chunk gối đầu `1000/200`, quét khung xương mục lục và sinh bài tập theo dạng. |
-| [PdfPigLocalExamParser.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfPigLocalExamParser.cs) | `Parse`, `ParsePageRange`, `CleanPuaSymbols`, `ParseExamText` | Bộ bóc tách đề thi 100% offline bằng C# thuần + PdfPig làm tầng dự phòng cuối khi cả Gemini và OpenAI đều gián đoạn. |
-| [PdfImageExtractor.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PdfImageExtractor.cs) | `ExtractImages`, `MapImagesToExam` | Rút trích hình vẽ đồ thị/hình học từ PDF bằng hybrid PDFium-PdfPig và ánh xạ đúng ảnh vào từng câu hỏi trong đề thi. |
-| [PromptTemplateService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PromptTemplateService.cs) | `RenderPromptAsync`, `RenderPrompt` | Đọc và nội suy biến `{{key}}` cho các file `.prompt.txt` tách rời khỏi code C#. |
-| [SocraticTutorService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/SocraticTutorService.cs) | `StreamSocraticDialogueAsync` | Điều phối gia sư AI Socratic (gợi mở từng bước, không mớm đáp án trực tiếp) trả về luồng bất đồng bộ `IAsyncEnumerable<string>`. |
-| [GeminiEmbeddingService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/GeminiEmbeddingService.cs) | `EmbedTextAsync`, `EmbedBatchAsync`, `LoadApiKeys`, `GetNextKey` | Nhúng vector 768 chiều MRL (`models/gemini-embedding-001`), gom batch 15 đoạn, xoay vòng Multi-Key an toàn đa luồng và chuẩn hóa L2-Normalization cho HNSW. |
-| [PgVectorDbService.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/PgVectorDbService.cs) | `IndexTheoreticalDocumentAsync`, `SearchSimilarChunksAsync`, `SplitIntoOverlappingChunks` | Vector Database thật trên PostgreSQL `pgvector` (HNSW Cosine 768 chiều), thay thế hoàn toàn `QdrantVectorDbService` in-memory cũ. |
-| [InMemoryExamJobManager.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/InMemoryExamJobManager.cs) | `CreateJob`, `UpdateJobProgress`, `CompleteJob`, `FailJob`, `GetJob` | Quản lý vòng đời trạng thái job bóc tách đề thi chạy nền an toàn đa luồng (`ConcurrentDictionary`). |
-| [InMemoryTextbookJobManager.cs](../../All%20Services/V-Eval-Ai_Engine/V-Eval-Ai_Engine.Infrastructure/Services/InMemoryTextbookJobManager.cs) | `CreateJob`, `UpdateJobProgress`, `CompleteJob`, `FailJob`, `GetJob`, `GetJobByFileHash`, `GetActiveJob`, `GetAllJobs` | Quản lý vòng đời job nạp SGK, hỗ trợ chống nạp trùng theo `fileHash` và khôi phục thanh tiến trình khi người dùng F5. |
-
----
-
-### 10.2. V-Eval-Content_Service (14 file logic bổ sung)
-
-| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
-| :--- | :--- | :--- |
-| [CurriculumController.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Controllers/CurriculumController.cs) | `GetCurriculumTree` (`GET`), `ImportCurriculum` (`POST /import`), `UpdatePattern` (`PUT /patterns/{id}`), `CreateNode`/`UpdateNode`/`DeleteNode` | Quản trị toàn bộ cây chương trình GDPT 2018 (Miền -> Chương -> Bài -> Dạng bài) và đồng bộ từ SGK Studio. |
-| [DiagnosticController.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Controllers/DiagnosticController.cs) | `GetDiagnosticTest` (`GET /diagnostic-test`) | Cung cấp bộ đề khảo sát năng lực đầu vào cân bằng 4 miền kiến thức cho học sinh mới. |
-| [MockExamsController.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Controllers/MockExamsController.cs) | `GetExams`, `GetExamById`, `ImportExam` (`POST /import`), `PublishExam` (`PATCH/PUT /{id}/publish`), `DeleteExam`, `CreateQuizExam` (`POST /quiz`) | Quản lý trọn vòng đời đề thi thử ĐGNL (import từ AI Engine, xuất bản, xóa) và API 19 tạo phiếu bài tập thích ứng cho nhóm vi mô. |
-| [ContentGrpcService.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.API/Services/ContentGrpcService.cs) | `ResolveDomainCode`, `InferSubjectName`, `GetSkillsTree`, `GetQuestionsByDifficulty`, `GetExamAnswerKey`, `GetQuestionDetail`, `GetMilestoneQuiz` | Hiện thực 5 RPC gRPC tốc độ cao kèm cơ chế cô lập môn học/chương và lọc bỏ câu hỏi sai ngôn ngữ. |
-| [SubjectTaxonomyHelper.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Common/Helpers/SubjectTaxonomyHelper.cs) | `ResolveDomainCode`, `InferSubjectName`, `IsContentLanguageMismatch` | Chuẩn hóa mã miền/môn học và phát hiện câu hỏi lạc ngôn ngữ (ví dụ câu Tiếng Anh lọt vào bộ đề Ngữ văn/Toán). |
-| [ImportMockExamCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Commands/ImportMockExam/ImportMockExamCommandHandler.cs) | `Handle(ImportMockExamCommand, CancellationToken)` | Nhập nguyên bộ đề thi (chùm đọc hiểu `Passages`, câu đơn, đáp án, hình ảnh) vào cơ sở dữ liệu Content. |
-| [PublishMockExamCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Commands/PublishMockExam/PublishMockExamCommandHandler.cs) | `Handle(PublishMockExamCommand, CancellationToken)` | Chuyển trạng thái đề thi sang `Published` để mở cho học sinh vào thi thử. |
-| [DeleteMockExamCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Commands/DeleteMockExam/DeleteMockExamCommandHandler.cs) | `Handle(DeleteMockExamCommand, CancellationToken)` | Xóa đề thi thử và liên kết câu hỏi khỏi hệ thống. |
-| [GetMockExamsQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Queries/GetMockExams/GetMockExamsQueryHandler.cs) & [GetMockExamByIdQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/MockExams/Queries/GetMockExamById/GetMockExamByIdQueryHandler.cs) | `Handle(GetMockExamsQuery)`, `Handle(GetMockExamByIdQuery)` | Truy vấn danh sách tổng quan đề thi và chi tiết đầy đủ chùm đọc hiểu/câu hỏi của 1 đề thi. |
-| [CreateQuestionCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Commands/CreateQuestion/CreateQuestionCommandHandler.cs), [UpdateQuestionCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Commands/UpdateQuestion/UpdateQuestionCommandHandler.cs), [DeleteQuestionCommandHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Commands/DeleteQuestion/DeleteQuestionCommandHandler.cs) | `Handle(...)` | Bộ CQRS Command Handlers xử lý thêm mới, cập nhật nội dung/độ khó Bloom và xóa mềm câu hỏi trong ngân hàng. |
-| [GetQuestionByIdQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Queries/GetQuestionById/GetQuestionByIdQueryHandler.cs) & [GetQuestionsBySkillQueryHandler.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Application/Questions/Queries/GetQuestionsBySkill/GetQuestionsBySkillQueryHandler.cs) | `Handle(...)` | Truy vấn chi tiết 1 câu hỏi và phân trang danh sách câu hỏi theo `SkillId`. |
-| [DiagnosticExamSeeder.cs](../../All%20Services/V-Eval-Content_Service/V-Eval-Content_Service.Infrastructure/Persistence/Seeds/DiagnosticExamSeeder.cs) | `SeedDiagnosticExamAsync(ContentDbContext, ILogger)` | Khởi tạo tự động bộ đề thi chẩn đoán năng lực chuẩn cân bằng 4 miền khi triển khai môi trường mới. |
-
----
-
-### 10.3. V-Eval-Practice_Service (26 file logic bổ sung — Core Flow 2, 3, 5, 6, PayOS & Lịch học)
-
-| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
-| :--- | :--- | :--- |
-| [PaymentsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/PaymentsController.cs) | `CreatePaymentLink`, `ProcessPayOsWebhook`, `GetStatus`, `GetTransactions`, `GetPaymentsByStudent`, `GetMyPayments`, `GetTuitionStatusByStudent` | Cổng API thanh toán học phí PayOS VietQR, tiếp nhận Webhook tự động và tra cứu trạng thái/lịch sử đóng học phí. |
-| [PayOsPaymentService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/PayOsPaymentService.cs) | `CreatePaymentLinkAsync`, `VerifyWebhookDataAsync`, `GetPaymentLinkInformationAsync` | Tích hợp trực tiếp API PayOS: ký số HMAC-SHA256 tạo link VietQR, xác thực chữ ký Webhook chống giả mạo và đồng bộ trạng thái đơn hàng. |
-| [CreatePaymentLinkCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/CreatePaymentLink/CreatePaymentLinkCommandHandler.cs) & [ProcessPayOsWebhookCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Payments/Commands/ProcessPayOsWebhook/ProcessPayOsWebhookCommandHandler.cs) | `Handle(CreatePaymentLinkCommand)`, `Handle(ProcessPayOsWebhookCommand)` | Sinh `OrderCode`, tạo giao dịch `PENDING`; khi nhận Webhook hợp lệ đảm bảo Idempotency, cập nhật `PAID` và tự động mở khóa chặng 1 lộ trình PLAR trong 1 ACID Transaction. |
-| [PaymentRepository.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Persistence/Repositories/PaymentRepository.cs) | `GetByOrderCodeAsync`, `GetActiveRegistrationAsync`, `HasActiveTuitionAsync`, `AddPaymentAsync`, `AddTransactionAsync`, `AddClassEnrollmentAsync` | Quản lý truy vấn đơn thanh toán, đăng ký khóa học, ghi nhận lịch sử giao dịch và tự động xếp lớp sau thanh toán. |
-| [RoadmapsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/RoadmapsController.cs) | `GenerateRoadmap`, `GetMyRoadmap`, `GetNodeDetail`, `GetReviewQueue`, `GetRoadmapById`, `TeacherReviewRoadmap`, `DirectorDecision` | Điều phối toàn bộ vòng đời lộ trình cá nhân hóa PLAR từ lúc sinh lộ trình, giáo viên rà soát cho tới Giám đốc Học thuật phê duyệt. |
-| [GenerateRoadmapCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Commands/GenerateRoadmap/GenerateRoadmapCommandHandler.cs) | `Handle`, `InferGradeLevel`, `ExtractChapterNumber`, `ExtractLessonNumber`, `GetSubjectSortOrder` | Hoạch định cây lộ trình học tập cá nhân hóa tích hợp đầy đủ 750 dạng bài GDPT 2018 theo thứ tự môn/lớp/chương/bài và mức độ ưu tiên lỗ hổng. |
-| [RoadmapApprovalWorkflow.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Roadmaps/Approval/RoadmapApprovalWorkflow.cs) | `Handle(GetRoadmapReviewQueueQuery)`, `Handle(GetRoadmapByIdQuery)`, `Handle(TeacherReviewRoadmapCommand)`, `Handle(DirectorDecisionCommand)` | Hiện thực quy trình duyệt lộ trình 2 cấp (Giáo viên tinh chỉnh -> Giám đốc Học thuật phê duyệt kích hoạt). |
-| [MilestoneBinder.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Graph/MilestoneBinder.cs) | `BindMilestones(...)` | Gắn kết các tài nguyên học tập và chốt kiểm tra (Milestone Quiz) vào từng node trên đồ thị lộ trình. |
-| [ZpdQuestionSelector.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Common/Adaptive/ZpdQuestionSelector.cs) | `ConvertPltToTheta`, `CalculateIrt2PlProbability`, `SelectNextQuestion` | Động cơ chọn câu hỏi thích ứng theo Vùng phát triển gần (ZPD): đổi xác suất `P(L_t)` sang năng lực `theta`, tính xác suất đúng IRT 2PL để chọn câu hỏi vừa sức nhất. |
-| [StartStageCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/StartStage/StartStageCommandHandler.cs), [SubmitPreviewCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/SubmitPreview/SubmitPreviewCommandHandler.cs), [SubmitAnswerCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/SubmitAnswer/SubmitAnswerCommandHandler.cs), [ReflectCompleteCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Commands/ReflectComplete/ReflectCompleteCommandHandler.cs) | `Handle(...)` | Điều phối vòng lặp 4 pha học tập thích ứng PLAR: Khởi động chặng -> Khảo sát sơ bộ (Preview) -> Luyện tập cập nhật BKT theo từng câu -> Phản tư nhận thức chốt chặng. |
-| [GetNextQuestionQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Queries/GetNextQuestion/GetNextQuestionQueryHandler.cs) & [GetRemedialPackageQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Stages/Queries/GetRemedialPackage/GetRemedialPackageQueryHandler.cs) | `Handle(...)`, `MapDifficultyToParamB` | Lấy câu hỏi tiếp theo chuẩn ZPD và đóng gói bộ học liệu bổ trợ (Remedial) khi học sinh trượt chặng. |
-| [ClassesController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/ClassesController.cs) | `GetClasses`, `CreateClassWithSchedule`, `AssignTeacher`, `EnrollOrTransferStudent`, `AutoClusterThematicClasses`, `AutoPartitionMicroGroups`, `GetClassMicroGroups`, `AssignGroupWorksheet` | Quản lý lớp học offline, phân công giáo viên, xếp học sinh, gom nhóm vi mô K-Means 3–5 bạn và giao phiếu bài tập theo nhóm. |
-| [AutoPartitionMicroGroupsCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Commands/AutoPartitionMicroGroups/AutoPartitionMicroGroupsCommandHandler.cs) & [GetClassMicroGroupsQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Classes/Queries/GetClassMicroGroups/GetClassMicroGroupsQueryHandler.cs) | `Handle(...)` | Gọi thuật toán `ClassMicroClusterer`, lưu các nhóm vi mô vào DB và truy xuất danh sách bàn học kèm điểm yếu chung. |
-| [EarlyWarningsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/EarlyWarningsController.cs), [EarlyWarningSweepWorker.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/BackgroundJobs/EarlyWarningSweepWorker.cs), [EarlyWarningSweepService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/EarlyWarningSweepService.cs) | `GetMyAlerts`, `GetAlertsDashboard`, `ResolveAlert`, `ScheduleCounseling`, `ExecuteEarlyWarningSweep`, `ExecuteSweepAsync` | Quét định kỳ 6h sáng toàn hệ thống phát hiện sớm học sinh có nguy cơ tụt hạng/không đạt mục tiêu ĐGNL và đặt lịch tư vấn can thiệp. |
-| [NotificationDispatcher.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/NotificationDispatcher.cs) | `DispatchAlertAsync` | Điều phối gửi thông báo cảnh báo học tập đa kênh (In-app, Email, SMS/Zalo) tới học sinh, phụ huynh và giáo viên. |
-| [AcademicTermsController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/AcademicTermsController.cs), [CoursesController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/CoursesController.cs), [SchedulesController.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.API/Controllers/SchedulesController.cs), [ScheduleService.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/Services/ScheduleService.cs) | `GetAcademicTermsAsync`, `CreateCourseAsync`, `SaveClassSchedulesAsync`, `GenerateClassSessionsAsync`, `RescheduleClassSessionAsync`, `GetSessionAttendancesAsync`, `SubmitSessionAttendances` | Quản trị học kỳ, danh mục khóa học, cấu hình lịch học cố định hàng tuần, sinh buổi học tự động, dời lịch và điểm danh từng buổi. |
-| [SubmitMockExamCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/MockExams/Commands/SubmitMockExam/SubmitMockExamCommandHandler.cs) | `Handle(SubmitMockExamCommand, CancellationToken)` | Chấm điểm bài thi thử ĐGNL toàn diện, lưu kết quả và đồng bộ câu sai vào Sổ tay lỗi sai. |
-| [SubmitDailyReviewCommandHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Mistakes/Commands/SubmitDailyReview/SubmitDailyReviewCommandHandler.cs) & [GetDailyReviewQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Mistakes/Queries/GetDailyReview/GetDailyReviewQueryHandler.cs) | `Handle(...)` | Lấy danh sách câu hỏi đến hạn ôn tập hằng ngày từ Sổ tay lỗi sai và cập nhật lịch lặp lại SM-2 sau khi học sinh làm lại. |
-| [GetParentDashboardQueryHandler.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Application/Features/Analytics/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs) | `Handle(GetParentDashboardQuery, CancellationToken)` | Tổng hợp tiến độ học tập, điểm số và cảnh báo thực tế của con em từ PostgreSQL hiển thị trên Cổng Phụ huynh. |
-| [ContentGrpcClient.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/GrpcClients/ContentGrpcClient.cs) & [ContentHttpClient.cs](../../All%20Services/V-Eval-Practice_Service/V-Eval-Practice_Service.Infrastructure/HttpClients/ContentHttpClient.cs) | `GetExamAnswerKeysAsync`, `GetSkillsTreeAsync`, `GetMilestoneQuizAsync`, `GetQuestionDetailAsync`, `CreateAdaptiveQuizAsync` | Client giao tiếp gRPC/HTTP nội bộ sang Content Service để lấy bảng đáp án, cây kỹ năng và sinh phiếu bài tập thích ứng. |
-
----
-
-### 10.4. V-Eval-Gateway (5 file logic bổ sung)
-
-| File Mã Nguồn | Các Hàm Chính | Công Dụng Cốt Lõi |
-| :--- | :--- | :--- |
-| [GatewayAuthExtensions.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Security/GatewayAuthExtensions.cs) | `AddGatewayAuthentication(services, configuration)` | Cấu hình xác thực JWT Bearer tập trung tại cửa ngõ Gateway (validate chữ ký, Issuer, Audience và ClockSkew). |
-| [GlobalExceptionMiddleware.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Middlewares/GlobalExceptionMiddleware.cs) | `InvokeAsync(HttpContext)` | Bắt toàn bộ ngoại lệ chưa xử lý tại Gateway và trả về JSON lỗi chuẩn hóa RFC 7807, không để lộ stack trace. |
-| [RequestLoggingMiddleware.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Middlewares/RequestLoggingMiddleware.cs) | `InvokeAsync(HttpContext)` | Đo thời gian xử lý (latency) và ghi log có cấu trúc cho mọi HTTP Request/Response đi qua Reverse Proxy. |
-| [DownstreamHealthCheck.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Health/DownstreamHealthCheck.cs) | `CheckHealthAsync(HealthCheckContext, CancellationToken)` | *(Dự kiến xóa theo `plan_cleanup_dead_code.md`)* File stub `// TODO`, chưa đăng ký vào `services.AddHealthChecks()`. |
-| [ServiceCollectionExtensions.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Extensions/ServiceCollectionExtensions.cs) & [MiddlewarePipelineExtensions.cs](../../All%20Services/V-Eval-Gateway/V-Eval-Gateway.API/Extensions/MiddlewarePipelineExtensions.cs) | `AddGatewayServices`, `UseGatewayMiddlewarePipeline` | Đóng gói gọn gàng việc đăng ký YARP, CORS, Auth, RateLimiter và thứ tự chuỗi Middleware của Gateway. |
-
----
-
-### 10.5. V-Eval-Identity_Service (7 file logic bổ sung)
-
-| File Mã Nguồn | Các Hàm / Endpoint Chính | Công Dụng Cốt Lõi |
-| :--- | :--- | :--- |
-| [AuthController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/AuthController.cs) | `ValidateEmail`, `Register`, `VerifyAccount`, `Login`, `RefreshToken`, `ForgotPassword`, `VerifyResetOtp`, `ResetPassword` | Cung cấp đầy đủ bộ API xác thực tài khoản, làm mới JWT Token và quy trình quên mật khẩu 3 bước có đối soát OTP 6 số. |
-| [UsersController.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.API/Controllers/UsersController.cs) | `GetCurrentUser`, `GetUsers`, `ProvisionUser`, `ToggleStatus`, `UpdateProfile`, `ChangePassword`, `GetStudentParentLinkOverview`, `ConnectParentByCode` | Quản trị người dùng theo vai trò, Soft Delete (`ToggleStatus`), cập nhật hồ sơ cá nhân và điều phối liên kết Phụ huynh - Học sinh. |
-| [BrevoSmtpEmailService.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Services/BrevoSmtpEmailService.cs) | `SendRegistrationOtpEmailAsync`, `SendForgotPasswordOtpEmailAsync` | Gửi email mã OTP thực tế qua Brevo SMTP Relay (`MailKit`, STARTTLS port 587) với template HTML chuẩn thương hiệu V-Eval. |
-| [EmailValidationHelper.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Common/Validators/EmailValidationHelper.cs) | `ValidateFormatAndRules`, `ValidateEmailComprehensiveAsync` | Kiểm thực email đa tầng: chuẩn RFC 5322, gợi ý sửa lỗi typo phổ biến (`@mail.com` -> `@gmail.com`) và tra cứu bản ghi DNS MX trực tuyến. |
-| [ParentLinkingFeatures.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Application/Features/Users/ParentLinking/ParentLinkingFeatures.cs) | `Handle(GetStudentParentLinkOverviewQuery)`, `Handle(ConnectParentByCodeCommand)`, `Handle(CreateParentLinkRequestCommand)`, `Handle(RespondParentLinkRequestCommand)` | Xử lý liên kết 2 chiều Phụ huynh - Học sinh qua Mã học sinh `VE-XXXXXX`, mã PIN 6 số động hoặc duyệt yêu cầu kết nối. |
-| [UserRepository.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Persistence/Repositories/UserRepository.cs) | `ComputeStudentAccountCode`, `GetByEmailWithRolesAsync`, `GetByIdWithDetailsAsync`, `AddTeacherProfileAsync`, `AddAcademicDirectorProfileAsync`, `AddParentProfileAsync`, `ConnectParentToStudentByCodeAsync` | Truy vấn tổng hợp User + Role + Profile đa vai trò, sinh mã học sinh tất định `VE-XXXXXX` và thao tác bảng `ParentStudentRelations`. |
-| [DbInitializer.cs](../../All%20Services/V-Eval-Identity_Service/V-Eval-Identity_Service.Infrastructure/Persistence/Seeds/DbInitializer.cs) | `SeedAsync(AppDbContext)` | Khởi tạo dữ liệu nền (Roles chuẩn, Campus, tài khoản quản trị mặc định) khi khởi chạy dịch vụ Identity lần đầu. |
-
-
 
