@@ -1,7 +1,5 @@
 # CẬP NHẬT TIẾN ĐỘ HỆ THỐNG - V-EVAL CAPSTONE SYSTEM REPO
 
-## [27/11/2026] - Nâng Cấp Giao Diện Phòng Thi, Kết Quả Đánh Giá, Khung Chat Gia Sư AI & Phát Đề Đầu Vào Ngẫu Nhiên
+## [28/11/2026] - Hoàn Thiện Kéo-Thả Câu Hỏi Vào Gia Sư AI Trên Toàn Bộ Màn Hình Học Sinh
 
-- **V-Eval-Web_Client**: Tinh gọn giao diện phòng thi (`ExamRoom.jsx`, `DiagnosticAssessmentPage.jsx`), thêm dropdown `Bảng số liệu` tự động cho Markdown table, tăng cường `MathText.jsx`; sửa lỗi tràn lưới & tương thích MUI v9 tại `DiagnosticSkillOverviewCard.jsx`; chuẩn hóa khung chat Gia sư AI (`AISocraticTutorModal.jsx`) cố định `34vw` + lịch sử trượt mượt 2 chiều `16vw` (tổng `50vw`). `node --test tests/*.test.js` pass 100%, `npm run build` đạt 0 lỗi (`1.94s`).
-- **V-Eval-Content_Service**: Cập nhật `GetDiagnosticTestQuery.cs` lọc đề `DIAGNOSTIC` đã xuất bản (`IsPublished`) và phát ngẫu nhiên trong tập đề chưa làm.
-- **Supabase `v_eval_content`**: Chuẩn hóa phân loại 91 kỹ năng Ngôn ngữ, dựng lại 3 đề đầu vào `DIAGNOSTIC` (90 câu hỏi chuẩn) và chuyển đổi 19/19 câu hỏi bảng số liệu sang Markdown Table.
+- **V-Eval-Web_Client**: Tạo helper dùng chung `src/utils/aiQuestionDrag.js`, bổ sung kéo-thả câu hỏi sang Gia sư AI trên toàn bộ màn hình học tập, luyện tập, sổ tay SM-2 và xem lại bài làm của học sinh (giữ khóa phòng thi đang làm bài), hỗ trợ thả trực tiếp vào nút nổi **Hỏi Gia sư AI** và sửa lỗi nhấp nháy `onDragLeave`. `node --test tests/*.test.js` pass 100%, `npm run build` đạt 0 lỗi (`3.19s`).
